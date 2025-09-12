@@ -48,7 +48,9 @@ class TestStopPolicyConstruction:
 
     def test_empty_policy_raises_error(self):
         """Test that empty policy raises InvariantViolation."""
-        with pytest.raises(InvariantViolation, match="must include at least 1 sequence"):
+        with pytest.raises(
+            InvariantViolation, match="must include at least 1 sequence"
+        ):
             StopPolicy(sequences=())
 
     def test_empty_sequence_raises_error(self):
@@ -56,7 +58,6 @@ class TestStopPolicyConstruction:
         with pytest.raises(InvariantViolation, match="cannot be empty"):
             StopPolicy(sequences=("valid", ""))
 
-    
     def test_too_long_sequence_raises_error(self):
         """Test that sequence exceeding max length raises InvariantViolation."""
         long_seq = "A" * 129  # One over the limit
@@ -112,7 +113,7 @@ class TestStopPolicyImmutability:
     def test_frozen_dataclass(self):
         """Test that StopPolicy is truly immutable."""
         policy = StopPolicy(sequences=("END",))
-        
+
         # Should not be able to modify sequences
         with pytest.raises(AttributeError):
             policy.sequences = ("NEW",)  # type: ignore
@@ -126,7 +127,7 @@ class TestStopPolicyImmutability:
         """Test that StopPolicy instances are hashable."""
         policy1 = StopPolicy(sequences=("END",))
         policy2 = StopPolicy(sequences=("\n\n",))
-        
+
         # Should be able to use as dictionary keys
         mapping = {policy1: "first", policy2: "second"}
         assert mapping[policy1] == "first"
@@ -225,7 +226,9 @@ class TestStopPolicyErrorMessages:
 
     def test_empty_policy_message(self):
         """Test empty policy error message."""
-        with pytest.raises(InvariantViolation, match="must include at least 1 sequence"):
+        with pytest.raises(
+            InvariantViolation, match="must include at least 1 sequence"
+        ):
             StopPolicy(sequences=())
 
     def test_empty_sequence_message(self):
@@ -259,7 +262,9 @@ class TestStopPolicyWithFromSequences:
 
     def test_from_sequences_empty_iterable(self):
         """Test from_sequences with empty iterable."""
-        with pytest.raises(InvariantViolation, match="must include at least 1 sequence"):
+        with pytest.raises(
+            InvariantViolation, match="must include at least 1 sequence"
+        ):
             StopPolicy.from_sequences([])
 
     def test_from_sequences_preserves_order(self):
@@ -270,9 +275,10 @@ class TestStopPolicyWithFromSequences:
 
     def test_from_sequences_with_generator(self):
         """Test from_sequences with generator expression."""
+
         def generate_sequences():
             yield "END"
             yield "STOP"
-        
+
         policy = StopPolicy.from_sequences(generate_sequences())
         assert policy.sequences == ("END", "STOP")

@@ -4,6 +4,8 @@ This package contains the core business logic, entities, value objects,
 and domain services that implement the novel writing assistance functionality.
 """
 
+from .book import Book
+from .chapter import Chapter
 from .errors import (
     DomainError,
     InvariantViolation,
@@ -31,6 +33,8 @@ from .values import (
 )
 
 __all__ = [
+    "Book",
+    "Chapter",
     "DomainError",
     "InvariantViolation",
     "ConcurrencyConflict",

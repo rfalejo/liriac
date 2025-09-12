@@ -80,7 +80,7 @@ class StopPolicy:
         """
         # Convert to list to handle iterables and enable processing
         sequence_list = list(sequences)
-        
+
         # Normalize each sequence by trimming whitespace
         normalized = []
         for seq in sequence_list:
@@ -93,20 +93,20 @@ class StopPolicy:
                 raise InvariantViolation(
                     "Stop sequence cannot be empty (minimum length: 1)"
                 )
-            
+
             # For length validation, use the original sequence to preserve whitespace
             if len(seq) > _MAX_SEQUENCES_LENGTH:
                 raise InvariantViolation(
                     f"Stop sequence exceeds maximum length {_MAX_SEQUENCES_LENGTH} (got {len(seq)})"
                 )
-            
+
             # For storage, trim external whitespace from non-whitespace sequences,
             # but preserve whitespace-only sequences as-is
             if seq.strip():
                 normalized.append(seq.strip())
             else:
                 normalized.append(seq)
-        
+
         return cls(sequences=tuple(normalized))
 
     def __str__(self) -> str:
