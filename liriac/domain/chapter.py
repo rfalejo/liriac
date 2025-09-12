@@ -9,6 +9,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 
 from .errors import InvariantViolation
+from .stop_policy import StopPolicy
 from .values import (
     ChapterId,
     make_chapter_id,
@@ -93,6 +94,50 @@ class Chapter:
 
         self.number = new_number
         self.id = make_chapter_id(new_number)
+
+    def append_text(self, delta: str, stop: StopPolicy) -> tuple["Chapter", tuple]:
+        """Append AI-generated text to the chapter.
+        
+        This method enforces append-only behavior for AI-generated content.
+        The delta is only added to the end of existing text; existing content
+        cannot be modified through this method.
+        
+        Args:
+            delta: Text content to append (validated as markdown).
+            stop: Stop policy for generation tracking (not applied by domain).
+            
+        Returns:
+            Tuple of (updated_chapter, events) where events is empty tuple in MVP.
+            
+        Raises:
+            InvariantViolation: If delta is None.
+            
+        Note:
+            StopPolicy is carried for contract symmetry and potential event recording.
+            Actual stop sequence application is handled by adapters/providers.
+        """
+        validated_delta = markdown(delta)
+        self.text = self.text + validated_delta
+        return self, ()
+
+    def apply_user_edit(self, full_text: str) -> tuple["Chapter", tuple]:
+        """Apply a manual user edit to replace the entire chapter text.
+        
+        This method allows full text replacement for manual human edits,
+        bypassing the append-only restriction that applies to AI generation.
+        
+        Args:
+            full_text: New complete markdown text for the chapter.
+            
+        Returns:
+            Tuple of (updated_chapter, events) where events is empty tuple in MVP.
+            
+        Raises:
+            InvariantViolation: If full_text is None.
+        """
+        validated_text = markdown(full_text)
+        self.text = validated_text
+        return self, ()
 
     def replace_text(self, full_text: str) -> None:
         """Replace the entire chapter text.

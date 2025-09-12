@@ -13,7 +13,7 @@ help: ## Show this help
 	@awk 'BEGIN {FS = ":.*##"; printf "Available targets:\n"} /^[a-zA-Z0-9_\/-]+:.*##/ { printf "  %-16s %s\n", $$1, $$2 }' $(MAKEFILE_LIST)
 
 test: ## Run test suite with coverage
-	$(PYTEST) --cov=liaric --cov-report=term-missing
+	$(PYTEST) --cov=liriac --cov-report=term-missing
 
 lint: ## Run Ruff lint checks
 	$(RUFF) check .
@@ -25,12 +25,12 @@ pyright: ## Run Pyright type checks
 	$(PYRIGHT)
 
 typecheck: ## Run mypy on the project
-	mypy liaric
+	mypy liriac
 
 fix: ## Fix issues found by the linters and type checkers
 	$(RUFF) format
-	mypy --install-types --non-interactive liaric
-	mypy --check-untyped-defs liaric
+	mypy --install-types --non-interactive liriac
+	mypy --check-untyped-defs liriac
 
 clean: ## Remove cache artifacts
 	@find . -type d -name "__pycache__" -exec rm -rf {} +
