@@ -12,6 +12,7 @@ from .errors import (
     SlugInvalid,
     ContextOverBudget,
 )
+from .stop_policy import StopPolicy
 from .values import (
     BookId,
     ChapterId,
@@ -36,6 +37,7 @@ __all__ = [
     "AppendRejected",
     "SlugInvalid",
     "ContextOverBudget",
+    "StopPolicy",
     "BookId",
     "ChapterId",
     "Title",
