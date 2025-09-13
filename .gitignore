@@ -211,3 +211,7 @@ prompts/*
 # uv
 .uv/
 uv.lock
+
+# docs
+docs/tickets/
+docs/reviews/
