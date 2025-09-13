@@ -80,11 +80,6 @@ python -m liriac
 - `Ctrl+K`: Characters reference
 - `Ctrl+W`: World-building reference
 
-## Ticket Management
-- Tickets are created in `docs/tickets/` with a specific format
-- Each ticket includes title, description, acceptance criteria, and testing strategy
-- Reviews of completed tickets are saved in `docs/reviews/`
-
 ## Important Notes
 
 - **Python version is strictly 3.11** - enforced by the run script
