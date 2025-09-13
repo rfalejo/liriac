@@ -21,6 +21,16 @@ This plan incorporates clarifications:
 - Testing Strategy:
   - Shell smoke tests for `./run`, `uv run liriac`, and `python -m liriac` in CI.
 
+## LR-01A - Strong type hinting
+- ID: LR-01A
+- Name: Strong type hinting
+- Acceptance Criteria:
+  - Configure `mypy` in `pyproject.toml` with strict settings.
+  - All code in `liriac/` is fully type-hinted and passes `mypy` checks.
+- Testing Strategy:
+  - CI step to run `mypy liriac/` and fail on any type errors.
+  - Ensure new code is type-annotated as part of code reviews.
+
 ## LR-02 — CLI & Entry Points
 
 - ID: LR-02

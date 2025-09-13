@@ -13,3 +13,8 @@ model: claude-3-5-haiku-20241022
 ## Your task
 
 Based on the above changes, create a single git commit following the conventional commit format.
+Don't add co-authors or summary lines, just a single commit message.
+Examples:
+- `feat: add user login functionality`
+- `fix: correct typo in README`
+- `docs: update API documentation for clarity`
