@@ -42,6 +42,6 @@ class LiriacApp(App[None]):
     .instruction {
         text-align: center;
         color: $secondary;
-        dim: true;
+        opacity: 0.7;
     }
     """
