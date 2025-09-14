@@ -25,7 +25,10 @@ classifiers = [
     "Topic :: Text Editors :: Text Processing",
     "Topic :: Utilities",
 ]
-dependencies = []
+dependencies = [
+    "typer>=0.9.0",
+    "textual>=0.41.0",
+]
 
 [project.optional-dependencies]
 dev = [
@@ -37,6 +40,9 @@ dev = [
     "typing-extensions",
     "types-toml",
 ]
+
+[project.scripts]
+liriac = "liriac.cli:app"
 
 [project.urls]
 Homepage = "https://github.com/liriac/liriac"

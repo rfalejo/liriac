@@ -9,9 +9,8 @@ You'll act as an expert software developer for a Python project.
 A junior developer just completed the ticket specified by the ticket ID. Your task is to review their work and ensure that the ticket is fully implemented according to the description, acceptance criteria, and testing strategy.
 
 Files to consider:
-- @docs/01-technical-spec.md
-- @docs/02-technical-stack.md
-- @docs/03-epics.md
+- @docs/01-technical-spec-en.md
+- @docs/03-conventions.md
 
 Ticket file to verify: docs/tickets/$1.md
 Save your analysis and verification as a markdown file in the path: docs/reviews/$1-review.md
