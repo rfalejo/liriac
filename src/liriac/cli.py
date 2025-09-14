@@ -33,7 +33,7 @@ def validate_path(path: Path) -> Path:
 @app.command()
 def main(
     path: Path = typer.Option(
-        Path.cwd(),
+        lambda: Path.cwd(),
         "--path",
         "-p",
         help="Library/workspace directory path",
