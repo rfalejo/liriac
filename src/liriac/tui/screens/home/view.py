@@ -70,7 +70,6 @@ class HomeScreen(Screen[None]):
 
     BINDINGS = [
         ("tab", "switch_focus", "Switch Focus"),
-        ("enter", "select_item", "Select"),
     ]
 
     def __init__(self, library_path: Path, repo: LibraryRepository) -> None:
@@ -173,22 +172,11 @@ class HomeScreen(Screen[None]):
                 book_id = self._book_ids[books_list.index]
                 self._load_chapters(book_id)
 
-    def action_switch_focus(self) -> None:
-        """Switch focus between books and chapters lists."""
-        books_list = self.query_one("#books-list", ListView)
-        chapters_list = self.query_one("#chapters-list", ListView)
-
-        if books_list.has_focus:
-            chapters_list.focus()
-        else:
-            books_list.focus()
-
-    def action_select_item(self) -> None:
-        """Select the currently highlighted item."""
-        chapters_list = self.query_one("#chapters-list", ListView)
-
-        if chapters_list.has_focus and chapters_list.highlighted_child is not None:
-            item = chapters_list.highlighted_child
+    @on(ListView.Selected)
+    def on_list_selected(self, event: ListView.Selected) -> None:
+        """Handle item selection in lists."""
+        if event.list_view.id == "chapters-list":
+            item = event.item
 
             # Check if this is a valid chapter item (custom ChapterListItem)
             if (
@@ -199,6 +187,16 @@ class HomeScreen(Screen[None]):
                 self.post_message(
                     ChapterChosen(book_id=self._current_book_id, ref=item.chapter_ref)
                 )
+
+    def action_switch_focus(self) -> None:
+        """Switch focus between books and chapters lists."""
+        books_list = self.query_one("#books-list", ListView)
+        chapters_list = self.query_one("#chapters-list", ListView)
+
+        if books_list.has_focus:
+            chapters_list.focus()
+        else:
+            books_list.focus()
 
     CSS = """
     Screen {
