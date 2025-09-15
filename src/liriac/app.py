@@ -6,7 +6,7 @@ from textual.app import App
 from textual.events import Key
 
 from .infra.fs.library import FilesystemLibraryRepository
-from .tui import ChapterChosen, HomeScreen
+from .tui import ChapterChosen, EditorScreen, HomeScreen
 
 
 class LiriacApp(App[None]):
@@ -29,12 +29,12 @@ class LiriacApp(App[None]):
         Args:
             message: ChapterChosen message with book and chapter info
         """
-        # Store the last selection (for now, just log it)
+        # Store the last selection
         self.last_selection = (str(message.book_id), str(message.ref.relative_path))
-        # TODO: Open editor in a future ticket
-        self.log.info(
-            f"Chapter selected: {message.book_id}/{message.ref.relative_path}"
-        )
+
+        # Open the editor with the selected chapter
+        editor_screen = EditorScreen(self.library_path, self.repo, message.ref)
+        self.push_screen(editor_screen)
 
     def on_key(self, event: Key) -> None:
         """Handle key events."""
