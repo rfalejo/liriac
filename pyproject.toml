@@ -30,6 +30,8 @@ dependencies = [
     "textual>=0.41.0",
     "tomli-w>=1.0.0",
     "pydantic>=2.5",
+    "httpx>=0.25",
+    "anyio>=4",
 ]
 
 [project.optional-dependencies]
@@ -41,6 +43,7 @@ dev = [
     "pytest-asyncio",
     "typing-extensions",
     "types-toml",
+    "respx>=0.20",
 ]
 
 [project.scripts]
@@ -77,7 +80,7 @@ ignore = [
 [tool.black]
 line-length = 88
 target-version = ['py311']
-include = '\.pyi?$'
+include = '\\.pyi?$'
 extend-exclude = '''
 /(
   # directories

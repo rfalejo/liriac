@@ -7,11 +7,11 @@ These protocols enable clean architecture by separating contracts from implement
 from __future__ import annotations
 
 from pathlib import Path
-from typing import Protocol
+from typing import AsyncIterator, Protocol
 
 from .entities.book import Book
 from .entities.chapter import Chapter
-from .types import BookId
+from .types import AISettings, ContextProfile, StreamEvent, BookId
 from .value_objects import ChapterRef
 
 
@@ -92,7 +92,27 @@ class ChapterRepository(Protocol):
         ...
 
 
+class AIProvider(Protocol):
+    """Asynchronous AI streaming provider.
+
+    Contract: implementors return an async iterator of StreamEvent values.
+    The iterator yields text deltas as they arrive and must finish with a
+    final event where done=True. Implementations must not perform IO in
+    the domain; IO lives in infra adapters.
+    """
+
+    def stream(
+        self,
+        *,
+        prompt: str,
+        settings: AISettings,
+        context: ContextProfile | None = None,
+    ) -> AsyncIterator[StreamEvent]:
+        ...
+
+
 __all__ = [
     "LibraryRepository",
     "ChapterRepository",
+    "AIProvider",
 ]
