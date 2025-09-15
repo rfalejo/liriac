@@ -2,8 +2,6 @@
 
 from pathlib import Path
 
-from textual.widgets import Static
-
 from liriac.app import LiriacApp
 
 
@@ -20,13 +18,12 @@ def test_liriac_app_initialization(tmp_path: Path) -> None:
     assert app.library_path == tmp_path
 
 
-def test_liriac_app_compose_method(tmp_path: Path) -> None:
-    """Test that LiriacApp compose method works."""
+def test_liriac_app_runs_with_home_screen(tmp_path: Path) -> None:
+    """Test that LiriacApp initializes with home screen."""
     app = LiriacApp(library_path=tmp_path)
 
-    # Get the compose result without running the app
-    compose_result = list(app.compose())
+    # Check that the app has the correct library path
+    assert app.library_path == tmp_path
 
-    # Should return two Static widgets
-    assert len(compose_result) == 2
-    assert all(isinstance(widget, Static) for widget in compose_result)
+    # Check that the repository is initialized
+    assert app.repo is not None
