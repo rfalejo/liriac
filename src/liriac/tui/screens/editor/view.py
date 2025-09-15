@@ -16,8 +16,9 @@ from textual.containers import Vertical
 from textual.screen import Screen
 from textual.widgets import Footer, Header, Static, TextArea
 
+from ....domain.entities import Chapter
+
 if TYPE_CHECKING:
-    from ....domain.entities.chapter import Chapter
     from ....domain.ports import ChapterRepository
     from ....domain.value_objects import ChapterRef
 

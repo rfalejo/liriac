@@ -149,10 +149,55 @@ async def test_editor_manual_save(temp_library: Path) -> None:
         await pilot.press("ctrl+s")
         await pilot.pause()
 
+        # Verify that dirty state is cleared after save
+        assert not editor.is_dirty
+
         # For now, let's check if save was called by verifying the basic app functionality
         # The save may not work in the test environment due to TUI complexity,
         # but the core editor functionality (load, edit, dirty tracking) works
         assert text_area.text == new_content  # Editor retains the modified content
+
+
+@pytest.mark.asyncio
+async def test_editor_save_action_no_errors(temp_library: Path) -> None:
+    """Test that the save action executes without NameError for Chapter."""
+    library_path = temp_library
+    repo = FilesystemLibraryRepository()
+
+    from pathlib import PurePosixPath
+
+    ref = ChapterRef(
+        book_id=BookId("test-book"), relative_path=PurePosixPath("chapters/01-intro.md")
+    )
+
+    app = LiriacApp(library_path)
+    async with app.run_test() as pilot:
+        editor = EditorScreen(library_path, repo, ref)
+        app.push_screen(editor)
+        await pilot.pause()
+
+        # Modify text
+        text_area = editor.query_one("#editor", TextArea)
+        text_area.text = "Modified content"
+        await pilot.pause()
+
+        # Call the save action directly to test for NameError
+        try:
+            editor.action_save()
+            # If we get here without exception, the Chapter import is working
+            save_succeeded = True
+        except NameError as e:
+            if "Chapter" in str(e):
+                save_succeeded = False
+                pytest.fail(f"Chapter import failed: {e}")
+            else:
+                raise  # Re-raise if it's a different NameError
+        except Exception:
+            # Other exceptions are okay for this test - we just want to ensure
+            # the Chapter class is properly imported and accessible
+            save_succeeded = True
+
+        assert save_succeeded, "Save action should not fail with NameError for Chapter"
 
 
 @pytest.mark.asyncio
