@@ -1,0 +1,29 @@
+- name: Detective Rebecca Stone
+  role: Protagonist
+  description: Experienced detective investigating the art gallery heist
+  personality: Methodical, intuitive, persistent, has a knack for seeing patterns others miss
+  background: 15 years on the force, specializes in complex theft cases
+
+- name: Detective James Park
+  role: Partner/Supporting Character
+  description: Rebecca's partner who provides research support and different perspectives
+  personality: Detail-oriented, tech-savvy, good at finding connections in data
+  background: Former computer crimes specialist who transferred to major crimes
+
+- name: Victoria Ashworth
+  role: Mystery Figure
+  description: Reclusive millionaire art collector who disappeared five years ago
+  personality: Secretive, cultured, had deep knowledge of art history
+  background: Inherited wealth and art collection, mysteriously vanished without a trace
+
+- name: Officer Martinez
+  role: Supporting Character
+  description: Junior officer assisting with the crime scene investigation
+  personality: Eager, observant, still learning the ropes
+  background: Recent police academy graduate working his first major case
+
+- name: Gallery Guards
+  role: Victims/Witnesses
+  description: Henry Walsh and Maria Santos, the security guards who were drugged
+  personality: Professional, reliable, confused about their memory loss
+  background: Long-time security professionals with clean records

@@ -1,0 +1,17 @@
+- name: Elena
+  role: Protagonist
+  description: A young cartographer who discovers a mysterious map that leads her on an epic journey
+  personality: Curious, brave, intelligent, somewhat naive about the dangers she'll face
+  background: Lives in a small village, has always been fascinated by maps and distant lands
+
+- name: Lysander
+  role: Mentor/Guardian
+  description: An ancient crystal guardian who protects the first seal and tests worthy travelers
+  personality: Wise, otherworldly, speaks in riddles, has waited centuries for the right person
+  background: Keeper of ancient knowledge, bound to the Crystal Grove by magical forces
+
+- name: Villagers
+  role: Supporting Characters
+  description: The people of Elena's home village, representing the life she might leave behind
+  personality: Practical, caring, somewhat fearful of the unknown
+  background: Simple folk who have lived in the village for generations

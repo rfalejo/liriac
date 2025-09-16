@@ -1,3 +1,8 @@
-title = "Test Book"
+title = "The Mapmaker's Journey"
 created_at = "2024-01-01T10:00:00+00:00"
-chapters = ["chapters/01-start.md", "chapters/02-middle.md"]
+chapters = [
+    "chapters/01-start.md", 
+    "chapters/02-middle.md",
+    "chapters/03-crystal-guardian.md",
+    "chapters/04-the-choice.md"
+]

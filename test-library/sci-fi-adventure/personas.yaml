@@ -1,0 +1,29 @@
+- name: Commander Sarah Chen
+  role: Protagonist
+  description: Ship commander who awakens from hibernation to find most of the crew dead
+  personality: Disciplined, responsible, quick-thinking under pressure, struggles with survivor's guilt
+  background: Experienced space fleet officer, chosen to lead the colony mission
+
+- name: Dr. Elena Martinez
+  role: Supporting Character - Medical
+  description: Chief medical officer and one of the 23 survivors
+  personality: Compassionate, methodical, maintains hope despite dire circumstances
+  background: Renowned physician who volunteered for the colony mission
+
+- name: Chief Engineer Kenji Nakamura
+  role: Supporting Character - Technical
+  description: The ship's chief engineer working to repair critical systems
+  personality: Pragmatic, innovative, tends to focus on practical solutions over emotional concerns
+  background: Former asteroid mining engineer with expertise in deep space systems
+
+- name: Dr. Sarah Kim
+  role: Supporting Character - Science
+  description: Xenobiologist trying to understand the alien station's communications
+  personality: Intellectually curious, methodical, excited by first contact possibilities
+  background: Leading expert in theoretical xenobiology and interspecies communication
+
+- name: ARIA
+  role: Ship AI
+  description: The ship's artificial intelligence system that survived the catastrophe
+  personality: Helpful but limited by programming, processes information logically
+  background: Advanced AI designed to assist with colony operations

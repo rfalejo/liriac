@@ -1,0 +1,7 @@
+title = "Stellar Horizons"
+created_at = "2024-02-15T14:30:00+00:00"
+chapters = [
+    "chapters/01-awakening.md",
+    "chapters/02-station-alpha.md",
+    "chapters/03-the-signal.md"
+]
