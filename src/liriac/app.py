@@ -6,6 +6,7 @@ from textual.app import App
 from textual.events import Key
 
 from .domain.types import ContextProfile
+from .infra import UIState, save_ui_state
 from .infra.fs.library import FilesystemLibraryRepository
 from .tui import (
     ChapterChosen,
@@ -39,6 +40,21 @@ class LiriacApp(App[None]):
         """
         # Store the last selection
         self.last_selection = (str(message.book_id), str(message.ref.relative_path))
+
+        # Persist UI state (last opened chapter). caret position is not tracked yet.
+        # Use UTC ISO timestamp for updated_at.
+        from datetime import UTC, datetime
+
+        ui_state = UIState(
+            last_opened=message.ref.relative_path.as_posix(),
+            caret_offset=None,
+            updated_at=datetime.now(tz=UTC).isoformat(),
+        )
+        try:
+            save_ui_state(self.library_path, message.book_id, ui_state)
+        except OSError:
+            # Non-fatal: UI state persistence failure should not block navigation
+            pass
 
         # Open the editor with the selected chapter
         editor_screen = EditorScreen(self.library_path, self.repo, message.ref)

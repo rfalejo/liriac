@@ -15,6 +15,8 @@ from textual.screen import Screen
 from textual.widget import Widget
 from textual.widgets import ListItem, ListView, Static
 
+from ....infra import load_ui_state
+
 if TYPE_CHECKING:
     from ....domain.ports import LibraryRepository
     from ....domain.types import BookId
@@ -149,13 +151,33 @@ class HomeScreen(Screen[None]):
                     ListItem(Static("No chapters in this book"), disabled=True)
                 )
             else:
-                for chapter_ref in book.chapters:
+                # Load UI state to know which chapter to pre-select (if any)
+                state = load_ui_state(self.library_path, book_id)
+                last_opened = state.last_opened
+
+                target_index: int | None = None
+
+                for idx, chapter_ref in enumerate(book.chapters):
                     # Use the chapter filename as display text
                     display_name = chapter_ref.relative_path.name
                     item = ChapterListItem(
                         Static(display_name), chapter_ref=chapter_ref
                     )
                     chapters_list.append(item)
+                    # Determine index to pre-select
+                    if (
+                        last_opened is not None
+                        and chapter_ref.relative_path.as_posix() == last_opened
+                    ):
+                        target_index = idx
+
+                # If a matching chapter found, highlight/select it
+                if target_index is not None and 0 <= target_index < len(chapters_list.children):
+                    try:
+                        chapters_list.index = target_index
+                    except Exception:
+                        # Non-fatal; ignore if ListView API changes
+                        pass
 
         except (FileNotFoundError, ValueError) as e:
             chapters_list.append(
