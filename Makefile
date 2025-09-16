@@ -6,7 +6,7 @@ UV ?= uv
 PYTHON ?= python3.11
 
 PKG := liriac
-SRC := src tests
+SRC := . tests
 
 # Colors for help
 CYAN := \033[36m
@@ -28,8 +28,24 @@ upgrade: ## Upgrade dependencies to latest compatible
 	$(UV) sync --all-extras -U
 
 .PHONY: run
-run: ## Run the CLI (use ARGS="--path .")
-	$(UV) run $(PKG) $(ARGS)
+run: ## Run Django development server
+	$(UV) run python manage.py runserver $(ARGS)
+
+.PHONY: migrate
+migrate: ## Run Django migrations
+	$(UV) run python manage.py migrate
+
+.PHONY: makemigrations
+makemigrations: ## Create Django migrations
+	$(UV) run python manage.py makemigrations
+
+.PHONY: shell
+shell: ## Open Django shell
+	$(UV) run python manage.py shell
+
+.PHONY: createsuperuser
+createsuperuser: ## Create Django superuser
+	$(UV) run python manage.py createsuperuser
 
 .PHONY: fmt
 fmt: ## Auto-format: ruff --fix + black
@@ -43,7 +59,7 @@ lint: ## Lint only (no changes)
 
 .PHONY: typecheck
 typecheck: ## Type-check with mypy --strict
-	$(UV) run mypy --strict src tests
+	$(UV) run mypy --strict . tests
 
 .PHONY: test
 test: ## Run tests (pytest)

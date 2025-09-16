@@ -5,7 +5,7 @@ build-backend = "hatchling.build"
 [project]
 name = "liriac"
 version = "0.1.0"
-description = "Linux TUI application for writing books with streaming AI assistance"
+description = "Web application for writing books with streaming AI assistance"
 authors = [
     {name = "liriac", email = "dev@liriac.com"},
 ]
@@ -16,19 +16,19 @@ classifiers = [
     "Development Status :: 3 - Alpha",
     "Intended Audience :: Developers",
     "License :: OSI Approved :: MIT License",
-    "Operating System :: POSIX :: Linux",
+    "Framework :: Django",
+    "Operating System :: OS Independent",
     "Programming Language :: Python :: 3",
     "Programming Language :: Python :: 3.11",
     "Programming Language :: Python :: 3.12",
     "Programming Language :: Python :: 3.13",
-    "Topic :: Software Development :: Libraries :: Python Modules",
+    "Topic :: Internet :: WWW/HTTP :: Dynamic Content",
     "Topic :: Text Editors :: Text Processing",
-    "Topic :: Utilities",
 ]
 dependencies = [
-    "typer>=0.9.0",
-    "textual>=0.41.0",
-    "tomli-w>=1.0.0",
+    "Django>=5.0",
+    "django-environ>=0.11",
+    "django-stubs>=5.0",
     "pydantic>=2.5",
     "httpx>=0.25",
     "anyio>=4",
@@ -40,14 +40,17 @@ dev = [
     "black",
     "mypy",
     "pytest",
+    "pytest-django",
     "pytest-asyncio",
     "typing-extensions",
     "types-toml",
     "respx>=0.20",
+    "factory-boy",
+    "coverage",
 ]
 
 [project.scripts]
-liriac = "liriac.cli:app"
+liriac = "liriac.manage:main"
 
 [project.urls]
 Homepage = "https://github.com/liriac/liriac"
