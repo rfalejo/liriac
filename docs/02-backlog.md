@@ -35,7 +35,6 @@
 - BL-011: Suggestions service: prompt, live deltas, accept/regenerate/cancel; suggestions log.
 - BL-012: Context management: personas and chapters toggles; token estimation.
 - BL-013: UI state persistence: `.liriac/state.json` (last opened).
-- BL-014: Tests: domain/services unit tests, httpx/respx integration, Textual Pilot basics.
 
 ## Milestones & Order
 - M1: Core + CLI + Domain (BL-001–003)
