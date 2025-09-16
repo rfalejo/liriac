@@ -4,7 +4,7 @@ SHELL := bash
 
 UV ?= uv
 PYTHON ?= python3.12
-PNPM ?= pnpm
+PNPM ?= npm
 FRONTEND_DIR ?= frontend
 BACKEND_DIR ?= backend
 
@@ -59,13 +59,11 @@ schema: ## Generate OpenAPI schema (DRF Spectacular)
 
 .PHONY: fmt
 fmt: ## Auto-format: ruff --fix + black (backend)
-	cd $(BACKEND_DIR) && $(UV) run ruff check --fix .
-	cd $(BACKEND_DIR) && $(UV) run black .
+	cd $(BACKEND_DIR) && $(UV) run ruff check --fix . && $(UV) run black .
 
 .PHONY: lint
 lint: ## Lint backend only (no changes)
-	cd $(BACKEND_DIR) && $(UV) run ruff check .
-	cd $(BACKEND_DIR) && $(UV) run black --check .
+	cd $(BACKEND_DIR) && $(UV) run ruff check . && $(UV) run black --check .
 
 .PHONY: typecheck
 typecheck: ## Type-check backend with mypy --strict
@@ -88,23 +86,23 @@ build: ## Build backend wheel/sdist via uv
 # ------------------------
 .PHONY: fe-dev
 fe-dev: ## Run frontend dev server (Vite)
-	cd $(FRONTEND_DIR) && $(PNPM) dev $(ARGS)
+	cd $(FRONTEND_DIR) && $(PNPM) run dev $(ARGS)
 
 .PHONY: fe-build
 fe-build: ## Build frontend for production
-	cd $(FRONTEND_DIR) && $(PNPM) build
+	cd $(FRONTEND_DIR) && $(PNPM) run build
 
 .PHONY: fe-lint
 fe-lint: ## Lint frontend (ESLint)
-	cd $(FRONTEND_DIR) && $(PNPM) lint
+	cd $(FRONTEND_DIR) && $(PNPM) run lint
 
 .PHONY: fe-test
 fe-test: ## Test frontend (Vitest)
-	cd $(FRONTEND_DIR) && $(PNPM) test
+	cd $(FRONTEND_DIR) && $(PNPM) run test
 
 .PHONY: fe-typecheck
 fe-typecheck: ## Type-check frontend (tsc --noEmit)
-	cd $(FRONTEND_DIR) && $(PNPM) typecheck
+	cd $(FRONTEND_DIR) && $(PNPM) run typecheck
 
 .PHONY: fe-typegen
 fe-typegen: schema ## Generate frontend TS types from OpenAPI schema
@@ -116,7 +114,7 @@ fe-typegen: schema ## Generate frontend TS types from OpenAPI schema
 .PHONY: dev
 dev: ## Run backend and frontend dev servers together
 	cd $(BACKEND_DIR) && $(UV) run python manage.py runserver $(ARGS) & \
-	cd $(FRONTEND_DIR) && $(PNPM) dev
+	cd $(FRONTEND_DIR) && $(PNPM) run dev
 
 .PHONY: check
 check: ## Lint + typecheck + tests for frontend and backend

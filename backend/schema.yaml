@@ -1,0 +1,28 @@
+openapi: 3.0.3
+info:
+  title: Liriac API
+  version: 1.0.0
+  description: API for the liriac writing application
+paths:
+  /api/v1/health/:
+    get:
+      operationId: health_retrieve
+      description: Health check endpoint.
+      tags:
+      - health
+      security:
+      - cookieAuth: []
+      - basicAuth: []
+      - {}
+      responses:
+        '200':
+          description: No response body
+components:
+  securitySchemes:
+    basicAuth:
+      type: http
+      scheme: basic
+    cookieAuth:
+      type: apiKey
+      in: cookie
+      name: sessionid
