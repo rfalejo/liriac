@@ -1,117 +1,177 @@
 # Metadata
-Nombre de proyecto: liriac
-Descripción: aplicación TUI para la escritura de libros sin salir de la terminal con IA completion. Permitirá al usuario crear y editar libros y capítulos.
+Project name: liriac  
+Description: React + TypeScript single-page application backed by a Django API that enables writing books and chapters with streaming AI assistance, contextual personas, and reliable autosave.
 
-## Editor de texto (Modo manual)
-Interfaz mínima estilo máquina de escribir, WYSIWYG estilo Microsoft Word. No habrá herramientas de edición avanzadas, como búsqueda, reemplazo, etc. Únicamente recorrer el libro, mover el cursor y editar libremente en cualquier parte de este.
+## Frontend Overview
+The client is a Vite-powered React 18 SPA written in strict TypeScript. Tailwind CSS provides layout and typography primitives; Headless UI helps with accessible modals, drawers, and menus. Core state lives in React Query (server cache) and Zustand (view preferences and transient UI flags). Routing relies on React Router with nested layouts for the library dashboard and editor. Global keyboard shortcuts attach once at the root and dispatch domain-specific actions via a dedicated hook.
 
-## Sugerencias por IA (Modo sugerencia)
-Activada por Shift+Tab, desplegará un diálogo de prompt en la parte infeior de la interfaz y el usuario ingresará su prompt para solicitar la continuación del texto, Enter envía el prompt, desactiva el input y muestra:
+## Manual Writing Mode
+The editor renders a controlled `<textarea>`-like component optimized for large documents. Cursor movement and text editing respect native browser behavior, while custom handlers delegate critical shortcuts (save, toggle suggestions, open context modal). React Query hydrates chapter content from the Django API, caches responses, and updates optimistically when autosave succeeds. Tailwind utility classes keep the writing column fluid on desktop and compact on tablet viewports; a top app bar hosts navigation, autosave state, and suggestion status indicators.
+
+## AI Suggestions Mode
+Pressing Shift+Tab opens a bottom drawer implemented with Headless UI dialog primitives. The drawer contains:
 
 ```
-Generando... 128 tokens [Esc x 2] Detener <- actualizado en vivo junto con el streaming.
+Prompt input field with character counter
+“Generating… 128 tokens [Esc x 2] Stop” status banner
+Live token stream rendered line by line
+Actions: Accept, Regenerate, Cancel
+Suggestion pager: “Suggestion 1/2” with left/right arrows
 ```
 
-El usuario podrá crear, editar y eliminar los personajes y detalles del ambiente que pertenecen a un libro, dándalo la posibilidad de configurar el contexto de la IA (activando y desactivando qué capítulos y detalles del mundo debe tomar en cuenta para la siguiente sugerencia). Por ejemplo, en en un capítulo dado, el usuario podrá desactivar personajes que no aparecen en dicho capítulo para mejorar la calidad de las sugerencias, así mismo, podrá escoger qué capítulos enviar en el contexto. Especialmente útil en libros largos, donde quizá se requiera de contexto los últimos 3 capítulos, aunque por defecto intentará enviar todo el libro.
+When the user submits a prompt, the frontend sends a POST request to `/api/v1/chapters/{id}/suggestions/` (REST) to register the intent. The response includes a WebSocket URL (`/ws/suggestions/{session_id}/`) served by Django Channels. React Query (or a custom hook) subscribes to the socket and appends deltas to an in-memory buffer. Stopping the stream sends a cancellation frame; accepted suggestions merge into the editor state, regenerate spins up another session. All events are reflected in a suggestion log timeline.
 
-La IA únicamente podrá sugerir la continuación de la último parte escrita del libro, esta no podrá realizar ediciones en partes previas.
+## Context Management (Personas & Chapters)
+The “Context” action launches a modal overlay with two panels:
 
-Al realizar la IA una sugerencia, esta aparecerá como si fuese la verdadera continuación de la parte anterior, pero con un color ligeramente distinto al texto original. El usuario podrá escoger entre aceptar, regenerar y cancelar la sugerencia. Al regenerar, las sugerencias se irán acumulando y el usuario puede deslizar con el teclado las sugerencias (1/2, 2/2, etc). Al aceptar una sugerencia, las demás se eliminarán (pero quedarán almacenadas en un archivo log que puede verse desde el explorar de archivos del SO). Al aceptar una sugerencia, se agregará al archivo .md del capítulo y el cambio de color desaparecerá.
+- **Personas**: Checkboxes listing available personas. Toggling issues PATCH requests to `/api/v1/context/personas/` with optimistic updates; metadata (role, notes) comes from cached endpoints.
+- **Chapters**: Multi-select list of context chapters loaded from `/api/v1/books/{id}/chapters/`. Token usage estimates update as selections change, drawing on `/api/v1/context/estimates/`.
 
-Tendrá soporte para streaming y atajo de teclado para detener la generación, descartarla o aceptarla, por ejemplo, si el usuario detiene la generación, esto no se toma como un fallo, sino como un "detente ahí y decido qué hago", la escritura de texto parará y el escrito no se perderá, a no ser que el usuario lo elimine y por ende este salga de la lista de sugerencias, bajando el número de las sugerencias totales.
+Context configuration is persisted per chapter. Validation happens both client-side (preventing token limits) and server-side (hard ceilings enforced by Django).
 
-## Autoguardado
-Al aceptar una sugerencia, idempotente cada 10 segundos. Por ahora no habrá soporte para revertir y rehacer cambios.
+## Autosave
+Autosave triggers ten seconds after the last keystroke or immediately after accepting an AI suggestion. The editor maintains a content hash; if unchanged, the client skips network calls. Save requests hit `/api/v1/chapters/{id}/autosave/` with the current body and checksum. The backend replies with the persisted hash and timestamp. Feedback surfaces in the status bar:
 
-## Pantallas
-
-### Pantalla principal (Selección de libro y capítulo)
 ```
-┌─ liriac — Biblioteca ───────────────────────────────────────────────────────────────────────────────────┐
-│ Libros                                          Capítulos del libro seleccionado                        │
-│ ┌───────────────────────────────────────────┐   ┌─────────────────────────────────────────────────────┐ │
-│ │ > El viajero                              │   │ > Cap 01: La salida                                 │ │
-│ │   La ciudad invisible                     │   │   Cap 02: El mapa                                   │ │
-│ │   Bosque de vidrio                        │   │   Cap 03: El puerto                                 │ │
-│ └───────────────────────────────────────────┘   └─────────────────────────────────────────────────────┘ │
-│                                                                                                         │
-│ Detalles: Creado: 2024-09-01 • Capítulos: 27 • Último abierto: Cap 03                                   │
-├─────────────────────────────────────────────────────────────────────────────────────────────────────────┤
-│ [Enter] Abrir capítulo   [n] Nuevo libro   [c] Nuevo capítulo   [r] Renombrar   [Del] Eliminar          │
-│ [Tab] Cambiar panel      [Esc] Salir                                                                    │
-└─────────────────────────────────────────────────────────────────────────────────────────────────────────┘
+Mode: Manual • Autosave: saving…
+Mode: Manual • Autosave: saved 2s ago
 ```
 
-### Editor (Modo manual)
+Failures display toast notifications with retry actions. The SPA also mirrors drafts to `IndexedDB` (via `idb-keyval`) to protect against transient offline periods.
+
+## Screens and Navigation
+
+### Library Dashboard
 ```
-┌─ liriac — Libro: "El viajero" — Capítulo 03: "El puerto" ─────────────────────────────────────────────┐
-│                                                                                                       │
-│  El muelle olía a sal y a madera húmeda.                                                              │
-│  Las gaviotas trazaban círculos perezosos sobre el agua plana, y las sogas crujían con cada balanceo. │
-│                                                                                                       │
-│  Camila ajustó el cuaderno contra el pecho y respiró hondo antes de dar el primer paso.               │
-│  No esperaba respuestas, solo el rumor del mar y el golpe sordo de sus botas.                         │
-│                                                                                                       │
-│                                                                                                       │
-│                                                                                                       │
-│                                                                                                       │
-│                                                                                                       │
-├───────────────────────────────────────────────────────────────────────────────────────────────────────┤
-│ Modo: Manual  •  Libro: El viajero  •  Cap: 03  •  Ln 12, Col 1  •  Autoguardado: activo (cada 10 s) │
-└───────────────────────────────────────────────────────────────────────────────────────────────────────┘
++---------------------------------------------------------------+
+| liriac — Library                                              |
+|                                                               |
+| Books                               Chapters (selected book)   |
+| ┌───────────────────────────────┐   ┌────────────────────────┐ |
+| │ ▶ El viajero                  │   │ ▶ Cap 01: La salida    │ |
+| │   La ciudad invisible         │   │   Cap 02: El mapa      │ |
+| │   Bosque de vidrio            │   │   Cap 03: El puerto    │ |
+| └───────────────────────────────┘   └────────────────────────┘ |
+|                                                               |
+| Details: Created 2024‑09‑01 • Chapters: 27 • Last opened: Cap 03 |
++---------------------------------------------------------------+
+Actions: [Enter] Open chapter • [N] New book • [C] New chapter • [Esc] Exit
 ```
 
-### Modo sugerencia (Prompt y streaming)
-```
-┌─ liriac — Libro: "El viajero" — Capítulo 03: "El puerto" ─────────────────────────────────────────────┐
-│                                                                                                       │
-│  El muelle olía a sal y a madera húmeda.                                                              │
-│  Las gaviotas trazaban círculos perezosos sobre el agua plana, y las sogas crujían con cada balanceo. │
-│                                                                                                       │
-│  Camila ajustó el cuaderno contra el pecho y respiró hondo antes de dar el primer paso.               │
-│  > La brisa le trajo un susurro distante, como si el océano                                           │
-│  > le hubiese guardado un secreto demasiado tiempo.                                                   │
-│                                                                                                       │
-├───────────────────────────────────────────────────────────────────────────────────────────────────────┤
-│ Prompt: "Continúa con tensión creciente y un detalle sensorial"                                       │
-│ Generando... 128 tokens [Esc x 2] Detener      Sugerencias 1/2  ← →                                   │
-│ [a] Aceptar   [r] Regenerar   [c] Cancelar     [Shift+Tab] Alternar modo  [F10] Contexto              │
-└───────────────────────────────────────────────────────────────────────────────────────────────────────┘
-```
-Nota:
-- El texto sugerido por IA se visualiza con color ligeramente distinto al original. Al aceptar, se integra al capítulo y pierde el color diferenciado.
+Cards and lists reuse Tailwind component patterns. Keyboard shortcuts are captured at the route level and routed through a custom hook to keep focus states synchronized.
 
-### Gestión de contexto (Personajes y capítulos)
+### Editor (Manual Mode)
 ```
-┌─ Contexto de IA - Libro: "El viajero" — Capítulo 03: "El puerto"──────────────────────────────────────┐
-│                                                                                                       │
-│ Personajes (Espacio: activar/desactivar)                    Capítulos incluidos (Espacio: alternar)   │
-│ ┌───────────────────────────────────────────────────────┐   ┌───────────────────────────────────────┐ │
-│ │ [x] Camila (protagonista)                             │   │ [x] Cap 01: La salida                 │ │
-│ │ [x] Tomás (hermano)                                   │   │ [x] Cap 02: El mapa                   │ │
-│ │ [ ] Silvia (antagonista)                              │   │ [x] Cap 03: El puerto                 │ │
-│ │ [ ] Capitán Herrera                                   │   │ [ ] Cap 04: La tormenta               │ │
-│ │ [x] Gaviotas (ambiente)                               │   │ [ ] Cap 05: El faro                   │ │
-│ └───────────────────────────────────────────────────────┘   └───────────────────────────────────────┘ │
-│                                                                                                       │
-│ System prompt: 2.2k Tokens estimados: 3.1k  • Límite: 8k                                              │
-├───────────────────────────────────────────────────────────────────────────────────────────────────────┤
-│ [Enter] Guardar cambios   [Esc] Cerrar   [Tab] Cambiar panel                                          │
-└───────────────────────────────────────────────────────────────────────────────────────────────────────┘
-```
-Nota:
-- La configuración del contexto se guarda a nivel de capítulo
-
-### Indicadores de autoguardado (al aceptar sugerencias o haber escrito nuevo texto en los últimos 10seg)
-```
-┌───────────────────────────────────────────────────────────────────────────────────────────────────────┐
-│ Modo: Sugerencia • Autoguardado: guardando...                                                         │
-└───────────────────────────────────────────────────────────────────────────────────────────────────────┘
++---------------------------------------------------------------+
+| liriac — Book: "El viajero" — Chapter 03: "El puerto"         |
+|                                                               |
+|  The pier smelled of salt and damp wood.                      |
+|  Gulls carved lazy circles above the flat water while ropes   |
+|  creaked with every swell.                                    |
+|                                                               |
+|  Camila pressed the notebook to her chest and exhaled deeply. |
+|  She expected no answers, only the murmur of the sea and the  |
+|  thud of her boots.                                           |
+|                                                               |
+|  …                                                            |
+|                                                               |
++---------------------------------------------------------------+
+Footer: Mode: Manual • Book: El viajero • Chapter: 03 • Ln 12, Col 1 • Autosave: active (every 10s)
 ```
 
-### Indicadores de autoguardado desaparece después de autoguardado completo
+A sticky footer shows live status: autosave, suggestion progress, context summary. Tailwind variants adapt spacing and font size between desktop and tablet breakpoints.
+
+### Suggestion Mode (Prompt + Streaming)
 ```
-┌───────────────────────────────────────────────────────────────────────────────────────────────────────┐
-│ Modo: Sugerencia                                                                                      │
-└───────────────────────────────────────────────────────────────────────────────────────────────────────┘
++---------------------------------------------------------------+
+| liriac — Book: "El viajero" — Chapter 03                      |
+|                                                               |
+|  The pier smelled of salt and damp wood.                      |
+|  …                                                            |
+|  > The breeze carried a distant whisper, as if the ocean      |
+|  > had guarded a secret for too long.                         |
+|                                                               |
++---------------------------------------------------------------+
+Prompt: “Raise tension and add a sensory detail”
+Generating… 128 tokens [Esc x 2] Stop     Suggestions 1/2 ← →
+Actions: [A] Accept • [R] Regenerate • [C] Cancel • [Shift+Tab] Toggle mode • [F10] Context
 ```
+
+Suggestion text uses Tailwind color utilities to distinguish AI output. Accepting triggers autosave and logs the event through `/api/v1/suggestions/{id}/accept/`.
+
+### Context Management Modal
+```
++---------------------------------------------------------------+
+| Context — Book: "El viajero" — Chapter 03                     |
+|                                                               |
+| Personas (Space toggles)            Chapters included         |
+| ┌────────────────────────────┐      ┌───────────────────────┐ |
+| │ [x] Camila (protagonist)   │      │ [x] Cap 01: La salida │ |
+| │ [x] Tomás (brother)        │      │ [x] Cap 02: El mapa   │ |
+| │ [ ] Silvia (antagonist)    │      │ [x] Cap 03: El puerto │ |
+| │ [ ] Captain Herrera        │      │ [ ] Cap 04: La tormenta │
+| └────────────────────────────┘      └───────────────────────┘ |
+| System prompt tokens: 2.2k • Estimate: 3.1k • Limit: 8k         |
++---------------------------------------------------------------+
+Actions: [Enter] Save • [Esc] Close • [Tab] Switch panel
+```
+
+Changes sync immediately with the API; conflict responses (e.g., exceeding limits) display inline validation messages.
+
+### Autosave Indicators
+```
+Mode: Suggestion • Autosave: saving…
+Mode: Suggestion
+```
+Indicators animate using Tailwind transitions and fade once the backend confirms persistence.
+
+## Backend Overview
+The backend is a Django 5 project using SQLite for structured data; chapter bodies are stored inline as text; no external object storage. REST endpoints are built with Django REST Framework; streaming updates use Django Channels over WebSockets. Key components:
+
+- `apps.library`: models for books, chapters, personas, context profiles.
+- `apps.suggestions`: AI session orchestration, streaming consumers, audit log.
+- `apps.autosave`: idempotent autosave service, checksum verification, snapshot policy.
+- `apps.users`: authentication (JWT or session) with permissions per book.
+- Shared utilities for content hashing, token estimation, and structured logging.
+
+All responses are JSON; errors follow RFC 7807 problem details.
+
+## API Surface (draft)
+- `GET /api/v1/books/` — list books (filters, pagination).
+- `POST /api/v1/books/` — create book.
+- `GET /api/v1/books/{book_id}/chapters/` — list chapters with metadata.
+- `GET /api/v1/chapters/{chapter_id}/` — fetch chapter content.
+- `POST /api/v1/chapters/{chapter_id}/autosave/` — idempotent save with checksum.
+- `POST /api/v1/chapters/{chapter_id}/suggestions/` — start suggestion session (returns session id + ws url).
+- `POST /api/v1/suggestions/{suggestion_id}/accept/` — accept suggestion.
+- `POST /api/v1/suggestions/{suggestion_id}/reject/` — reject suggestion.
+- `PATCH /api/v1/context/personas/` — update persona toggles.
+- `PATCH /api/v1/context/chapters/` — update included chapters.
+- `GET /api/v1/context/estimates/` — token estimation preview.
+
+WebSocket: `ws://…/ws/suggestions/{session_id}/` streams events shaped as `{ "type": "delta" | "usage" | "done" | "error", ... }`.
+
+## Data Model Highlights
+- `Book`: title, slug, created_at, last_opened, relations to chapters and personas.
+- `Chapter`: order index, title, storage path, content hash, updated_at.
+- `Persona`: name, role, notes, enabled flag (per chapter association via through table).
+- `Suggestion`: session id, chapter foreign key, status (`pending`, `accepted`, `rejected`), payload (delta log).
+- `SuggestionEvent`: timestamped deltas for audit.
+- `ContextProfile`: per chapter selection of personas/chapters, token estimates, system prompt reference.
+
+Autosave snapshots live in `.liriac/versions/` and only persist when diffs exceed 100 characters; writes happen via atomic `os.replace`.
+
+## Security & Observability
+- Authentication: JWT (access + refresh) or signed session cookies. CSRF protection for unsafe requests if using sessions.
+- Authorization: per-book ACLs enforced on every API call and WebSocket handshake.
+- Logging: structured JSON with log levels; secrets redacted. Suggestion streams emit timing metrics for monitoring.
+- Metrics: optional Prometheus exporter plus application-level counters persisted locally for analytics.
+- Error handling: consistent problem-detail responses, with frontend mapping to user-friendly toasts.
+
+## Testing Strategy
+- Frontend: Vitest + React Testing Library for components, Playwright for end-to-end flows (full stack against dev servers).
+- Backend: pytest + DRF test utilities for REST, Channels tests for streaming, contract tests verifying payload schemas.
+- Shared contracts: OpenAPI schema generated by DRF Spectacular feeds `openapi-typescript` to keep TypeScript DTOs in sync.
+- CI pipeline: lint (ESLint, ruff), format (Prettier, black), type check (tsc --noEmit, mypy), unit tests, integration tests.
+
+This draft anchors the React + Django implementation while preserving the product intent: a web-based writing environment with AI-assisted suggestions, granular context control, and resilient autosave.
