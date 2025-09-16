@@ -1,13 +1,12 @@
-from __future__ import annotations
-
 """In-memory history for per-chapter suggestions.
 
 Keeps a bounded list of recent suggestions per ChapterRef.
 """
 
+from __future__ import annotations
+
 from collections import defaultdict, deque
 from dataclasses import dataclass, field
-from typing import Deque, Dict, Tuple
 
 from ...domain.entities.suggestion import Suggestion
 from ...domain.value_objects import ChapterRef
@@ -21,7 +20,7 @@ class SuggestionsHistory:
     """
 
     max_per_chapter: int = 10
-    _by_ref: Dict[ChapterRef, Deque[Suggestion]] = field(init=False, repr=False)
+    _by_ref: dict[ChapterRef, deque[Suggestion]] = field(init=False, repr=False)
 
     def __post_init__(self) -> None:
         if self.max_per_chapter <= 0:
@@ -32,7 +31,7 @@ class SuggestionsHistory:
     def add(self, ref: ChapterRef, suggestion: Suggestion) -> None:
         self._by_ref[ref].append(suggestion)
 
-    def get(self, ref: ChapterRef) -> Tuple[Suggestion, ...]:
+    def get(self, ref: ChapterRef) -> tuple[Suggestion, ...]:
         return tuple(self._by_ref.get(ref, ()))
 
     def clear(self, ref: ChapterRef) -> None:

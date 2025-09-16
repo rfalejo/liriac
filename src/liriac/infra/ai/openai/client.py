@@ -1,7 +1,7 @@
 from __future__ import annotations
 
+from collections.abc import AsyncIterator
 from dataclasses import dataclass
-from typing import AsyncIterator, Optional
 
 import anyio
 import httpx
@@ -27,7 +27,7 @@ class OpenAIProvider(AIProvider):
         *,
         prompt: str,
         settings: AISettings,
-        context: Optional[ContextProfile] = None,
+        context: ContextProfile | None = None,
     ) -> AsyncIterator[StreamEvent]:
         return self._stream_impl(prompt=prompt, settings=settings, context=context)
 
@@ -36,7 +36,7 @@ class OpenAIProvider(AIProvider):
         *,
         prompt: str,
         settings: AISettings,
-        context: Optional[ContextProfile],
+        context: ContextProfile | None,
     ) -> AsyncIterator[StreamEvent]:
         # Resolve effective parameters
         model = settings.model or self._settings.openai_model
@@ -152,7 +152,7 @@ class OpenAIProvider(AIProvider):
                 return
 
     def _build_messages(
-        self, *, prompt: str, context: Optional[ContextProfile]
+        self, *, prompt: str, context: ContextProfile | None
     ) -> list[dict[str, str]]:
         system = (context.system_prompt if context else "").strip()
         messages: list[dict[str, str]] = []

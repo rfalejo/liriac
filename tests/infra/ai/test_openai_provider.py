@@ -1,14 +1,15 @@
 from __future__ import annotations
 
 import json
-from typing import AsyncIterator, Union, Dict, Any
+from collections.abc import AsyncIterator
+from typing import Any
 
 import anyio
 import httpx
 import pytest
 import respx
 
-from liriac.domain.types import AISettings, ContextProfile, StreamEvent
+from liriac.domain.types import AISettings, StreamEvent
 from liriac.infra.ai.openai.client import OpenAIProvider
 from liriac.infra.config.settings import AppSettings
 
@@ -20,7 +21,7 @@ async def test_import_provider() -> None:
     assert _O is not None
 
 
-def _sse(data: Union[Dict[str, Any], str]) -> bytes:
+def _sse(data: dict[str, Any] | str) -> bytes:
     if isinstance(data, str):
         payload = data
     else:

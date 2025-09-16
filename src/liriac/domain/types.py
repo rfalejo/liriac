@@ -6,13 +6,19 @@ Defines strongly typed identifiers and enumerations for the domain layer.
 from __future__ import annotations
 
 from dataclasses import dataclass
-from typing import Literal, NewType
+from typing import TYPE_CHECKING, Literal, NewType
+
+if TYPE_CHECKING:
+    from .value_objects import ChapterRef
 
 # Entity identifiers
 BookId = NewType("BookId", str)
 ChapterId = NewType("ChapterId", str)
 PersonaId = NewType("PersonaId", str)
 SuggestionId = NewType("SuggestionId", str)
+
+# Reference types for context management
+PersonaRef = NewType("PersonaRef", str)
 
 # Suggestion status
 SuggestionStatus = Literal["pending", "accepted", "rejected"]
@@ -64,7 +70,9 @@ class StreamEvent:
 class ContextProfile:
     """Context to guide AI generation (selected chapters/personas, system prompt)."""
 
-    system_prompt: str = ""
+    chapters: tuple[ChapterRef, ...]
+    personas: tuple[PersonaRef, ...]
+    system_prompt: str
 
 
 __all__ = [
@@ -72,6 +80,7 @@ __all__ = [
     "ChapterId",
     "PersonaId",
     "SuggestionId",
+    "PersonaRef",
     "SuggestionStatus",
     "SuggestionSource",
     # AI types

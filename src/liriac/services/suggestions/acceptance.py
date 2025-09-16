@@ -1,9 +1,8 @@
 from __future__ import annotations
 
-from dataclasses import dataclass
-from datetime import datetime, timezone
-from pathlib import Path
 import os
+from datetime import UTC, datetime
+from pathlib import Path
 
 from ...domain.entities.suggestion import Suggestion
 from ...domain.value_objects import ChapterRef
@@ -43,7 +42,7 @@ def write_log(base_dir: Path, ref: ChapterRef, suggestion: Suggestion, now: date
     target_dir = book_dir / ".liriac" / "suggestions"
     target_dir.mkdir(parents=True, exist_ok=True)
 
-    ts = now.astimezone(timezone.utc).strftime("%Y-%m-%dT%H-%M-%SZ")
+    ts = now.astimezone(UTC).strftime("%Y-%m-%dT%H-%M-%SZ")
     filename = f"{ts}-{_safe_stem(ref)}.md"
     final_path = target_dir / filename
     tmp_path = final_path.with_suffix(".tmp")

@@ -1,15 +1,14 @@
 from __future__ import annotations
 
-from datetime import datetime, timezone
+from collections.abc import AsyncIterator
+from datetime import UTC, datetime
 from pathlib import Path, PurePosixPath
-from typing import AsyncIterator, Optional
 
 import pytest
 
 from liriac.domain.ports import AIProvider
-from liriac.domain.types import AISettings, ContextProfile, StreamEvent
+from liriac.domain.types import AISettings, BookId, ContextProfile, StreamEvent
 from liriac.domain.value_objects import ChapterRef
-from liriac.domain.types import BookId
 from liriac.services import (
     SuggestionsHistory,
     SuggestionsService,
@@ -23,7 +22,7 @@ class FakeAIProvider(AIProvider):
         *,
         prompt: str,
         settings: AISettings,
-        context: Optional[ContextProfile] = None,
+        context: ContextProfile | None = None,
     ) -> AsyncIterator[StreamEvent]:
         async def gen() -> AsyncIterator[StreamEvent]:
             yield StreamEvent(delta="Hello ")
@@ -99,16 +98,16 @@ def test_merge_text_exact_spacing() -> None:
 
 def test_accept_and_logging(tmp_path: Path, chapter_ref: ChapterRef) -> None:
     # Build history with one suggestion
-    from liriac.services.suggestions.history import SuggestionsHistory
     from liriac.domain.entities.suggestion import Suggestion
     from liriac.domain.types import SuggestionId
+    from liriac.services.suggestions.history import SuggestionsHistory
 
     hist = SuggestionsHistory()
     suggestion = Suggestion(
         id=SuggestionId("s1"),
         text="Accepted text",
         source="ai",
-        created_at=datetime.now(timezone.utc),
+        created_at=datetime.now(UTC),
         status="pending",
     )
     hist.add(chapter_ref, suggestion)
@@ -146,21 +145,21 @@ def test_history_window() -> None:
         id=SuggestionId("1"),
         text="a",
         source="ai",
-        created_at=datetime.now(timezone.utc),
+        created_at=datetime.now(UTC),
         status="pending",
     )
     s2 = Suggestion(
         id=SuggestionId("2"),
         text="b",
         source="ai",
-        created_at=datetime.now(timezone.utc),
+        created_at=datetime.now(UTC),
         status="pending",
     )
     s3 = Suggestion(
         id=SuggestionId("3"),
         text="c",
         source="ai",
-        created_at=datetime.now(timezone.utc),
+        created_at=datetime.now(UTC),
         status="pending",
     )
 

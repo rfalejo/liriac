@@ -4,7 +4,7 @@ Orchestration and use case implementations that coordinate between
 domain entities and infrastructure adapters.
 """
 
-from .suggestions import SuggestionsService, SuggestionsHistory, merge_text, write_log
+from .suggestions import SuggestionsHistory, SuggestionsService, merge_text, write_log
 
 __all__ = [
     "SuggestionsService",

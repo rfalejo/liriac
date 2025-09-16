@@ -4,9 +4,9 @@ Provides orchestration for AI-generated suggestions including streaming,
 regeneration, acceptance, and logging utilities.
 """
 
-from .orchestrator import SuggestionsService
-from .history import SuggestionsHistory
 from .acceptance import merge_text, write_log
+from .history import SuggestionsHistory
+from .orchestrator import SuggestionsService
 
 __all__ = [
     "SuggestionsService",

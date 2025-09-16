@@ -1,17 +1,16 @@
 from __future__ import annotations
 
-from dataclasses import dataclass
-from datetime import datetime, timezone
-from pathlib import Path
-from typing import AsyncIterator, Optional
 import uuid
+from collections.abc import AsyncIterator
+from datetime import UTC, datetime
+from pathlib import Path
 
 from ...domain.entities.suggestion import Suggestion
 from ...domain.ports import AIProvider
 from ...domain.types import AISettings, ContextProfile, StreamEvent, SuggestionId
 from ...domain.value_objects import ChapterRef
-from .history import SuggestionsHistory
 from .acceptance import merge_text, write_log
+from .history import SuggestionsHistory
 
 
 class SuggestionsService:
@@ -25,7 +24,7 @@ class SuggestionsService:
         provider: AIProvider,
         *,
         base_dir: Path,
-        history: Optional[SuggestionsHistory] = None,
+        history: SuggestionsHistory | None = None,
     ) -> None:
         self._provider = provider
         self._history = history or SuggestionsHistory()
@@ -36,7 +35,7 @@ class SuggestionsService:
         *,
         prompt: str,
         settings: AISettings,
-        context: Optional[ContextProfile],
+        context: ContextProfile | None,
         ref: ChapterRef,
     ) -> AsyncIterator[StreamEvent]:
         """Stream suggestion deltas and record the final suggestion in history.
@@ -57,7 +56,7 @@ class SuggestionsService:
                         id=SuggestionId(str(uuid.uuid4())),
                         text=text,
                         source="ai",
-                        created_at=datetime.now(timezone.utc),
+                        created_at=datetime.now(UTC),
                         status="pending",
                     )
                     self._history.add(ref, sug)
@@ -85,5 +84,5 @@ class SuggestionsService:
 
         suggestion = history[index]
         merged = merge_text(base_text, suggestion.text)
-        write_log(self._base_dir, ref, suggestion, datetime.now(timezone.utc))
+        write_log(self._base_dir, ref, suggestion, datetime.now(UTC))
         return merged

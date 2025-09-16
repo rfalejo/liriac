@@ -6,12 +6,13 @@ These protocols enable clean architecture by separating contracts from implement
 
 from __future__ import annotations
 
+from collections.abc import AsyncIterator
 from pathlib import Path
-from typing import AsyncIterator, Protocol
+from typing import Protocol
 
 from .entities.book import Book
 from .entities.chapter import Chapter
-from .types import AISettings, ContextProfile, StreamEvent, BookId
+from .types import AISettings, BookId, ContextProfile, StreamEvent
 from .value_objects import ChapterRef
 
 
