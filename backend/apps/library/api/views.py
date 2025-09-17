@@ -2,16 +2,19 @@ from __future__ import annotations
 
 from typing import Any
 
-from django.db.models import QuerySet
+from django.core.exceptions import ValidationError
 from django.shortcuts import get_object_or_404
-from rest_framework import mixins, viewsets, status
-from rest_framework.views import APIView
+from rest_framework import mixins, status, viewsets
+from rest_framework.filters import OrderingFilter, SearchFilter
 from rest_framework.request import Request
 from rest_framework.response import Response
-from rest_framework.filters import SearchFilter, OrderingFilter
+from rest_framework.views import APIView
+
+from apps.autosave.services.autosave import AutosaveService
 
 from ..models import Book, Chapter, Persona
 from .serializers import (
+    AutosaveSerializer,
     BookSerializer,
     ChapterCreateSerializer,
     ChapterDetailSerializer,
@@ -45,7 +48,7 @@ class BookChapterListCreateAPIView(APIView):
     def get(self, request: Request, book_pk: int, *args: Any, **kwargs: Any) -> Response:  # noqa: D401
         qs = Chapter.objects.filter(book_id=book_pk).order_by("order")
         # Manual pagination using DRF paginator
-        paginator = viewsets.GenericViewSet().paginator  # type: ignore[attr-defined]
+        paginator = viewsets.GenericViewSet().paginator
         # Fallback if paginator not configured
         if paginator is not None:  # pragma: no branch - simple guard
             page = paginator.paginate_queryset(qs, request)
@@ -75,3 +78,25 @@ class PersonaViewSet(
     filter_backends = [SearchFilter, OrderingFilter]
     search_fields = ["name", "role"]
     ordering_fields = ["name"]
+
+
+class ChapterAutosaveAPIView(APIView):
+    """POST /api/v1/chapters/<id>/autosave/"""
+
+    def post(self, request: Request, id: int, *args: Any, **kwargs: Any) -> Response:  # noqa: D401
+        chapter = get_object_or_404(Chapter, pk=id)
+        serializer = AutosaveSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        data = serializer.validated_data
+        try:
+            result = AutosaveService.autosave(
+                chapter_id=chapter.id,
+                body=data["body"],
+                checksum=data["checksum"],
+            )
+        except ValidationError as exc:
+            return Response(exc.message_dict, status=status.HTTP_400_BAD_REQUEST)
+        return Response(
+            {"saved": result.saved, "checksum": result.checksum, "saved_at": result.saved_at},
+            status=status.HTTP_200_OK,
+        )

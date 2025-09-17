@@ -1,11 +1,12 @@
 from __future__ import annotations
 
+import re
 from typing import Any
 
 from django.utils.text import slugify
 from rest_framework import serializers
 
-from ..models import Book, Chapter, Persona, HEX_CHECKSUM_RE
+from ..models import HEX_CHECKSUM_RE, Book, Chapter, Persona
 
 
 class BookSerializer(serializers.ModelSerializer[Book]):
@@ -26,7 +27,8 @@ class ChapterListSerializer(serializers.ModelSerializer[Chapter]):
 
 
 class ChapterDetailSerializer(serializers.ModelSerializer[Chapter]):
-    book = serializers.PrimaryKeyRelatedField(read_only=True)
+    # Explicit annotation for mypy without generics (DRF field not subscriptable by default types)
+    book: serializers.PrimaryKeyRelatedField = serializers.PrimaryKeyRelatedField(read_only=True)  # type: ignore[type-arg]
 
     class Meta:
         model = Chapter
@@ -75,3 +77,17 @@ class PersonaSerializer(serializers.ModelSerializer[Persona]):
 
     def validate_name(self, value: str) -> str:  # noqa: D401
         return value.strip()
+
+
+class AutosaveSerializer(serializers.Serializer):  # type: ignore[type-arg]
+    body = serializers.CharField(allow_blank=True)
+    checksum = serializers.CharField(max_length=64)
+
+    def validate_checksum(self, value: str) -> str:  # noqa: D401
+        if not re.match(HEX_CHECKSUM_RE, value):
+            raise serializers.ValidationError("Invalid checksum format")
+        return value
+
+    def validate(self, attrs: dict[str, Any]) -> dict[str, Any]:  # noqa: D401
+        # Body/checksum consistency will be re-validated in service; keep lightweight here.
+        return attrs

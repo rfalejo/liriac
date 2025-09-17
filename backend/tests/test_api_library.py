@@ -3,7 +3,6 @@ from __future__ import annotations
 import hashlib
 
 import pytest
-from django.urls import reverse
 from rest_framework.test import APIClient
 
 from apps.library.models import Book, Chapter, Persona
