@@ -46,6 +46,9 @@ INSTALLED_APPS = [
     # Local apps
     'apps.health',
     'apps.echo',
+    'apps.library',
+    'apps.suggestions',
+    'apps.autosave',
 ]
 
 MIDDLEWARE = [
