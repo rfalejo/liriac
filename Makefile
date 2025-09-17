@@ -61,6 +61,9 @@ schema: ## Generate OpenAPI schema (DRF Spectacular)
 fmt: ## Auto-format: ruff --fix + black (backend)
 	cd $(BACKEND_DIR) && $(UV) run ruff check --fix . && $(UV) run black .
 
+.PHONY: format
+format: fmt fe-fmt ## Format backend (ruff+black) and frontend (Prettier)
+
 .PHONY: lint
 lint: ## Lint backend only (no changes)
 	cd $(BACKEND_DIR) && $(UV) run ruff check . && $(UV) run black --check .
@@ -108,6 +111,10 @@ fe-test: ## Test frontend (Vitest)
 fe-typecheck: ## Type-check frontend (tsc --noEmit)
 	cd $(FRONTEND_DIR) && $(PNPM) run typecheck
 
+.PHONY: fe-fmt
+fe-fmt: ## Format frontend (Prettier)
+	cd $(FRONTEND_DIR) && $(PNPM) run format
+
 .PHONY: fe-typegen
 fe-typegen: schema ## Generate frontend TS types from OpenAPI schema
 	cd $(FRONTEND_DIR) && $(PNPM) dlx openapi-typescript ../$(BACKEND_DIR)/schema.yaml -o src/api/types.ts
@@ -122,6 +129,7 @@ dev: ## Run backend and frontend dev servers together
 
 .PHONY: check
 check: ## Lint + typecheck + tests for frontend and backend
+	$(MAKE) format
 	$(MAKE) fe-lint
 	$(MAKE) fe-typecheck
 	$(MAKE) fe-test

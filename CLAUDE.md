@@ -4,135 +4,138 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-Liriac is a web-based writing environment for authoring books with AI assistance. It consists of:
-- **Frontend**: React + TypeScript SPA with Vite, Tailwind CSS, and modern tooling
-- **Backend**: Django REST Framework with WebSocket support via Django Channels
-- **Architecture**: Local-only development tool with streaming AI suggestions and autosave functionality
+Liriac is a Linux TUI application for writing books with streaming AI assistance. The project consists of a Django + DRF backend with WebSocket support and a React + TypeScript frontend.
 
 ## Development Environment
 
 ### Prerequisites
-- Python 3.12+ with UV package manager
-- Node.js 20+ with pnpm (or npm)
-- SQLite (built-in)
+- Python 3.12+
+- Node.js 20+
+- pnpm 8+ (or npm)
+- uv (Python package manager)
 
-### Setup
+### Initial Setup
 ```bash
-# Install backend dependencies
-cd backend && uv sync --all-extras
-
-# Install frontend dependencies
+# Install dependencies
+uv sync --all-extras
 cd frontend && pnpm install
 ```
 
-## Common Commands
+## Common Development Commands
 
 ### Backend (Django)
 ```bash
-# Development server
-make run                    # Start Django dev server
-make migrate               # Run migrations
-make makemigrations        # Create migrations
-make shell                 # Django shell
-make createsuperuser       # Create superuser
-
-# Code quality
-make fmt                   # Format code (ruff + black)
-make lint                  # Lint code
-make typecheck             # Type check with mypy
-make test                  # Run tests
-make cov                   # Tests with coverage
-
-# Build and deployment
-make build                 # Build wheel/sdist
-make schema                # Generate OpenAPI schema
+make run              # Run Django development server
+make migrate          # Run Django migrations
+make makemigrations   # Create Django migrations
+make shell           # Open Django shell
+make createsuperuser # Create Django superuser
+make schema          # Generate OpenAPI schema
 ```
 
-### Frontend (React)
+### Frontend (React + TypeScript)
 ```bash
-# Development
-make fe-dev                # Start Vite dev server
-make fe-build              # Build for production
-
-# Code quality
-make fe-lint               # ESLint
-make fe-typecheck          # TypeScript check
-make fe-test               # Vitest tests
-
-# Type generation
-make fe-typegen            # Generate TS types from OpenAPI schema
+make fe-setup        # Install frontend dependencies
+make fe-dev          # Run frontend dev server
+make fe-build        # Build frontend for production
+make fe-fmt          # Format frontend code with Prettier
 ```
 
-### Combined Workflows
+### Code Quality
 ```bash
-make dev                   # Run both frontend and backend dev servers
-make check                 # Full CI pipeline (lint + typecheck + tests)
-make clean                 # Remove caches and build artifacts
+make fmt             # Format code (ruff + black)
+make lint            # Lint code (no changes)
+make typecheck       # Type check (mypy + tsc)
+make test            # Run tests
+make check           # Full CI pipeline (lint + typecheck + tests)
+pnpm -C frontend format       # (Alt) run Prettier write in frontend
+pnpm -C frontend format:check # (Alt) check formatting without writing
 ```
 
-## Architecture Overview
+## Project Architecture
 
-### Project Structure
-```
-liriac/
-├── frontend/              # React SPA
-│   ├── src/
-│   │   ├── app/           # Entry point and routing
-│   │   ├── components/    # Reusable components
-│   │   ├── api/           # API clients and types
-│   │   └── styles/        # Global styles
-│   └── package.json
-├── backend/               # Django backend
-│   ├── apps/              # Django apps
-│   │   ├── echo/          # WebSocket echo functionality
-│   │   └── health/        # Health check endpoints
-│   ├── liriac/            # Django project settings
-│   └── manage.py
-└── docs/                  # Technical documentation
-```
+### Backend Structure
+- **Django 5.2** with **Django REST Framework** for REST API
+- **Django Channels** for WebSocket support
+- **SQLite** database (no external dependencies)
+- **DRF Spectacular** for OpenAPI schema generation
 
-### Key Technologies
-- **Frontend**: React 19, TypeScript, Vite, Tailwind CSS, Vitest
-- **Backend**: Django 5, Django REST Framework, Django Channels, pytest
-- **Communication**: REST API + WebSockets for streaming
-- **Database**: SQLite (no external dependencies)
-- **Type Safety**: Strict TypeScript, mypy --strict, shared OpenAPI schema
+Key directories:
+- `backend/apps/` - Django applications (health, echo, etc.)
+- `backend/liriac/` - Django project configuration
+- `backend/tests/` - Backend tests
 
-### API Design
-- REST endpoints under `/api/v1/`
-- WebSocket namespace `/ws/` for streaming AI suggestions
-- OpenAPI schema generated via DRF Spectacular
-- No authentication required (local-only development)
+### Frontend Structure
+- **React 19.1.1** with **TypeScript**
+- **Vite** for build tooling
+- **Tailwind CSS** for styling
+- **Vitest** + Testing Library for testing
 
-### Core Features
-1. **Book Management**: CRUD operations for books and chapters
-2. **AI Suggestions**: Streaming AI assistance via WebSockets
-3. **Autosave**: Automatic saving with checksum deduplication
-4. **Context Management**: Persona and chapter selection for AI context
+Key directories:
+- `frontend/src/` - React components and application code
+- `frontend/public/` - Static assets
+
+### Key Integration Points
+- REST API endpoints under `/api/v1/`
+- WebSocket endpoints under `/ws/`
+- OpenAPI schema generated at `backend/schema.yaml`
+- Frontend types generated from OpenAPI schema
+
+## Code Style and Conventions
+
+### Python (Backend)
+- **Line length**: 88 characters (ruff + black)
+- **Type checking**: `mypy --strict`
+- **Formatting**: ruff + black
+- **Linting**: ruff with E, W, F, I, B, C4, UP rules
+- **Testing**: pytest with Django support
+
+### TypeScript (Frontend)
+- **Type checking**: strict TypeScript (`tsc --noEmit`)
+- **Formatting**: ESLint + Prettier
+- **Linting**: ESLint with React-specific rules
+- **Testing**: Vitest + Testing Library
 
 ## Development Workflow
 
-### Code Quality Standards
-- **Backend**: ruff for linting, black for formatting, mypy --strict for type checking
-- **Frontend**: ESLint, TypeScript strict mode, Prettier (if configured)
-- **Testing**: pytest for backend, Vitest for frontend
-- **Commits**: Conventional commits encouraged
+### Making Changes
+1. Create feature branch from main
+2. Implement changes following the architecture patterns
+3. Update tests
+4. Run `make check` to ensure all quality checks pass
+5. Commit with descriptive message
 
-### Type Safety
-- Backend uses `mypy --strict` with comprehensive type annotations
-- Frontend uses strict TypeScript with no implicit any
-- Shared types generated from OpenAPI schema via `make fe-typegen`
+### API Changes
+1. Update Django models/views
+2. Regenerate OpenAPI schema: `make schema`
+3. Generate frontend types: `make fe-typegen`
+4. Update frontend API client if needed
 
 ### Testing
-- Backend: pytest with Django test runner, factory-boy for fixtures
-- Frontend: Vitest with Testing Library for component tests
-- Integration: End-to-end tests can be added with Playwright
+- Backend: `make test` (pytest)
+- Frontend: `make fe-test` (Vitest)
+- Combined: `make check`
+
+## Architecture Principles
+
+- **Strong typing**: Strict TypeScript on frontend, `mypy --strict` on Python
+- **Modular boundaries**: SPA handles presentation only, Django exposes validated use cases
+- **Streaming-first**: AI suggestions arrive incrementally over WebSockets
+- **Idempotent persistence**: Autosave endpoints deduplicate writes via content hashes
+- **Accessibility & performance**: Keyboard-first workflows, Tailwind utility styling
+- **Observability**: Structured JSON logs, per-request tracing
+
+## Current Implementation Status
+
+The project is in early development with:
+- Basic Django backend setup with health check and echo endpoints
+- WebSocket support via Django Channels
+- React frontend with TypeScript and Tailwind CSS
+- Build and development tooling configured
 
 ## Important Notes
 
-- This is a **local-only development tool** - not designed for public deployment
-- No authentication or authorization required
-- All data stored in SQLite database
-- WebSocket streaming for real-time AI suggestions
-- Autosave functionality with content hash deduplication
-- Strong typing enforced across the entire stack
+- Local-only development: No authentication required, runs on localhost
+- No external dependencies: SQLite for database, in-memory channel layer
+- Strong typing enforcement across the stack
+- Shared OpenAPI schema for type safety between frontend and backend
