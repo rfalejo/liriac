@@ -20,7 +20,7 @@ Status: Recommended (MVP), Python 3.12+, TypeScript (strict), strongly typed.
 - CI gating: lint, typecheck, and tests must pass before merge.
 - Performance: stream AI output; avoid repeated large string builds; snapshot only if diff ≥ 100 chars.
 - Imports/Naming: stdlib → third-party → local; absolute imports; conventional names; define `__all__` when needed.
-- Lint/Format: backend `ruff --fix` and `black .`; frontend `eslint` and `prettier --write`.
+- Lint/Format: backend `ruff --fix` and `black .`; frontend `eslint` and `prettier --write`; combined `make format`.
 - Type Check: run `mypy --strict` and `tsc --noEmit`; avoid `cast()` unless justified.
 - Tools: use `uv` (env, deps, `uv run`) and `pnpm` (dev, build, test).
 - Makefile: run backend and frontend tasks; includes `fe-*` targets and common `fmt`, `lint`, `typecheck`, `test`, `check`, `build`, `clean`.

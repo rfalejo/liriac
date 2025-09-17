@@ -48,6 +48,8 @@ make lint            # Lint code (no changes)
 make typecheck       # Type check (mypy + tsc)
 make test            # Run tests
 make check           # Full CI pipeline (lint + typecheck + tests)
+make fe-fmt          # Format frontend (Prettier)
+make format          # Format backend + frontend together
 pnpm -C frontend format       # (Alt) run Prettier write in frontend
 pnpm -C frontend format:check # (Alt) check formatting without writing
 ```
