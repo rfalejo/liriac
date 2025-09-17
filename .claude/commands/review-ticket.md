@@ -11,6 +11,7 @@ A junior developer just completed the ticket specified by the ticket ID. Your ta
 Files to consider:
 - @docs/01-technical-spec-en.md
 - @docs/03-conventions.md
+- @Makefile
 
 Ticket file to verify: docs/tickets/$1.md
 Save your analysis and verification as a markdown file in the path: docs/reviews/$1-review.md

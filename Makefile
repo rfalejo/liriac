@@ -4,7 +4,7 @@ SHELL := bash
 
 UV ?= uv
 PYTHON ?= python3.12
-PNPM ?= npm
+PNPM ?= pnpm
 FRONTEND_DIR ?= frontend
 BACKEND_DIR ?= backend
 

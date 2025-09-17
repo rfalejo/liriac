@@ -1,7 +1,8 @@
 """Tests for WebSocket echo consumer."""
 import pytest
-from apps.echo.consumers import EchoConsumer
 from channels.testing import WebsocketCommunicator
+
+from apps.echo.consumers import EchoConsumer
 
 
 @pytest.mark.asyncio
