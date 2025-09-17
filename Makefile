@@ -67,7 +67,7 @@ lint: ## Lint backend only (no changes)
 
 .PHONY: typecheck
 typecheck: ## Type-check backend with mypy --strict
-	cd $(BACKEND_DIR) && $(UV) run mypy --strict . tests
+	cd $(BACKEND_DIR) && $(UV) run mypy --strict .
 
 .PHONY: test
 test: ## Run backend tests (pytest)
@@ -84,6 +84,10 @@ build: ## Build backend wheel/sdist via uv
 # ------------------------
 # Frontend (React + TS + Tailwind)
 # ------------------------
+.PHONY: fe-setup
+fe-setup: ## Install frontend dependencies
+	cd $(FRONTEND_DIR) && $(PNPM) install
+
 .PHONY: fe-dev
 fe-dev: ## Run frontend dev server (Vite)
 	cd $(FRONTEND_DIR) && $(PNPM) run dev $(ARGS)
