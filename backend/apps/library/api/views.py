@@ -1,0 +1,77 @@
+from __future__ import annotations
+
+from typing import Any
+
+from django.db.models import QuerySet
+from django.shortcuts import get_object_or_404
+from rest_framework import mixins, viewsets, status
+from rest_framework.views import APIView
+from rest_framework.request import Request
+from rest_framework.response import Response
+from rest_framework.filters import SearchFilter, OrderingFilter
+
+from ..models import Book, Chapter, Persona
+from .serializers import (
+    BookSerializer,
+    ChapterCreateSerializer,
+    ChapterDetailSerializer,
+    ChapterListSerializer,
+    PersonaSerializer,
+)
+
+
+class BookViewSet(mixins.ListModelMixin, mixins.CreateModelMixin, mixins.RetrieveModelMixin, viewsets.GenericViewSet[Book]):
+    queryset = Book.objects.all().order_by("title")
+    serializer_class = BookSerializer
+    filter_backends = [SearchFilter, OrderingFilter]
+    search_fields = ["title", "slug"]
+    ordering_fields = ["title", "created_at"]
+
+
+class ChapterViewSet(mixins.RetrieveModelMixin, mixins.UpdateModelMixin, viewsets.GenericViewSet[Chapter]):
+    queryset = Chapter.objects.select_related("book").all()
+    serializer_class = ChapterDetailSerializer
+    filter_backends = [SearchFilter, OrderingFilter]
+    search_fields = ["title"]
+    ordering_fields = ["order", "updated_at"]
+
+    def get_serializer_class(self) -> Any:  # noqa: D401
+        return ChapterDetailSerializer
+
+
+class BookChapterListCreateAPIView(APIView):
+    filter_backends = [SearchFilter, OrderingFilter]
+
+    def get(self, request: Request, book_pk: int, *args: Any, **kwargs: Any) -> Response:  # noqa: D401
+        qs = Chapter.objects.filter(book_id=book_pk).order_by("order")
+        # Manual pagination using DRF paginator
+        paginator = viewsets.GenericViewSet().paginator  # type: ignore[attr-defined]
+        # Fallback if paginator not configured
+        if paginator is not None:  # pragma: no branch - simple guard
+            page = paginator.paginate_queryset(qs, request)
+            serializer = ChapterListSerializer(page, many=True)
+            return paginator.get_paginated_response(serializer.data)
+        serializer = ChapterListSerializer(qs, many=True)
+        return Response(serializer.data)
+
+    def post(self, request: Request, book_pk: int, *args: Any, **kwargs: Any) -> Response:  # noqa: D401
+        book = get_object_or_404(Book, pk=book_pk)
+        serializer = ChapterCreateSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        chapter = Chapter.objects.create(book=book, **serializer.validated_data)
+        out = ChapterListSerializer(instance=chapter).data
+        return Response(out, status=status.HTTP_201_CREATED)
+
+
+class PersonaViewSet(
+    mixins.ListModelMixin,
+    mixins.CreateModelMixin,
+    mixins.RetrieveModelMixin,
+    mixins.UpdateModelMixin,
+    viewsets.GenericViewSet[Persona],
+):
+    queryset = Persona.objects.all().order_by("name")
+    serializer_class = PersonaSerializer
+    filter_backends = [SearchFilter, OrderingFilter]
+    search_fields = ["name", "role"]
+    ordering_fields = ["name"]
