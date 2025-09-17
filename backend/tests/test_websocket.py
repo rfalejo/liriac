@@ -6,6 +6,7 @@ from apps.echo.consumers import EchoConsumer
 
 
 @pytest.mark.asyncio
+@pytest.mark.django_db
 class TestEchoConsumer:
     """Test cases for the echo WebSocket consumer."""
 

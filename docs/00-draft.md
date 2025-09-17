@@ -136,6 +136,22 @@ The backend is a Django 5 project using SQLite for structured data; chapter bodi
 
 All responses are JSON; errors follow RFC 7807 problem details.
 
+### Suggestions Streaming (Implemented BL-007)
+`SuggestionsService` orchestrates AI text generation sessions. A session is created for a chapter and emits a normalized async event stream:
+
+```
+delta -> delta -> ... -> usage? -> done | error
+```
+
+Implementation notes:
+- Providers implement `AIProvider.stream(...)` yielding dataclass events (`DeltaEvent`, `UsageEvent`, `DoneEvent`, `ErrorEvent`).
+- The mock provider powers tests; an OpenAI-compatible provider performs SSE parsing with bounded retries.
+- Every event is persisted to `SuggestionEvent`; a synthetic `done` is recorded on cancellation for consistency.
+- Usage token counts are denormalized onto the parent `Suggestion.payload` for quick access.
+- Cancellation is cooperative via a `CancelToken` stored per session; future WebSocket consumer will map client stop requests to `SuggestionsService.cancel(session_id)`.
+
+Planned (next tickets): expose a WebSocket consumer to push these events and REST endpoints to accept/reject suggestions.
+
 ## API Surface (draft)
 - `GET /api/v1/books/` — list books (filters, pagination).
 - `POST /api/v1/books/` — create book.

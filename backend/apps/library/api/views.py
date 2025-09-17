@@ -43,7 +43,7 @@ class ChapterViewSet(mixins.RetrieveModelMixin, mixins.UpdateModelMixin, viewset
         return ChapterDetailSerializer
 
 
-class BookChapterListCreateAPIView(generics.GenericAPIView):
+class BookChapterListCreateAPIView(generics.GenericAPIView[Chapter]):
     filter_backends = [SearchFilter, OrderingFilter]
 
     def get_serializer_class(self) -> Any:  # noqa: D401
