@@ -51,11 +51,14 @@ class BookChapterListCreateAPIView(generics.GenericAPIView[Chapter]):
             return ChapterCreateSerializer
         return ChapterListSerializer
 
+    @extend_schema(
+        operation_id="books_chapters_list",
+        responses={200: ChapterListSerializer(many=True)},
+        tags=["books"],
+    )
     def get(self, request: Request, book_pk: int, *args: Any, **kwargs: Any) -> Response:  # noqa: D401
         qs = Chapter.objects.filter(book_id=book_pk).order_by("order")
-        # Manual pagination using DRF paginator
         paginator = viewsets.GenericViewSet().paginator
-        # Fallback if paginator not configured
         if paginator is not None:  # pragma: no branch - simple guard
             page = paginator.paginate_queryset(qs, request)
             serializer = ChapterListSerializer(page, many=True)
@@ -63,6 +66,12 @@ class BookChapterListCreateAPIView(generics.GenericAPIView[Chapter]):
         serializer = ChapterListSerializer(qs, many=True)
         return Response(serializer.data)
 
+    @extend_schema(
+        operation_id="books_chapters_create",
+        request=ChapterCreateSerializer,
+        responses={201: ChapterListSerializer},
+        tags=["books"],
+    )
     def post(self, request: Request, book_pk: int, *args: Any, **kwargs: Any) -> Response:  # noqa: D401
         book = get_object_or_404(Book, pk=book_pk)
         serializer = ChapterCreateSerializer(data=request.data)

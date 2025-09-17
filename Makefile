@@ -129,6 +129,14 @@ dev: ## Run backend and frontend dev servers together
 
 .PHONY: check
 check: ## Lint + typecheck + tests for frontend and backend
+	# Regenerate schema and TS types first to catch drift early
+	$(MAKE) schema
+	$(MAKE) fe-typegen
+	# Fail if regeneration produced uncommitted changes to contract artifacts
+	@if ! git diff --quiet --exit-code backend/schema.yaml frontend/src/api/types.ts; then \
+		echo "\nSchema/type drift detected. Commit regenerated backend/schema.yaml and frontend/src/api/types.ts"; \
+		exit 1; \
+	fi
 	$(MAKE) format
 	$(MAKE) fe-lint
 	$(MAKE) fe-typecheck
@@ -137,6 +145,15 @@ check: ## Lint + typecheck + tests for frontend and backend
 	$(MAKE) typecheck
 	$(MAKE) test
 	$(MAKE) fe-build
+
+.PHONY: contract-check
+contract-check: schema fe-typegen ## Regenerate schema and types, fail if drift
+	@if ! git diff --quiet --exit-code backend/schema.yaml frontend/src/api/types.ts; then \
+		echo "Schema/type drift detected. Run 'make schema fe-typegen' and commit changes."; \
+		exit 1; \
+	else \
+		echo "Contracts up to date."; \
+	fi
 
 .PHONY: clean
 clean: ## Remove caches and build artifacts

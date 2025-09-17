@@ -68,13 +68,31 @@ paths:
           description: ''
   /api/v1/books/{book_pk}/chapters/:
     get:
-      operationId: books_chapters_retrieve
+      operationId: books_chapters_list
       parameters:
       - in: path
         name: book_pk
         schema:
           type: integer
         required: true
+      - name: ordering
+        required: false
+        in: query
+        description: Which field to use when ordering the results.
+        schema:
+          type: string
+      - name: page
+        required: false
+        in: query
+        description: A page number within the paginated result set.
+        schema:
+          type: integer
+      - name: search
+        required: false
+        in: query
+        description: A search term.
+        schema:
+          type: string
       tags:
       - books
       security:
@@ -86,7 +104,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ChapterList'
+                $ref: '#/components/schemas/PaginatedChapterListList'
           description: ''
     post:
       operationId: books_chapters_create
@@ -115,11 +133,11 @@ paths:
       - basicAuth: []
       - {}
       responses:
-        '200':
+        '201':
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ChapterCreate'
+                $ref: '#/components/schemas/ChapterList'
           description: ''
   /api/v1/books/{id}/:
     get:
@@ -623,6 +641,29 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/Book'
+    PaginatedChapterListList:
+      type: object
+      required:
+      - count
+      - results
+      properties:
+        count:
+          type: integer
+          example: 123
+        next:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?page=4
+        previous:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?page=2
+        results:
+          type: array
+          items:
+            $ref: '#/components/schemas/ChapterList'
     PaginatedPersonaList:
       type: object
       required:
