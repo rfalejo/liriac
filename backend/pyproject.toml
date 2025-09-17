@@ -65,6 +65,13 @@ Homepage = "https://github.com/liriac/liriac"
 Repository = "https://github.com/liriac/liriac.git"
 Issues = "https://github.com/liriac/liriac/issues"
 
+[dependency-groups]
+dev = [
+    "django-stubs>=5.2.5",
+    "djangorestframework-stubs>=3.16.2",
+    "types-channels>=4.3.0.20250822",
+]
+
 [tool.ruff]
 line-length = 88
 target-version = "py311"
@@ -144,8 +151,8 @@ DJANGO_SETTINGS_MODULE = "liriac.settings"
 python_paths = ["."]
 
 [tool.coverage.run]
-source = ["src"]
-omit = ["tests/*"]
+source = ["."]
+omit = ["tests/*", ".venv/*"]
 
 [tool.coverage.report]
 exclude_lines = [

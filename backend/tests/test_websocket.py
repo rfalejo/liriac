@@ -9,7 +9,7 @@ from apps.echo.consumers import EchoConsumer
 class TestEchoConsumer:
     """Test cases for the echo WebSocket consumer."""
 
-    async def test_websocket_connect_and_disconnect(self):
+    async def test_websocket_connect_and_disconnect(self) -> None:
         """Test WebSocket connection and disconnection."""
         communicator = WebsocketCommunicator(EchoConsumer.as_asgi(), "/ws/echo/")
 
@@ -20,7 +20,7 @@ class TestEchoConsumer:
         # Test disconnection
         await communicator.disconnect()
 
-    async def test_websocket_echo_message(self):
+    async def test_websocket_echo_message(self) -> None:
         """Test that messages are echoed back correctly."""
         communicator = WebsocketCommunicator(EchoConsumer.as_asgi(), "/ws/echo/")
 
@@ -41,7 +41,7 @@ class TestEchoConsumer:
         # Disconnect
         await communicator.disconnect()
 
-    async def test_websocket_multiple_messages(self):
+    async def test_websocket_multiple_messages(self) -> None:
         """Test echoing multiple messages in sequence."""
         communicator = WebsocketCommunicator(EchoConsumer.as_asgi(), "/ws/echo/")
 
