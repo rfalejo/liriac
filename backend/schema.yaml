@@ -83,7 +83,11 @@ paths:
       - {}
       responses:
         '200':
-          description: No response body
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ChapterList'
+          description: ''
     post:
       operationId: books_chapters_create
       parameters:
@@ -94,13 +98,29 @@ paths:
         required: true
       tags:
       - books
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ChapterCreate'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/ChapterCreate'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/ChapterCreate'
+        required: true
       security:
       - cookieAuth: []
       - basicAuth: []
       - {}
       responses:
         '200':
-          description: No response body
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ChapterCreate'
+          description: ''
   /api/v1/books/{id}/:
     get:
       operationId: books_retrieve
@@ -136,13 +156,53 @@ paths:
         required: true
       tags:
       - chapters
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Autosave'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/Autosave'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/Autosave'
+        required: true
       security:
       - cookieAuth: []
       - basicAuth: []
       - {}
       responses:
         '200':
-          description: No response body
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  saved:
+                    type: boolean
+                  checksum:
+                    type: string
+                  saved_at:
+                    type: string
+                    format: date-time
+                required:
+                - saved
+                - checksum
+                - saved_at
+          description: ''
+        '400':
+          content:
+            application/json:
+              schema:
+                description: Bad request
+          description: ''
+        '404':
+          content:
+            application/json:
+              schema:
+                description: Chapter not found
+          description: ''
   /api/v1/chapters/{id}/:
     get:
       operationId: chapters_retrieve
@@ -245,7 +305,16 @@ paths:
       - {}
       responses:
         '200':
-          description: No response body
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                required:
+                - status
+          description: ''
   /api/v1/personas/:
     get:
       operationId: personas_list
@@ -400,6 +469,17 @@ paths:
           description: ''
 components:
   schemas:
+    Autosave:
+      type: object
+      properties:
+        body:
+          type: string
+        checksum:
+          type: string
+          maxLength: 64
+      required:
+      - body
+      - checksum
     Book:
       type: object
       properties:
@@ -428,6 +508,36 @@ components:
       - last_opened
       - slug
       - title
+    ChapterCreate:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        title:
+          type: string
+          maxLength: 200
+        order:
+          type: integer
+          maximum: 9223372036854775807
+          minimum: 0
+          format: int64
+        body:
+          type: string
+        checksum:
+          type: string
+          pattern: ^[0-9a-f]{64}$
+          maxLength: 64
+        updated_at:
+          type: string
+          format: date-time
+          readOnly: true
+      required:
+      - checksum
+      - id
+      - order
+      - title
+      - updated_at
     ChapterDetail:
       type: object
       properties:
@@ -463,6 +573,29 @@ components:
       - book
       - checksum
       - created_at
+      - id
+      - order
+      - title
+      - updated_at
+    ChapterList:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        title:
+          type: string
+          maxLength: 200
+        order:
+          type: integer
+          maximum: 9223372036854775807
+          minimum: 0
+          format: int64
+        updated_at:
+          type: string
+          format: date-time
+          readOnly: true
+      required:
       - id
       - order
       - title

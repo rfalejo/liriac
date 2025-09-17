@@ -4,7 +4,8 @@ from typing import Any
 
 from django.core.exceptions import ValidationError
 from django.shortcuts import get_object_or_404
-from rest_framework import mixins, status, viewsets
+from drf_spectacular.utils import extend_schema
+from rest_framework import generics, mixins, status, viewsets
 from rest_framework.filters import OrderingFilter, SearchFilter
 from rest_framework.request import Request
 from rest_framework.response import Response
@@ -42,8 +43,13 @@ class ChapterViewSet(mixins.RetrieveModelMixin, mixins.UpdateModelMixin, viewset
         return ChapterDetailSerializer
 
 
-class BookChapterListCreateAPIView(APIView):
+class BookChapterListCreateAPIView(generics.GenericAPIView):
     filter_backends = [SearchFilter, OrderingFilter]
+
+    def get_serializer_class(self) -> Any:  # noqa: D401
+        if self.request.method == 'POST':
+            return ChapterCreateSerializer
+        return ChapterListSerializer
 
     def get(self, request: Request, book_pk: int, *args: Any, **kwargs: Any) -> Response:  # noqa: D401
         qs = Chapter.objects.filter(book_id=book_pk).order_by("order")
@@ -80,6 +86,22 @@ class PersonaViewSet(
     ordering_fields = ["name"]
 
 
+@extend_schema(
+    request=AutosaveSerializer,
+    responses={
+        200: {
+            "type": "object",
+            "properties": {
+                "saved": {"type": "boolean"},
+                "checksum": {"type": "string"},
+                "saved_at": {"type": "string", "format": "date-time"},
+            },
+            "required": ["saved", "checksum", "saved_at"],
+        },
+        400: {"description": "Bad request"},
+        404: {"description": "Chapter not found"},
+    },
+)
 class ChapterAutosaveAPIView(APIView):
     """POST /api/v1/chapters/<id>/autosave/"""
 
