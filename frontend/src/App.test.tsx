@@ -1,21 +1,46 @@
 import { render, screen } from '@testing-library/react';
-import { describe, it, expect } from 'vitest';
+import { describe, it, expect, vi } from 'vitest';
 import { MemoryRouter, Routes, Route } from 'react-router-dom';
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { AppLayout, LibraryPage, EditorPage, NotFoundPage } from './app/routes';
+
+// Mock the library hooks to prevent actual API calls
+vi.mock('./features/library/hooks', () => ({
+  useBooks: vi.fn(() => ({
+    data: null,
+    isLoading: false,
+    error: null,
+    refetch: vi.fn(),
+  })),
+  useBookChapters: vi.fn(() => ({
+    data: null,
+    isLoading: false,
+    error: null,
+    refetch: vi.fn(),
+  })),
+}));
 
 // For route assertions we construct a lightweight router with MemoryRouter,
 // rather than mounting the full BrowserRouter from App (which would nest routers).
 const renderWithRoute = (initial: string) => {
+  const queryClient = new QueryClient({
+    defaultOptions: {
+      queries: { retry: false, gcTime: 0 },
+    },
+  });
+
   return render(
-    <MemoryRouter initialEntries={[initial]}>
-      <AppLayout>
-        <Routes>
-          <Route path="/" element={<LibraryPage />} />
-          <Route path="/books/:bookId/chapters/:chapterId" element={<EditorPage />} />
-          <Route path="*" element={<NotFoundPage />} />
-        </Routes>
-      </AppLayout>
-    </MemoryRouter>,
+    <QueryClientProvider client={queryClient}>
+      <MemoryRouter initialEntries={[initial]}>
+        <AppLayout>
+          <Routes>
+            <Route path="/" element={<LibraryPage />} />
+            <Route path="/books/:bookId/chapters/:chapterId" element={<EditorPage />} />
+            <Route path="*" element={<NotFoundPage />} />
+          </Routes>
+        </AppLayout>
+      </MemoryRouter>
+    </QueryClientProvider>,
   );
 };
 

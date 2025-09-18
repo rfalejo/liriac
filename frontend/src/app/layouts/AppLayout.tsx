@@ -7,7 +7,11 @@ export function AppLayout({ children }: PropsWithChildren) {
       <header className="bg-white shadow-sm">
         <div className="max-w-7xl mx-auto px-4 py-4 flex items-center justify-between">
           <h1 className="text-2xl font-bold">
-            <Link to="/" aria-label="Liriac home" className="hover:text-indigo-600 transition-colors">
+            <Link
+              to="/"
+              aria-label="Liriac home"
+              className="hover:text-indigo-600 transition-colors"
+            >
               liriac
             </Link>
           </h1>
@@ -19,8 +23,8 @@ export function AppLayout({ children }: PropsWithChildren) {
       <main className="max-w-7xl w-full mx-auto px-4 py-8 flex-1">{children}</main>
       <footer className="border-t bg-white/70 backdrop-blur py-2 text-xs text-gray-500">
         <div className="max-w-7xl mx-auto px-4 flex items-center justify-between">
-            <span>Status: placeholder</span>
-            <span>© {new Date().getFullYear()} liriac</span>
+          <span>Status: placeholder</span>
+          <span>© {new Date().getFullYear()} liriac</span>
         </div>
       </footer>
     </div>

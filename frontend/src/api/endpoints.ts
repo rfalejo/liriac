@@ -5,7 +5,8 @@ import type { components } from './types';
 export type Book = components['schemas']['Book'];
 export type PaginatedBookList = components['schemas']['PaginatedBookList'];
 export type ChapterList = components['schemas']['ChapterList'];
-export type PaginatedChapterListList = components['schemas']['PaginatedChapterListList'];
+export type PaginatedChapterListList =
+  components['schemas']['PaginatedChapterListList'];
 export type ChapterDetail = components['schemas']['ChapterDetail'];
 export type Persona = components['schemas']['Persona'];
 export type PaginatedPersonaList = components['schemas']['PaginatedPersonaList'];
@@ -17,9 +18,13 @@ export interface ListParams {
 }
 
 // Accept a narrow record; fallback to empty string for non-matching values
-function buildQuery(params?: Record<string, string | number | boolean | undefined | null>): string {
+function buildQuery(
+  params?: Record<string, string | number | boolean | undefined | null>,
+): string {
   if (!params) return '';
-  const entries = Object.entries(params).filter(([, v]) => v !== undefined && v !== null && v !== '');
+  const entries = Object.entries(params).filter(
+    ([, v]) => v !== undefined && v !== null && v !== '',
+  );
   if (!entries.length) return '';
   const qs = new URLSearchParams(entries.map(([k, v]) => [k, String(v)])).toString();
   return `?${qs}`;
@@ -27,7 +32,9 @@ function buildQuery(params?: Record<string, string | number | boolean | undefine
 
 // Books
 export async function listBooks(params?: ListParams) {
-  const q = params ? { ...params } as Record<string, string | number | boolean | null | undefined> : undefined;
+  const q = params
+    ? ({ ...params } as Record<string, string | number | boolean | null | undefined>)
+    : undefined;
   return request<PaginatedBookList>(`/api/v1/books/${buildQuery(q)}`);
 }
 
@@ -37,8 +44,12 @@ export async function getBook(id: number) {
 
 // Chapters under a book (list for dashboard)
 export async function listBookChapters(bookId: number, params?: ListParams) {
-  const q = params ? { ...params } as Record<string, string | number | boolean | null | undefined> : undefined;
-  return request<PaginatedChapterListList>(`/api/v1/books/${bookId}/chapters/${buildQuery(q)}`);
+  const q = params
+    ? ({ ...params } as Record<string, string | number | boolean | null | undefined>)
+    : undefined;
+  return request<PaginatedChapterListList>(
+    `/api/v1/books/${bookId}/chapters/${buildQuery(q)}`,
+  );
 }
 
 // Single chapter detail
@@ -47,25 +58,43 @@ export async function getChapter(id: number) {
 }
 
 // Autosave
-export interface AutosavePayload { body: string; checksum: string }
-export interface AutosaveResponse { saved: boolean; checksum: string; saved_at: string }
+export interface AutosavePayload {
+  body: string;
+  checksum: string;
+}
+export interface AutosaveResponse {
+  saved: boolean;
+  checksum: string;
+  saved_at: string;
+}
 export async function autosaveChapter(id: number, payload: AutosavePayload) {
-  return request<AutosaveResponse>(`/api/v1/chapters/${id}/autosave/`, { json: payload, method: 'POST' });
+  return request<AutosaveResponse>(`/api/v1/chapters/${id}/autosave/`, {
+    json: payload,
+    method: 'POST',
+  });
 }
 
 // Personas
 export async function listPersonas(params?: ListParams) {
-  const q = params ? { ...params } as Record<string, string | number | boolean | null | undefined> : undefined;
+  const q = params
+    ? ({ ...params } as Record<string, string | number | boolean | null | undefined>)
+    : undefined;
   return request<PaginatedPersonaList>(`/api/v1/personas/${buildQuery(q)}`);
 }
 
-export interface CreatePersonaPayload { name: string; role?: string; notes?: string }
+export interface CreatePersonaPayload {
+  name: string;
+  role?: string;
+  notes?: string;
+}
 export async function createPersona(payload: CreatePersonaPayload) {
   return request<Persona>(`/api/v1/personas/`, { json: payload, method: 'POST' });
 }
 
 // Health
-export interface HealthResponse { status: string }
+export interface HealthResponse {
+  status: string;
+}
 export async function health() {
   return request<HealthResponse>(`/api/v1/health/`, { method: 'GET' });
 }

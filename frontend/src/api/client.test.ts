@@ -14,7 +14,7 @@ describe('request()', () => {
       ok: true,
       status: 200,
       headers: new Headers({ 'Content-Type': 'application/json' }),
-      json: async () => ({ hello: 'world' })
+      json: async () => ({ hello: 'world' }),
     });
 
     const res = await request<{ hello: string }>('/api/v1/health/', { method: 'GET' });
@@ -31,10 +31,13 @@ describe('request()', () => {
       status: 400,
       statusText: 'Bad Request',
       headers: new Headers({ 'Content-Type': 'application/json' }),
-      json: async () => ({ detail: 'Invalid payload' })
+      json: async () => ({ detail: 'Invalid payload' }),
     });
 
-    const res = await request('/api/v1/chapters/1/autosave/', { method: 'POST', json: { body: '', checksum: '' } });
+    const res = await request('/api/v1/chapters/1/autosave/', {
+      method: 'POST',
+      json: { body: '', checksum: '' },
+    });
     expect(res.ok).toBe(false);
     if (!res.ok) {
       expect(res.error).toContain('Invalid payload');
