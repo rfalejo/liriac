@@ -50,6 +50,7 @@ INSTALLED_APPS = [
     'apps.library',
     'apps.suggestions',
     'apps.autosave',
+    'apps.management',
 ]
 
 MIDDLEWARE = [

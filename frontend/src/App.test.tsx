@@ -61,8 +61,7 @@ describe('App', () => {
   it('renders Editor page on editor route', () => {
     renderWithRoute('/books/1/chapters/2');
     expect(screen.getByRole('heading', { name: /editor/i })).toBeInTheDocument();
-    expect(screen.getByText(/Book ID: 1/i)).toBeInTheDocument();
-    expect(screen.getByText(/Chapter ID: 2/i)).toBeInTheDocument();
+    expect(screen.getByText(/Book 1 — Chapter 2/i)).toBeInTheDocument();
   });
 
   it('renders Not Found on unknown route', () => {
