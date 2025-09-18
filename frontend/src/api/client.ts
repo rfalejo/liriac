@@ -12,7 +12,10 @@ const DEFAULT_HEADERS: HeadersInit = {
 
 function getBaseUrl(): string {
   // Prefer explicitly configured base; fallback to relative root
-  const base = (import.meta as any).env?.VITE_API_BASE || (globalThis as any).VITE_API_BASE || '/';
+  const metaEnv = (import.meta as unknown as { env?: Record<string, unknown> }).env || {};
+  const globalEnv = (globalThis as unknown as { VITE_API_BASE?: unknown }).VITE_API_BASE;
+  const candidate = (metaEnv as Record<string, unknown>).VITE_API_BASE || globalEnv || '/';
+  const base = typeof candidate === 'string' ? candidate : '/';
   return base.endsWith('/') ? base.slice(0, -1) : base;
 }
 
@@ -38,12 +41,12 @@ export async function request<T>(path: string, options: RequestOptions = {}): Pr
     return { ok: false, error: message, status: 0, response: null };
   }
 
-  let data: any = null;
+  let data: unknown = null;
   const contentType = response.headers.get('Content-Type') || '';
   if (contentType.includes('application/json')) {
     try {
       data = await response.json();
-    } catch (e) {
+    } catch {
       // ignore JSON parse errors; treat as text fallback
     }
   } else {
@@ -58,7 +61,19 @@ export async function request<T>(path: string, options: RequestOptions = {}): Pr
     return { ok: true, data: data as T, status: response.status, response };
   }
 
-  const error = typeof data === 'string' ? data : (data && (data.detail || data.error || JSON.stringify(data))) || response.statusText || 'Request failed';
+  let error: string;
+  if (typeof data === 'string') {
+    error = data;
+  } else if (data && typeof data === 'object') {
+    const record = data as Record<string, unknown>;
+    const detail = record.detail;
+    const err = record.error;
+    if (typeof detail === 'string') error = detail;
+    else if (typeof err === 'string') error = err;
+    else error = JSON.stringify(record);
+  } else {
+    error = response.statusText || 'Request failed';
+  }
   return { ok: false, error, status: response.status, response };
 }
 

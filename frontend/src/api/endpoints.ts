@@ -16,17 +16,19 @@ export interface ListParams {
   search?: string;
 }
 
-function buildQuery(params?: Record<string, any>): string {
+// Accept a narrow record; fallback to empty string for non-matching values
+function buildQuery(params?: Record<string, string | number | boolean | undefined | null>): string {
   if (!params) return '';
   const entries = Object.entries(params).filter(([, v]) => v !== undefined && v !== null && v !== '');
   if (!entries.length) return '';
-  const qs = new URLSearchParams(entries as any).toString();
+  const qs = new URLSearchParams(entries.map(([k, v]) => [k, String(v)])).toString();
   return `?${qs}`;
 }
 
 // Books
 export async function listBooks(params?: ListParams) {
-  return request<PaginatedBookList>(`/api/v1/books/${buildQuery(params)}`);
+  const q = params ? { ...params } as Record<string, string | number | boolean | null | undefined> : undefined;
+  return request<PaginatedBookList>(`/api/v1/books/${buildQuery(q)}`);
 }
 
 export async function getBook(id: number) {
@@ -35,7 +37,8 @@ export async function getBook(id: number) {
 
 // Chapters under a book (list for dashboard)
 export async function listBookChapters(bookId: number, params?: ListParams) {
-  return request<PaginatedChapterListList>(`/api/v1/books/${bookId}/chapters/${buildQuery(params)}`);
+  const q = params ? { ...params } as Record<string, string | number | boolean | null | undefined> : undefined;
+  return request<PaginatedChapterListList>(`/api/v1/books/${bookId}/chapters/${buildQuery(q)}`);
 }
 
 // Single chapter detail
@@ -52,7 +55,8 @@ export async function autosaveChapter(id: number, payload: AutosavePayload) {
 
 // Personas
 export async function listPersonas(params?: ListParams) {
-  return request<PaginatedPersonaList>(`/api/v1/personas/${buildQuery(params)}`);
+  const q = params ? { ...params } as Record<string, string | number | boolean | null | undefined> : undefined;
+  return request<PaginatedPersonaList>(`/api/v1/personas/${buildQuery(q)}`);
 }
 
 export interface CreatePersonaPayload { name: string; role?: string; notes?: string }
