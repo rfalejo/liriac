@@ -1,4 +1,4 @@
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect, useRef } from 'react';
 import { useBooks } from './hooks';
 import { isOk } from '../../api/client';
 import type { Book } from '../../api/endpoints';
@@ -7,12 +7,18 @@ interface BooksListProps {
   selectedBookId?: number;
   // Prefixed parameter name with underscore to satisfy no-unused-vars lint rule for function type signatures
   onBookSelect: (_book: Book) => void;
+  onBookPrefetch?: (_book: Book) => void;
 }
 
-export function BooksList({ selectedBookId, onBookSelect }: BooksListProps) {
+export function BooksList({
+  selectedBookId,
+  onBookSelect,
+  onBookPrefetch,
+}: BooksListProps) {
   const [currentPage, setCurrentPage] = useState(1);
   const [searchQuery, setSearchQuery] = useState('');
   const [debouncedSearch, setDebouncedSearch] = useState('');
+  const lastPrefetchedId = useRef<number | null>(null);
 
   // Debounce search input
   useMemo(() => {
@@ -32,6 +38,21 @@ export function BooksList({ selectedBookId, onBookSelect }: BooksListProps) {
 
   const { data: result, isLoading, error, refetch } = useBooks(queryParams);
   const data = result && isOk(result) ? result.data : null;
+
+  useEffect(() => {
+    if (!selectedBookId || !data?.results) {
+      lastPrefetchedId.current = selectedBookId ?? null;
+      return;
+    }
+
+    if (lastPrefetchedId.current === selectedBookId) return;
+
+    const matchingBook = data.results.find((book) => book.id === selectedBookId);
+    if (matchingBook) {
+      lastPrefetchedId.current = selectedBookId;
+      onBookPrefetch?.(matchingBook);
+    }
+  }, [data, onBookPrefetch, selectedBookId]);
 
   const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setSearchQuery(e.target.value);
@@ -53,53 +74,61 @@ export function BooksList({ selectedBookId, onBookSelect }: BooksListProps) {
     const errorMessage =
       error?.message || (result && !isOk(result) ? result.error : 'Unknown error');
     return (
-      <div className="space-y-4">
-        <h3 className="text-lg font-medium">Books</h3>
-        <div className="p-4 bg-red-50 border border-red-200 rounded-lg">
-          <p className="text-red-700 text-sm">Failed to load books: {errorMessage}</p>
+      <section className="space-y-4" aria-labelledby="books-panel" aria-live="polite">
+        <h3 id="books-panel" className="text-lg font-medium">
+          Books
+        </h3>
+        <div className="p-4 bg-red-100/80 border border-red-300 rounded-lg text-sm text-red-800 dark:bg-red-950/70 dark:border-red-900 dark:text-red-200">
+          <p>Failed to load books: {errorMessage}</p>
           <button
             onClick={() => refetch()}
-            className="mt-2 px-3 py-1 bg-red-100 hover:bg-red-200 text-red-700 text-xs rounded"
+            aria-label="Retry loading books"
+            className="mt-3 inline-flex items-center gap-2 px-3 py-1.5 border border-red-300/70 text-xs font-medium uppercase tracking-wide text-red-800 hover:bg-red-200/60 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-red-500 dark:border-red-700/70 dark:text-red-100 dark:hover:bg-red-900/60"
           >
             Retry
           </button>
         </div>
-      </div>
+      </section>
     );
   }
 
   return (
-    <div className="space-y-4">
+    <section className="space-y-4" aria-labelledby="books-panel" aria-busy={isLoading}>
       <div>
-        <h3 className="text-lg font-medium">Books</h3>
+        <h3 id="books-panel" className="text-lg font-medium">
+          Books
+        </h3>
         <div className="mt-2">
+          <label className="sr-only" htmlFor="books-search">
+            Search books
+          </label>
           <input
+            id="books-search"
             type="text"
             placeholder="Search books..."
             value={searchQuery}
             onChange={handleSearchChange}
-            className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+            className="w-full px-3 py-2 rounded-md border border-zinc-300 bg-white/95 text-sm text-zinc-900 shadow-sm transition focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-500 dark:border-zinc-700 dark:bg-zinc-900/70 dark:text-zinc-100"
           />
         </div>
       </div>
 
       {isLoading && (
-        <div className="space-y-2">
-          {/* Loading skeleton */}
+        <div className="space-y-2" role="status" aria-live="polite">
           {[...Array(3)].map((_, i) => (
             <div
               key={i}
-              className="p-3 border border-gray-200 rounded-lg animate-pulse"
+              className="p-3 border border-zinc-200 rounded-lg bg-white/60 animate-pulse dark:border-zinc-800 dark:bg-zinc-900/60"
             >
-              <div className="h-4 bg-gray-200 rounded w-3/4"></div>
-              <div className="h-3 bg-gray-200 rounded w-1/2 mt-2"></div>
+              <div className="h-4 bg-zinc-200 rounded w-3/4 dark:bg-zinc-800"></div>
+              <div className="h-3 bg-zinc-200 rounded w-1/2 mt-2 dark:bg-zinc-800"></div>
             </div>
           ))}
         </div>
       )}
 
       {data && data.results.length === 0 && (
-        <div className="p-4 text-center text-gray-500 border border-gray-200 rounded-lg">
+        <div className="p-4 text-center text-zinc-500 border border-zinc-200 rounded-lg bg-white/60 dark:border-zinc-800 dark:bg-zinc-900/60 dark:text-zinc-400">
           {debouncedSearch
             ? 'No books found matching your search.'
             : 'No books yet. Create your first book!'}
@@ -107,19 +136,24 @@ export function BooksList({ selectedBookId, onBookSelect }: BooksListProps) {
       )}
 
       {data && data.results.length > 0 && (
-        <div className="space-y-2">
+        <div className="space-y-2" role="list">
           {data.results.map((book) => (
             <button
               key={book.id}
+              type="button"
               onClick={() => onBookSelect(book)}
-              className={`w-full p-3 text-left border rounded-lg hover:bg-gray-50 transition-colors ${
+              aria-current={selectedBookId === book.id ? 'true' : undefined}
+              role="listitem"
+              className={`w-full p-3 text-left border rounded-lg transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-500 ${
                 selectedBookId === book.id
-                  ? 'border-blue-500 bg-blue-50'
-                  : 'border-gray-200'
+                  ? 'border-indigo-500 bg-indigo-100/80 text-zinc-900 dark:border-indigo-400 dark:bg-indigo-500/10 dark:text-zinc-50'
+                  : 'border-zinc-200 bg-white/60 hover:bg-zinc-100/70 dark:border-zinc-800 dark:bg-zinc-900/70 dark:hover:bg-zinc-800/70'
               }`}
             >
-              <div className="font-medium text-gray-900">{book.title}</div>
-              <div className="text-sm text-gray-500 mt-1">
+              <div className="font-medium text-zinc-900 dark:text-zinc-100">
+                {book.title}
+              </div>
+              <div className="text-sm text-zinc-500 mt-1 dark:text-zinc-400">
                 Created {new Date(book.created_at).toLocaleDateString()}
               </div>
             </button>
@@ -127,26 +161,27 @@ export function BooksList({ selectedBookId, onBookSelect }: BooksListProps) {
         </div>
       )}
 
-      {/* Pagination */}
       {data && (data.previous || data.next) && (
-        <div className="flex justify-between items-center pt-2">
+        <div className="flex justify-between items-center pt-2 text-sm text-zinc-600 dark:text-zinc-400">
           <button
             onClick={handlePreviousPage}
             disabled={!data.previous}
-            className="px-3 py-1 text-sm border border-gray-300 rounded hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+            className="px-3 py-1 rounded border border-zinc-300 hover:bg-zinc-100 disabled:opacity-50 disabled:cursor-not-allowed focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-500 dark:border-zinc-700 dark:hover:bg-zinc-800"
           >
             Previous
           </button>
-          <span className="text-sm text-gray-500">Page {currentPage}</span>
+          <span className="font-mono uppercase text-xs tracking-wide">
+            Page {currentPage}
+          </span>
           <button
             onClick={handleNextPage}
             disabled={!data.next}
-            className="px-3 py-1 text-sm border border-gray-300 rounded hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+            className="px-3 py-1 rounded border border-zinc-300 hover:bg-zinc-100 disabled:opacity-50 disabled:cursor-not-allowed focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-500 dark:border-zinc-700 dark:hover:bg-zinc-800"
           >
             Next
           </button>
         </div>
       )}
-    </div>
+    </section>
   );
 }

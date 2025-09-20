@@ -1,6 +1,6 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { screen } from '@testing-library/react';
+import { screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { useNavigate } from 'react-router-dom';
 import { ChaptersList } from '../ChaptersList';
@@ -186,5 +186,40 @@ describe('ChaptersList', () => {
 
     expect(screen.getByText('Chapters')).toBeInTheDocument();
     expect(screen.queryByText('Chapters —')).not.toBeInTheDocument();
+  });
+
+  it('should reset pagination to page 1 when the book changes', async () => {
+    const paginatedResult = {
+      ...mockApiResult,
+      data: {
+        ...mockPaginatedChapters,
+        next: 'http://example.com/page/2',
+      },
+    };
+
+    mockUseBookChapters.mockImplementation((bookId: number | undefined, params) => {
+      return {
+        data: paginatedResult,
+        isLoading: false,
+        error: null,
+        refetch: vi.fn(),
+        __meta: { bookId, params },
+      } as any;
+    });
+
+    const { rerender } = renderWithProviders(
+      <ChaptersList bookId={1} bookTitle="First Book" />,
+    );
+
+    const nextButton = screen.getByText('Next');
+    await userEvent.click(nextButton);
+
+    rerender(<ChaptersList bookId={2} bookTitle="Second Book" />);
+
+    await waitFor(() => {
+      const lastCall = mockUseBookChapters.mock.calls.at(-1);
+      expect(lastCall?.[0]).toBe(2);
+      expect(lastCall?.[1]).toMatchObject({ page: 1 });
+    });
   });
 });

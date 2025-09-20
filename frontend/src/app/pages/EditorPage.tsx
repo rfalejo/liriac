@@ -55,14 +55,14 @@ export function EditorPage() {
   if (isLoading) {
     return (
       <div className="flex flex-col h-full">
-        <header className="flex-shrink-0 p-4 border-b bg-white">
+        <header className="flex-shrink-0 p-4 border-b border-zinc-200/70 bg-white/80 backdrop-blur dark:border-zinc-800 dark:bg-zinc-900/80">
           <h1 className="text-xl font-semibold">Editor</h1>
-          <p className="text-sm text-gray-600">
+          <p className="text-sm text-zinc-600 dark:text-zinc-400">
             Book {bookIdNum} — Chapter {chapterIdNum}
           </p>
         </header>
-        <main className="flex-1 p-4">
-          <div className="w-full h-64 bg-gray-100 rounded-md animate-pulse" />
+        <main className="flex-1 p-4" aria-busy="true">
+          <div className="w-full h-64 rounded-md bg-zinc-100/80 animate-pulse dark:bg-zinc-900/50" />
         </main>
       </div>
     );
@@ -77,18 +77,23 @@ export function EditorPage() {
 
     return (
       <div className="flex flex-col h-full">
-        <header className="flex-shrink-0 p-4 border-b bg-white">
+        <header className="flex-shrink-0 p-4 border-b border-zinc-200/70 bg-white/80 backdrop-blur dark:border-zinc-800 dark:bg-zinc-900/80">
           <h1 className="text-xl font-semibold">Editor</h1>
-          <p className="text-sm text-gray-600">
+          <p className="text-sm text-zinc-600 dark:text-zinc-400">
             Book {bookIdNum} — Chapter {chapterIdNum}
           </p>
         </header>
-        <main className="flex-1 p-4 flex items-center justify-center">
-          <div className="text-center space-y-4">
-            <p className="text-red-600">{errorMessage}</p>
+        <main
+          className="flex-1 p-4 flex items-center justify-center"
+          role="alert"
+          aria-live="assertive"
+        >
+          <div className="text-center space-y-4 text-sm">
+            <p className="text-red-600 dark:text-red-400">{errorMessage}</p>
             <button
               onClick={handleRetry}
-              className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 transition-colors"
+              aria-label="Retry loading chapter"
+              className="px-4 py-2 rounded border border-indigo-500/70 bg-indigo-600 text-white shadow-sm transition-colors hover:bg-indigo-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-300 dark:border-indigo-400/70 dark:bg-indigo-500"
             >
               Retry
             </button>
@@ -103,9 +108,9 @@ export function EditorPage() {
   return (
     <div className="flex flex-col h-full">
       {/* Header */}
-      <header className="flex-shrink-0 p-4 border-b bg-white">
+      <header className="flex-shrink-0 p-4 border-b border-zinc-200/70 bg-white/80 backdrop-blur dark:border-zinc-800 dark:bg-zinc-900/80">
         <h1 className="text-xl font-semibold">Editor</h1>
-        <p className="text-sm text-gray-600">
+        <p className="text-sm text-zinc-600 dark:text-zinc-400">
           Book {bookIdNum} — Chapter {chapterIdNum}
           {chapter?.title && ` — ${chapter.title}`}
         </p>
@@ -122,7 +127,7 @@ export function EditorPage() {
           value={content}
           onChange={(e) => setContent(e.target.value)}
           onKeyDown={handleKeyDown}
-          className="w-full h-full resize-none border rounded-md p-4 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-900 font-mono leading-relaxed"
+          className="w-full h-full resize-none rounded-md border border-zinc-300 bg-white/95 p-4 font-mono leading-relaxed text-zinc-900 shadow-sm transition focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-500 dark:border-zinc-700 dark:bg-zinc-900/80 dark:text-zinc-100"
           placeholder="Start writing your chapter..."
         />
       </main>
@@ -131,7 +136,7 @@ export function EditorPage() {
       <footer
         role="status"
         aria-live="polite"
-        className="flex-shrink-0 p-3 border-t bg-gray-50 text-sm text-gray-600 flex items-center justify-between"
+        className="flex-shrink-0 p-3 border-t border-zinc-200/70 bg-zinc-100/60 text-sm text-zinc-600 flex items-center justify-between font-mono uppercase tracking-wide dark:border-zinc-800 dark:bg-zinc-900/70 dark:text-zinc-400"
       >
         <div className="flex items-center space-x-4">
           <span>Mode: Manual</span>

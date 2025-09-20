@@ -80,7 +80,7 @@ describe('EditorPage', () => {
 
     expect(screen.getByText('Test error')).toBeInTheDocument();
 
-    const retryButton = screen.getByRole('button', { name: 'Retry' });
+    const retryButton = screen.getByRole('button', { name: 'Retry loading chapter' });
     expect(retryButton).toBeInTheDocument();
 
     await userEvent.click(retryButton);
@@ -248,7 +248,9 @@ describe('EditorPage', () => {
     );
 
     expect(screen.getByText('Failed to load chapter')).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: 'Retry' })).toBeInTheDocument();
+    expect(
+      screen.getByRole('button', { name: 'Retry loading chapter' }),
+    ).toBeInTheDocument();
   });
 
   it('should update content when chapter changes', () => {

@@ -43,7 +43,9 @@ describe('LibraryPage', () => {
     renderWithProviders(<LibraryPage />);
 
     expect(screen.getByText('Library')).toBeInTheDocument();
-    expect(screen.getByText('Manage your books and chapters')).toBeInTheDocument();
+    expect(
+      screen.getByText(/Manage your books and chapters with a command-line/i),
+    ).toBeInTheDocument();
     expect(screen.getByText('Books')).toBeInTheDocument();
     expect(screen.getByText('Chapters')).toBeInTheDocument();
     // Use a regex matcher to be resilient to future wording tweaks or element splits
@@ -85,11 +87,26 @@ describe('LibraryPage', () => {
     });
   });
 
-  it('should manage URL state for selected book', async () => {
+  it('should derive selection from URL parameter and highlight the book', async () => {
+    const chaptersResult = { ...mockApiResult, data: mockPaginatedChapters };
+
+    mockUseBookChapters.mockReturnValue({
+      data: chaptersResult,
+      isLoading: false,
+      error: null,
+      refetch: vi.fn(),
+    } as any);
+
     renderWithProviders(<LibraryPage />, { initialEntries: ['/?book=1'] });
 
-    // Should call useBookChapters with bookId=1 because of URL param
     expect(mockUseBookChapters).toHaveBeenCalledWith(1, expect.any(Object));
+
+    await waitFor(() => {
+      expect(screen.getByText('— Test Book')).toBeInTheDocument();
+    });
+
+    const highlightedBook = screen.getByText('Test Book').closest('button');
+    expect(highlightedBook).toHaveAttribute('aria-current', 'true');
   });
 
   it('should show empty states when there are no books', async () => {

@@ -1,5 +1,4 @@
 import hashlib
-
 from typing import Any, TypedDict
 
 from django.core.management.base import BaseCommand

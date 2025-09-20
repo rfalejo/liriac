@@ -129,7 +129,7 @@ describe('BooksList', () => {
     );
 
     const bookButton = screen.getByText('Test Book').closest('button');
-    expect(bookButton).toHaveClass('border-blue-500', 'bg-blue-50');
+    expect(bookButton).toHaveClass('border-indigo-500', 'bg-indigo-100/80');
   });
 
   it('should handle search input', async () => {
