@@ -1,7 +1,7 @@
 import './App.css';
 import { BrowserRouter, Routes, Route } from 'react-router-dom';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { AppLayout, LibraryPage, EditorPage, NotFoundPage } from './app/routes';
+import { AppLayout, EditorPage, NotFoundPage } from './app/routes';
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -18,7 +18,7 @@ function App() {
       <BrowserRouter>
         <AppLayout>
           <Routes>
-            <Route path="/" element={<LibraryPage />} />
+            <Route path="/" element={<EditorPage />} />
             <Route path="/books/:bookId/chapters/:chapterId" element={<EditorPage />} />
             <Route path="*" element={<NotFoundPage />} />
           </Routes>

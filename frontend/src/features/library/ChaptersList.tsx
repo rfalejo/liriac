@@ -18,7 +18,6 @@ export function ChaptersList({ bookId, bookTitle }: ChaptersListProps) {
   const navigate = useNavigate();
   const qc = useQueryClient();
 
-  const [isCreateOpen, setCreateOpen] = useState(false);
   const [isEditOpen, setEditOpen] = useState(false);
   const [editing, setEditing] = useState<ChapterList | null>(null);
   const [localOrder, setLocalOrder] = useState<ChapterList[] | null>(null);
@@ -93,10 +92,7 @@ export function ChaptersList({ bookId, bookTitle }: ChaptersListProps) {
     setLocalOrder(renumbered);
   };
 
-  const openCreate = () => {
-    if (!bookId) return;
-    setCreateOpen(true);
-  };
+  // Create chapter now accessible via Top Bar quick action (BL-013C)
 
   const openEdit = (chapter: ChapterList) => {
     setEditing(chapter);
@@ -163,23 +159,12 @@ export function ChaptersList({ bookId, bookTitle }: ChaptersListProps) {
       aria-labelledby="chapters-panel"
       aria-busy={isLoading}
     >
-      <div className="flex items-center justify-between">
-        <h3 id="chapters-panel" className="text-lg font-medium">
-          Chapters
-          {bookTitle && (
-            <span className="text-zinc-500 font-normal"> — {bookTitle}</span>
-          )}
-        </h3>
-        {bookId && (
-          <button
-            type="button"
-            onClick={openCreate}
-            className="px-3 py-1.5 rounded bg-indigo-600 text-white text-sm hover:bg-indigo-700 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-500"
-          >
-            New Chapter
-          </button>
+      <h3 id="chapters-panel" className="text-lg font-medium">
+        Chapters
+        {bookTitle && (
+          <span className="text-zinc-500 font-normal"> — {bookTitle}</span>
         )}
-      </div>
+      </h3>
 
       {isLoading && (
         <div className="space-y-2" role="status" aria-live="polite">
@@ -288,18 +273,7 @@ export function ChaptersList({ bookId, bookTitle }: ChaptersListProps) {
       )}
 
       {/* Dialogs */}
-      <ChapterDialog
-        mode="create"
-        isOpen={isCreateOpen}
-        bookId={bookId}
-        onClose={() => setCreateOpen(false)}
-        onSuccess={(ch) => {
-          // Invalidate chapters list and navigate to editor
-          qc.invalidateQueries({ queryKey: ['books', bookId, 'chapters'] }).then(() => {
-            if (bookId) navigate(`/books/${bookId}/chapters/${ch.id}`);
-          });
-        }}
-      />
+      {/* Create dialog moved to Top Bar quick action (BL-013C) */}
       <ChapterDialog
         mode="edit"
         isOpen={isEditOpen}

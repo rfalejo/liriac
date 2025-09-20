@@ -77,7 +77,7 @@ Frontend and backend live in sibling directories to enable independent tooling w
 
 ## High-Level Architecture
 
-- SPA: React Router provides nested layouts (library dashboard, editor). React Query synchronizes server state; Zustand stores view preferences. Keyboard shortcuts dispatch domain actions (toggle suggestions, accept, autosave).
+- SPA: React Router provides nested layouts with an editor-first shell. The Editor is the primary screen and is also the root route. Navigation and search are palette-first (Cmd/Ctrl+K). React Query synchronizes server state; Zustand stores view preferences. Keyboard shortcuts dispatch domain actions (toggle suggestions, accept, autosave).
 - Backend: Django REST Framework delivers CRUD endpoints; domain logic encapsulates autosave validation, suggestions orchestration, and context checks. Django Channels handles WebSocket streaming of AI deltas using async consumers.
 - Integration: No authentication; SPA connects to backend over localhost HTTP and WebSockets. Shared OpenAPI schema generates frontend DTO types.
 
@@ -91,9 +91,9 @@ React SPA ──REST──> Django REST (DRF) ──> Domain Services ──> St
 ## Frontend Architecture Details
 
 - Entry: `src/app/main.tsx` wires providers (React Query, Router, Zustand persistence, Theme).
-- Layouts: `AppLayout` renders nav shell; `LibraryLayout` handles book list; `EditorLayout` hosts editor + drawers.
+- Layouts: `AppLayout` renders the global shell (Top Bar, Bottom Bar). The Library dashboard is deprecated in favor of an editor-only shell; the editor hosts the main textarea and drawers.
 - Features:
-  - Library: fetches `/books/` using React Query, displays paginated lists with Tailwind components.
+   - Palette-first navigation: the Command Palette is the single entry for search and navigation; inline search inputs are removed. Books/chapters are surfaced from React Query cache as command items.
   - Editor: controlled text area component with virtualization for long chapters, autosave indicators, sticky header/footer.
   - Suggestions: drawer component subscribes to WebSocket; tokens appended into a buffer, diffed for display.
   - Context: Headless UI modal with personas list and chapters multi-select; forms use React Hook Form + Zod validation.

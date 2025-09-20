@@ -1,24 +1,10 @@
 import { render, screen } from '@testing-library/react';
-import { describe, it, expect, vi } from 'vitest';
+import { describe, it, expect } from 'vitest';
 import { MemoryRouter, Routes, Route } from 'react-router-dom';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { AppLayout, LibraryPage, EditorPage, NotFoundPage } from './app/routes';
+import { AppLayout, EditorPage, NotFoundPage } from './app/routes';
 
-// Mock the library hooks to prevent actual API calls
-vi.mock('./features/library/hooks', () => ({
-  useBooks: vi.fn(() => ({
-    data: null,
-    isLoading: false,
-    error: null,
-    refetch: vi.fn(),
-  })),
-  useBookChapters: vi.fn(() => ({
-    data: null,
-    isLoading: false,
-    error: null,
-    refetch: vi.fn(),
-  })),
-}));
+// No library hooks needed for editor-only root route
 
 // For route assertions we construct a lightweight router with MemoryRouter,
 // rather than mounting the full BrowserRouter from App (which would nest routers).
@@ -34,7 +20,7 @@ const renderWithRoute = (initial: string) => {
       <MemoryRouter initialEntries={[initial]}>
         <AppLayout>
           <Routes>
-            <Route path="/" element={<LibraryPage />} />
+            <Route path="/" element={<EditorPage />} />
             <Route path="/books/:bookId/chapters/:chapterId" element={<EditorPage />} />
             <Route path="*" element={<NotFoundPage />} />
           </Routes>
@@ -53,15 +39,17 @@ describe('App', () => {
 
   // Description text removed in new layout; not part of acceptance criteria.
 
-  it('renders Library page on root route', () => {
+  it('renders Editor empty state on root route', () => {
     renderWithRoute('/');
-    expect(screen.getByRole('heading', { name: /library/i })).toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: /editor/i })).toBeInTheDocument();
+    expect(
+      screen.getByText(/Open the Command Palette \(Cmd\/Ctrl\+K\) to open a chapter\./i),
+    ).toBeInTheDocument();
   });
 
   it('renders Editor page on editor route', () => {
     renderWithRoute('/books/1/chapters/2');
-    expect(screen.getByRole('heading', { name: /editor/i })).toBeInTheDocument();
-    // Text appears in both header and bottom bar; tolerate multiple matches
+    // In editor layout, Top/Bottom bars show context; no local header
     const matches = screen.getAllByText(/Book 1 — Chapter 2/i);
     expect(matches.length).toBeGreaterThanOrEqual(1);
   });

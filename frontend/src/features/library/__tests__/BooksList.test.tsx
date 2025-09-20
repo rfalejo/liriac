@@ -1,6 +1,6 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { screen, waitFor } from '@testing-library/react';
+import { screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { BooksList } from '../BooksList';
 import {
@@ -38,7 +38,6 @@ describe('BooksList', () => {
     );
 
     expect(screen.getByText('Books')).toBeInTheDocument();
-    expect(screen.getByPlaceholderText('Search books...')).toBeInTheDocument();
     expect(screen.getByText('Test Book')).toBeInTheDocument();
   });
 
@@ -132,33 +131,7 @@ describe('BooksList', () => {
     expect(bookButton).toHaveClass('border-indigo-500', 'bg-indigo-100/80');
   });
 
-  it('should handle search input', async () => {
-    let capturedParams: any;
-    mockUseBooks.mockImplementation((params) => {
-      capturedParams = params;
-      return {
-        data: mockApiResult,
-        isLoading: false,
-        error: null,
-        refetch: vi.fn(),
-      } as any;
-    });
-
-    renderWithProviders(
-      <BooksList selectedBookId={undefined} onBookSelect={mockOnBookSelect} />,
-    );
-
-    const searchInput = screen.getByPlaceholderText('Search books...');
-    await userEvent.type(searchInput, 'test query');
-
-    // Wait for debounce
-    await waitFor(
-      () => {
-        expect(capturedParams?.search).toBe('test query');
-      },
-      { timeout: 500 },
-    );
-  });
+  // Search input removed per BL-013C (palette-first)
 
   it('should handle pagination', async () => {
     const paginatedResult = {

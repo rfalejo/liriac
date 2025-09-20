@@ -16,22 +16,12 @@ export function BooksList({
   onBookPrefetch,
 }: BooksListProps) {
   const [currentPage, setCurrentPage] = useState(1);
-  const [searchQuery, setSearchQuery] = useState('');
-  const [debouncedSearch, setDebouncedSearch] = useState('');
   const lastPrefetchedId = useRef<number | null>(null);
-
-  // Debounce search input
-  useEffect(() => {
-    const timer = setTimeout(() => {
-      setDebouncedSearch(searchQuery);
-      setCurrentPage(1); // Reset to first page when search changes
-    }, 300);
-    return () => clearTimeout(timer);
-  }, [searchQuery]);
 
   const queryParams = {
     page: currentPage,
-    search: debouncedSearch || undefined,
+    // Search removed; palette-first navigation
+    search: undefined,
     ordering: '-created_at', // Most recent first
   };
 
@@ -53,9 +43,7 @@ export function BooksList({
     }
   }, [data, onBookPrefetch, selectedBookId]);
 
-  const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setSearchQuery(e.target.value);
-  };
+  // Inline search removed (BL-013C)
 
   const handlePreviousPage = () => {
     if (data?.previous) {
@@ -93,24 +81,9 @@ export function BooksList({
 
   return (
     <section className="space-y-4" aria-labelledby="books-panel" aria-busy={isLoading}>
-      <div>
-        <h3 id="books-panel" className="text-lg font-medium">
-          Books
-        </h3>
-        <div className="mt-2">
-          <label className="sr-only" htmlFor="books-search">
-            Search books
-          </label>
-          <input
-            id="books-search"
-            type="text"
-            placeholder="Search books..."
-            value={searchQuery}
-            onChange={handleSearchChange}
-            className="w-full px-3 py-2 rounded-md border border-zinc-300 bg-white/95 text-sm text-zinc-900 shadow-sm transition focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-500 dark:border-zinc-700 dark:bg-zinc-900/70 dark:text-zinc-100"
-          />
-        </div>
-      </div>
+      <h3 id="books-panel" className="text-lg font-medium">
+        Books
+      </h3>
 
       {isLoading && (
         <div className="space-y-2" role="status" aria-live="polite">
@@ -128,9 +101,7 @@ export function BooksList({
 
       {data && data.results.length === 0 && (
         <div className="p-4 text-center text-zinc-500 border border-zinc-200 rounded-lg bg-white/60 dark:border-zinc-800 dark:bg-zinc-900/60 dark:text-zinc-400">
-          {debouncedSearch
-            ? 'No books found matching your search.'
-            : 'No books yet. Create your first book!'}
+          No books yet. Create your first book!
         </div>
       )}
 

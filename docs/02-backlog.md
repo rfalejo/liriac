@@ -38,9 +38,9 @@
 - BL-008: Channels setup: ASGI, routing under `/ws/`, suggestion consumer (delta/usage/error/done), cancel support.
 - BL-009: OpenAPI schema via DRF Spectacular; publish `backend/schema.yaml`.
 - BL-010: Frontend DTO generation using `openapi-typescript` → `frontend/src/api/types.ts` and client helpers.
-- BL-011: SPA shell: routing (dashboard `/`, editor `/books/:bookId/chapters/:chapterId`), layout, theme.
-- BL-012: Library dashboard: list books and chapters with React Query, pagination, basic create flows.
-- BL-013: Editor: large text area, status bar (mode, autosave state, cursor), keyboard shortcuts.
+- BL-011: SPA shell: routing (editor-first `/`, deep links `/books/:bookId/chapters/:chapterId`), layout, theme.
+- BL-012: Library dashboard (deprecated in UI): list books and chapters with React Query, pagination, basic create flows (access via palette and Top Bar quick actions).
+- BL-013: Editor: large text area, status bar (mode, autosave state, cursor), keyboard shortcuts; palette-first navigation (BL-013C).
 - BL-014: Autosave (frontend): 10s debounce, checksum skip, optimistic updates, IndexedDB mirror for resilience.
 - BL-015: Suggestions UI: bottom drawer (Headless UI), prompt form, live token stream, actions (accept/regenerate/cancel).
 - BL-016: Context modal: personas and chapters selection with optimistic PATCH; token estimate preview.

@@ -43,9 +43,7 @@ describe('LibraryPage', () => {
     renderWithProviders(<LibraryPage />);
 
     expect(screen.getAllByText('Library').length).toBeGreaterThan(0);
-    expect(
-      screen.getByText(/Manage your books and chapters with a command-line/i),
-    ).toBeInTheDocument();
+    expect(screen.getByText('Manage your books and chapters.')).toBeInTheDocument();
     expect(screen.getByText('Books')).toBeInTheDocument();
     expect(screen.getByText('Chapters')).toBeInTheDocument();
     // Use a regex matcher to be resilient to future wording tweaks or element splits

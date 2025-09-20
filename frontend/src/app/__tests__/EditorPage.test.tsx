@@ -56,8 +56,7 @@ describe('EditorPage', () => {
       </TestProviders>,
     );
 
-    expect(screen.getByText('Editor')).toBeInTheDocument();
-    expect(screen.getAllByText('Book 1 — Chapter 2').length).toBeGreaterThan(0);
+  expect(screen.getAllByText('Book 1 — Chapter 2').length).toBeGreaterThan(0);
     expect(screen.getByRole('main')).toContainElement(
       screen.getByRole('main').querySelector('.animate-pulse'),
     );
@@ -104,7 +103,6 @@ describe('EditorPage', () => {
       </TestProviders>,
     );
 
-    expect(screen.getByText('Editor')).toBeInTheDocument();
     expect(
       screen.getAllByText('Book 1 — Chapter 2 — Test Chapter').length,
     ).toBeGreaterThan(0);
