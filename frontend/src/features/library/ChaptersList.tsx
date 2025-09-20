@@ -3,6 +3,8 @@ import { useNavigate } from 'react-router-dom';
 import { useBookChapters } from './hooks';
 import { isOk } from '../../api/client';
 import type { ChapterList } from '../../api/endpoints';
+import ChapterDialog from './components/ChapterDialog';
+import { useQueryClient } from '@tanstack/react-query';
 
 interface ChaptersListProps {
   bookId?: number;
@@ -13,6 +15,11 @@ export function ChaptersList({ bookId, bookTitle }: ChaptersListProps) {
   const [currentPage, setCurrentPage] = useState(1);
   const previousBookIdRef = useRef<number | undefined>(bookId);
   const navigate = useNavigate();
+  const qc = useQueryClient();
+
+  const [isCreateOpen, setCreateOpen] = useState(false);
+  const [isEditOpen, setEditOpen] = useState(false);
+  const [editing, setEditing] = useState<ChapterList | null>(null);
 
   const bookChanged = bookId !== previousBookIdRef.current;
   const pageForQuery = bookChanged ? 1 : currentPage;
@@ -41,6 +48,16 @@ export function ChaptersList({ bookId, bookTitle }: ChaptersListProps) {
     if (bookId) {
       navigate(`/books/${bookId}/chapters/${chapter.id}`);
     }
+  };
+
+  const openCreate = () => {
+    if (!bookId) return;
+    setCreateOpen(true);
+  };
+
+  const openEdit = (chapter: ChapterList) => {
+    setEditing(chapter);
+    setEditOpen(true);
   };
 
   const handlePreviousPage = () => {
@@ -103,10 +120,23 @@ export function ChaptersList({ bookId, bookTitle }: ChaptersListProps) {
       aria-labelledby="chapters-panel"
       aria-busy={isLoading}
     >
-      <h3 id="chapters-panel" className="text-lg font-medium">
-        Chapters
-        {bookTitle && <span className="text-zinc-500 font-normal"> — {bookTitle}</span>}
-      </h3>
+      <div className="flex items-center justify-between">
+        <h3 id="chapters-panel" className="text-lg font-medium">
+          Chapters
+          {bookTitle && (
+            <span className="text-zinc-500 font-normal"> — {bookTitle}</span>
+          )}
+        </h3>
+        {bookId && (
+          <button
+            type="button"
+            onClick={openCreate}
+            className="px-3 py-1.5 rounded bg-indigo-600 text-white text-sm hover:bg-indigo-700 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-500"
+          >
+            New Chapter
+          </button>
+        )}
+      </div>
 
       {isLoading && (
         <div className="space-y-2" role="status" aria-live="polite">
@@ -135,23 +165,34 @@ export function ChaptersList({ bookId, bookTitle }: ChaptersListProps) {
       {data && data.results.length > 0 && (
         <div className="space-y-2">
           {data.results.map((chapter) => (
-            <button
+            <div
               key={chapter.id}
-              onClick={() => handleChapterClick(chapter)}
-              className="w-full p-3 text-left border border-zinc-200 rounded-lg transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-500 hover:bg-zinc-100 hover:border-indigo-300 dark:border-zinc-800 dark:bg-zinc-900/70 dark:hover:bg-zinc-800/70 dark:hover:border-indigo-400"
+              className="p-3 border border-zinc-200 rounded-lg transition-colors dark:border-zinc-800 dark:bg-zinc-900/70"
             >
               <div className="flex justify-between items-start mb-1">
-                <div className="font-medium text-zinc-900 dark:text-zinc-100">
+                <button
+                  onClick={() => handleChapterClick(chapter)}
+                  className="font-medium text-zinc-900 dark:text-zinc-100 hover:underline text-left"
+                >
                   {chapter.title}
-                </div>
-                <div className="text-xs text-zinc-500 bg-zinc-100 px-2 py-1 rounded dark:bg-zinc-800 dark:text-zinc-300">
-                  #{chapter.order}
+                </button>
+                <div className="flex items-center gap-2">
+                  <div className="text-xs text-zinc-500 bg-zinc-100 px-2 py-1 rounded dark:bg-zinc-800 dark:text-zinc-300">
+                    #{chapter.order}
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => openEdit(chapter)}
+                    className="px-2 py-1 text-xs rounded border border-zinc-300 hover:bg-zinc-100 dark:border-zinc-700 dark:hover:bg-zinc-800"
+                  >
+                    Edit
+                  </button>
                 </div>
               </div>
               <div className="text-sm text-zinc-500 dark:text-zinc-400">
                 Last updated {new Date(chapter.updated_at).toLocaleDateString()}
               </div>
-            </button>
+            </div>
           ))}
         </div>
       )}
@@ -178,6 +219,30 @@ export function ChaptersList({ bookId, bookTitle }: ChaptersListProps) {
           </button>
         </div>
       )}
+
+      {/* Dialogs */}
+      <ChapterDialog
+        mode="create"
+        isOpen={isCreateOpen}
+        bookId={bookId}
+        onClose={() => setCreateOpen(false)}
+        onSuccess={(ch) => {
+          // Invalidate chapters list and navigate to editor
+          qc.invalidateQueries({ queryKey: ['books', bookId, 'chapters'] }).then(() => {
+            if (bookId) navigate(`/books/${bookId}/chapters/${ch.id}`);
+          });
+        }}
+      />
+      <ChapterDialog
+        mode="edit"
+        isOpen={isEditOpen}
+        initial={editing ?? undefined}
+        onClose={() => setEditOpen(false)}
+        onSuccess={() => {
+          // Refresh chapters list; keep pagination
+          qc.invalidateQueries({ queryKey: ['books', bookId, 'chapters'] });
+        }}
+      />
     </section>
   );
 }

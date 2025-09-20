@@ -11,7 +11,7 @@ interface BookDialogProps {
   initial?: Pick<Book, 'id' | 'title' | 'slug'> | null;
   isOpen: boolean;
   onClose: () => void;
-  onSuccess?: (book: Book) => void;
+  onSuccess?: (_book: Book) => void;
 }
 
 function slugify(input: string): string {

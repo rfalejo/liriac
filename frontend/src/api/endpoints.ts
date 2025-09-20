@@ -73,6 +73,31 @@ export async function getChapter(id: number) {
   return request<ChapterDetail>(`/api/v1/chapters/${id}/`, { method: 'GET' });
 }
 
+// Chapter create/update
+export interface CreateChapterPayload {
+  title: string;
+  order: number;
+  body?: string;
+  checksum: string;
+}
+export async function createChapter(bookId: number, payload: CreateChapterPayload) {
+  return request<ChapterList>(`/api/v1/books/${bookId}/chapters/`, {
+    json: payload,
+    method: 'POST',
+  });
+}
+
+export interface UpdateChapterPayload {
+  title?: string;
+  order?: number;
+}
+export async function updateChapter(id: number, payload: UpdateChapterPayload) {
+  return request<ChapterDetail>(`/api/v1/chapters/${id}/`, {
+    json: payload,
+    method: 'PATCH',
+  });
+}
+
 // Autosave
 export interface AutosavePayload {
   body: string;

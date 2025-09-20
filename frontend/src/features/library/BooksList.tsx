@@ -1,4 +1,4 @@
-import { useState, useMemo, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useBooks } from './hooks';
 import { isOk } from '../../api/client';
 import type { Book } from '../../api/endpoints';
@@ -21,12 +21,11 @@ export function BooksList({
   const lastPrefetchedId = useRef<number | null>(null);
 
   // Debounce search input
-  useMemo(() => {
+  useEffect(() => {
     const timer = setTimeout(() => {
       setDebouncedSearch(searchQuery);
       setCurrentPage(1); // Reset to first page when search changes
     }, 300);
-
     return () => clearTimeout(timer);
   }, [searchQuery]);
 
