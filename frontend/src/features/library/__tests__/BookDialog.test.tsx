@@ -20,11 +20,22 @@ describe('BookDialog', () => {
   });
 
   it('creates a book with generated slug', async () => {
-    createBook.mockResolvedValue({ ok: true, data: mockBook, status: 201, response: {} as any });
+    createBook.mockResolvedValue({
+      ok: true,
+      data: mockBook,
+      status: 201,
+      response: {} as any,
+    });
     const onSuccess = vi.fn();
 
     renderWithProviders(
-      <BookDialog mode="create" initial={null} isOpen={true} onClose={() => {}} onSuccess={onSuccess} />,
+      <BookDialog
+        mode="create"
+        initial={null}
+        isOpen={true}
+        onClose={() => {}}
+        onSuccess={onSuccess}
+      />,
     );
 
     const titleInput = screen.getByLabelText('Title');
@@ -37,16 +48,30 @@ describe('BookDialog', () => {
     const submitBtn = screen.getByRole('button', { name: 'Create' });
     await userEvent.click(submitBtn);
 
-    expect(createBook).toHaveBeenCalledWith({ title: 'New Test Book', slug: 'new-test-book' });
+    expect(createBook).toHaveBeenCalledWith({
+      title: 'New Test Book',
+      slug: 'new-test-book',
+    });
     expect(onSuccess).toHaveBeenCalledWith(mockBook);
   });
 
   it('edits a book and calls update', async () => {
-    updateBook.mockResolvedValue({ ok: true, data: mockBook, status: 200, response: {} as any });
+    updateBook.mockResolvedValue({
+      ok: true,
+      data: mockBook,
+      status: 200,
+      response: {} as any,
+    });
     const onSuccess = vi.fn();
 
     renderWithProviders(
-      <BookDialog mode="edit" initial={{ id: 1, title: 'Old', slug: 'old' }} isOpen={true} onClose={() => {}} onSuccess={onSuccess} />,
+      <BookDialog
+        mode="edit"
+        initial={{ id: 1, title: 'Old', slug: 'old' }}
+        isOpen={true}
+        onClose={() => {}}
+        onSuccess={onSuccess}
+      />,
     );
 
     const titleInput = screen.getByLabelText('Title');

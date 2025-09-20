@@ -23,7 +23,13 @@ function slugify(input: string): string {
     .replace(/-+/g, '-');
 }
 
-export default function BookDialog({ mode, initial, isOpen, onClose, onSuccess }: BookDialogProps) {
+export default function BookDialog({
+  mode,
+  initial,
+  isOpen,
+  onClose,
+  onSuccess,
+}: BookDialogProps) {
   const titleId = useId();
   const descId = useId();
   const dialogRef = useRef<HTMLDivElement>(null);
@@ -68,9 +74,10 @@ export default function BookDialog({ mode, initial, isOpen, onClose, onSuccess }
     setGeneralError(null);
 
     const payload = { title: title.trim(), slug: slug.trim() };
-    const result = mode === 'create'
-      ? await createBook(payload)
-      : await updateBook(initial!.id, payload);
+    const result =
+      mode === 'create'
+        ? await createBook(payload)
+        : await updateBook(initial!.id, payload);
 
     setSubmitting(false);
 
@@ -121,12 +128,16 @@ export default function BookDialog({ mode, initial, isOpen, onClose, onSuccess }
           {mode === 'create' ? 'New Book' : 'Edit Book'}
         </h3>
         <p id={descId} className="text-sm text-zinc-600 dark:text-zinc-400 mt-1">
-          {mode === 'create' ? 'Create a new book by providing a title and slug.' : 'Update the title or slug for this book.'}
+          {mode === 'create'
+            ? 'Create a new book by providing a title and slug.'
+            : 'Update the title or slug for this book.'}
         </p>
 
         <form onSubmit={onSubmit} className="mt-4 space-y-3">
           <div>
-            <label htmlFor="book-title" className="block text-sm font-medium">Title</label>
+            <label htmlFor="book-title" className="block text-sm font-medium">
+              Title
+            </label>
             <input
               id="book-title"
               type="text"
@@ -136,11 +147,15 @@ export default function BookDialog({ mode, initial, isOpen, onClose, onSuccess }
               className="mt-1 w-full rounded-md border border-zinc-300 bg-white px-3 py-2 text-sm shadow-sm focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-500 dark:border-zinc-700 dark:bg-zinc-950"
             />
             {fieldErrors.title && (
-              <p className="mt-1 text-sm text-red-600" aria-live="polite">{fieldErrors.title.join(' ')}</p>
+              <p className="mt-1 text-sm text-red-600" aria-live="polite">
+                {fieldErrors.title.join(' ')}
+              </p>
             )}
           </div>
           <div>
-            <label htmlFor="book-slug" className="block text-sm font-medium">Slug</label>
+            <label htmlFor="book-slug" className="block text-sm font-medium">
+              Slug
+            </label>
             <input
               id="book-slug"
               type="text"
@@ -153,14 +168,21 @@ export default function BookDialog({ mode, initial, isOpen, onClose, onSuccess }
               required
               className="mt-1 w-full rounded-md border border-zinc-300 bg-white px-3 py-2 text-sm shadow-sm focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-500 dark:border-zinc-700 dark:bg-zinc-950"
             />
-            <p className="mt-1 text-xs text-zinc-500">Lowercase letters, numbers, and dashes only.</p>
+            <p className="mt-1 text-xs text-zinc-500">
+              Lowercase letters, numbers, and dashes only.
+            </p>
             {fieldErrors.slug && (
-              <p className="mt-1 text-sm text-red-600" aria-live="polite">{fieldErrors.slug.join(' ')}</p>
+              <p className="mt-1 text-sm text-red-600" aria-live="polite">
+                {fieldErrors.slug.join(' ')}
+              </p>
             )}
           </div>
 
           {generalError && (
-            <div className="p-2 text-sm text-red-700 bg-red-50 border border-red-200 rounded" aria-live="polite">
+            <div
+              className="p-2 text-sm text-red-700 bg-red-50 border border-red-200 rounded"
+              aria-live="polite"
+            >
               {generalError}
             </div>
           )}
