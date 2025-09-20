@@ -6,6 +6,7 @@ import type { Book } from '../../api/endpoints';
 import BookDialog from '../../features/library/components/BookDialog';
 import { useQueryClient } from '@tanstack/react-query';
 import { useBottomBar } from '../../features/bottombar';
+import { useTopBar } from '../../features/topbar';
 
 export function LibraryPage() {
   const [searchParams, setSearchParams] = useSearchParams();
@@ -14,6 +15,7 @@ export function LibraryPage() {
   const [isEditOpen, setEditOpen] = useState(false);
   const qc = useQueryClient();
   const bar = useBottomBar();
+  const top = useTopBar();
 
   // Get selected book ID from URL params
   const bookIdParam = searchParams.get('book');
@@ -47,11 +49,26 @@ export function LibraryPage() {
       ],
     });
 
+    // Publish Top Bar contributions
+    top.set({
+      breadcrumb: 'Library',
+      promptEnabled: false,
+      quickActions: [
+        { id: 'new-book', label: 'New Book', onClick: () => setCreateOpen(true) },
+      ],
+      connectivity: { api: 'online', ws: 'connected', env: 'DEV' },
+    });
+    top.registerCommands([
+      { id: 'nav-library', title: 'Open: Library', group: 'Navigate', run: () => {} },
+      { id: 'action-new-book', title: 'New Book', group: 'Actions', run: () => setCreateOpen(true) },
+    ]);
+
     return () => {
       // Reset to defaults when leaving the page
       bar.set({});
+      top.set({});
     };
-  }, [bar]);
+  }, [bar, top]);
 
   useEffect(() => {
     if (!bookIdParam) {

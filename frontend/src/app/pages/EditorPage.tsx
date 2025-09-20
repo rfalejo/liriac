@@ -3,6 +3,7 @@ import { useState, useEffect, useRef, useCallback } from 'react';
 import { useChapter } from '../../features/editor/hooks';
 import { isOk } from '../../api/client';
 import { useBottomBar } from '../../features/bottombar';
+import { useTopBar } from '../../features/topbar';
 
 export function EditorPage() {
   const { bookId, chapterId } = useParams<{ bookId: string; chapterId: string }>();
@@ -13,6 +14,7 @@ export function EditorPage() {
   const [content, setContent] = useState('');
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const bar = useBottomBar();
+  const top = useTopBar();
 
   // Update content when chapter data changes
   useEffect(() => {
@@ -44,6 +46,32 @@ export function EditorPage() {
       bar.set({});
     };
   }, [bookIdNum, chapterIdNum, chapterResult, bar]);
+
+  // Publish Top Bar contributions for Editor (breadcrumb, meta)
+  useEffect(() => {
+    const title =
+      chapterResult && isOk(chapterResult) && chapterResult.data.title
+        ? chapterResult.data.title
+        : undefined;
+    top.set({
+      breadcrumb: `Book: ${bookIdNum} › Chapter: ${chapterIdNum}${title ? ` — ${title}` : ''}`,
+      promptEnabled: true,
+      quickActions: [
+        { id: 'prompt', label: 'Prompt', onClick: () => bar.togglePrompt() },
+      ],
+      connectivity: { api: 'online', ws: 'connected', env: 'DEV' },
+    });
+    top.registerCommands([
+      { id: 'action-prompt', title: 'Prompt', group: 'Actions', run: () => bar.togglePrompt() },
+    ]);
+  }, [bookIdNum, chapterIdNum, chapterResult, top, bar]);
+
+  // Compute and patch doc meta based on content
+  useEffect(() => {
+    const words = content.trim() ? content.trim().split(/\s+/).length : 0;
+    const readingMinutes = words ? Math.max(1, Math.round(words / 200)) : 0;
+    top.patch({ meta: { words, readingMinutes } });
+  }, [content, top]);
 
   // Keyboard shortcuts
   const handleKeyDown = useCallback(

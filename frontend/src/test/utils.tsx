@@ -5,6 +5,8 @@ import { MemoryRouter } from 'react-router-dom';
 import type { ReactNode } from 'react';
 import { BottomBarProvider } from '../features/bottombar';
 import { BottomBar, PromptPopover } from '../features/bottombar';
+import { TopBarProvider } from '../features/topbar';
+import { CommandPalette } from '../features/topbar';
 
 // Test wrapper with necessary providers
 interface TestProvidersProps {
@@ -29,12 +31,15 @@ export function TestProviders({
   return (
     <QueryClientProvider client={queryClient}>
       <MemoryRouter initialEntries={initialEntries}>
-        <BottomBarProvider>
-          {children}
-          {/* Anchor global UI similar to AppLayout */}
-          <PromptPopover />
-          <BottomBar />
-        </BottomBarProvider>
+        <TopBarProvider>
+          <BottomBarProvider>
+            {children}
+            {/* Anchor global UI similar to AppLayout */}
+            <PromptPopover />
+            <BottomBar />
+            <CommandPalette />
+          </BottomBarProvider>
+        </TopBarProvider>
       </MemoryRouter>
     </QueryClientProvider>
   );
