@@ -5,18 +5,27 @@ from typing import Any
 
 from django.utils.text import slugify
 from rest_framework import serializers
+from rest_framework.validators import UniqueValidator
 
 from ..models import HEX_CHECKSUM_RE, Book, Chapter, Persona
 
 
 class BookSerializer(serializers.ModelSerializer[Book]):
+    # Override to accept any string and normalize to slug in validate_slug, ensure uniqueness
+    slug = serializers.CharField(
+        max_length=200,
+        validators=[UniqueValidator(queryset=Book.objects.all())],
+    )
     class Meta:
         model = Book
         fields = ["id", "title", "slug", "created_at", "last_opened"]
         read_only_fields = ["id", "created_at", "last_opened"]
 
     def validate_slug(self, value: str) -> str:  # noqa: D401
-        return slugify(value) if value else value
+        normalized = slugify(value) if value else ""
+        if not normalized:
+            raise serializers.ValidationError("Slug cannot be empty after normalization")
+        return normalized
 
 
 class ChapterListSerializer(serializers.ModelSerializer[Chapter]):

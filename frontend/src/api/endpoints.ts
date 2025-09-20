@@ -42,6 +42,22 @@ export async function getBook(id: number) {
   return request<Book>(`/api/v1/books/${id}/`, { method: 'GET' });
 }
 
+export interface CreateBookPayload {
+  title: string;
+  slug: string;
+}
+export async function createBook(payload: CreateBookPayload) {
+  return request<Book>(`/api/v1/books/`, { json: payload, method: 'POST' });
+}
+
+export interface UpdateBookPayload {
+  title?: string;
+  slug?: string;
+}
+export async function updateBook(id: number, payload: UpdateBookPayload) {
+  return request<Book>(`/api/v1/books/${id}/`, { json: payload, method: 'PATCH' });
+}
+
 // Chapters under a book (list for dashboard)
 export async function listBookChapters(bookId: number, params?: ListParams) {
   const q = params

@@ -24,7 +24,13 @@ from .serializers import (
 )
 
 
-class BookViewSet(mixins.ListModelMixin, mixins.CreateModelMixin, mixins.RetrieveModelMixin, viewsets.GenericViewSet[Book]):
+class BookViewSet(
+    mixins.ListModelMixin,
+    mixins.CreateModelMixin,
+    mixins.RetrieveModelMixin,
+    mixins.UpdateModelMixin,
+    viewsets.GenericViewSet[Book],
+):
     queryset = Book.objects.all().order_by("title")
     serializer_class = BookSerializer
     filter_backends = [SearchFilter, OrderingFilter]

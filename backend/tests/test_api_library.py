@@ -42,6 +42,39 @@ def test_books_list_create_and_search_ordering() -> None:
 
 
 @pytest.mark.django_db()
+def test_books_patch_update_and_slug_normalization_and_uniqueness() -> None:
+    client = APIClient()
+    b1 = Book.objects.create(title="Alpha", slug="alpha")
+    b2 = Book.objects.create(title="Beta", slug="beta")
+
+    # Happy path: update title only
+    resp = client.patch(f"/api/v1/books/{b1.id}/", {"title": "Alpha (rev)"}, format="json")
+    assert resp.status_code == 200
+    assert resp.json()["title"] == "Alpha (rev)"
+
+    # Slug normalization on update
+    resp2 = client.patch(
+        f"/api/v1/books/{b1.id}/",
+        {"slug": "  My New Slug!!  "},
+        format="json",
+    )
+    assert resp2.status_code == 200
+    assert resp2.json()["slug"] == "my-new-slug"
+
+    # Uniqueness violation when changing slug to existing one
+    resp3 = client.patch(
+        f"/api/v1/books/{b1.id}/",
+        {"slug": b2.slug},
+        format="json",
+    )
+    assert resp3.status_code == 400
+    # Ensure list/search still work after updates
+    resp_list = client.get("/api/v1/books/?search=alpha")
+    assert resp_list.status_code == 200
+    assert resp_list.json()["count"] >= 1
+
+
+@pytest.mark.django_db()
 def test_chapters_nested_list_create_and_detail_patch_restrict_body_checksum() -> None:
     client = APIClient()
     book = Book.objects.create(title="Book", slug="book")

@@ -3,10 +3,15 @@ import { useSearchParams } from 'react-router-dom';
 import { BooksList } from '../../features/library/BooksList';
 import { ChaptersList } from '../../features/library/ChaptersList';
 import type { Book } from '../../api/endpoints';
+import BookDialog from '../../features/library/components/BookDialog';
+import { useQueryClient } from '@tanstack/react-query';
 
 export function LibraryPage() {
   const [searchParams, setSearchParams] = useSearchParams();
   const [selectedBook, setSelectedBook] = useState<Book | null>(null);
+  const [isCreateOpen, setCreateOpen] = useState(false);
+  const [isEditOpen, setEditOpen] = useState(false);
+  const qc = useQueryClient();
 
   // Get selected book ID from URL params
   const bookIdParam = searchParams.get('book');
@@ -50,9 +55,29 @@ export function LibraryPage() {
         <h2 id="library-heading" className="text-2xl font-semibold tracking-tight">
           Library
         </h2>
-        <p className="text-sm text-zinc-600 dark:text-zinc-400">
-          Manage your books and chapters with a command-line inspired interface.
-        </p>
+        <div className="flex items-center justify-between">
+          <p className="text-sm text-zinc-600 dark:text-zinc-400">
+            Manage your books and chapters with a command-line inspired interface.
+          </p>
+          <div className="flex gap-2">
+            {selectedBook && (
+              <button
+                type="button"
+                onClick={() => setEditOpen(true)}
+                className="px-3 py-1.5 rounded border border-zinc-300 text-sm hover:bg-zinc-100 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-500 dark:border-zinc-700 dark:hover:bg-zinc-800"
+              >
+                Edit Book
+              </button>
+            )}
+            <button
+              type="button"
+              onClick={() => setCreateOpen(true)}
+              className="px-3 py-1.5 rounded bg-indigo-600 text-white text-sm hover:bg-indigo-700 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-500"
+            >
+              New Book
+            </button>
+          </div>
+        </div>
       </header>
 
       <div className="flex-1 grid grid-cols-1 lg:grid-cols-2 gap-6 min-h-0">
@@ -72,6 +97,36 @@ export function LibraryPage() {
           <ChaptersList bookId={selectedBookId} bookTitle={selectedBook?.title} />
         </div>
       </div>
+
+      {/* Create dialog */}
+      <BookDialog
+        mode="create"
+        isOpen={isCreateOpen}
+        initial={null}
+        onClose={() => setCreateOpen(false)}
+        onSuccess={(book) => {
+          // Invalidate book lists and select the created book
+          qc.invalidateQueries({ queryKey: ['books'] }).then(() => {
+            handleBookSelect(book);
+          });
+        }}
+      />
+
+      {/* Edit dialog */}
+      <BookDialog
+        mode="edit"
+        isOpen={isEditOpen}
+        initial={selectedBook}
+        onClose={() => setEditOpen(false)}
+        onSuccess={(book) => {
+          // Update selection and refresh caches
+          setSelectedBook(book);
+          const params = new URLSearchParams(searchParams);
+          params.set('book', String(book.id));
+          setSearchParams(params);
+          qc.invalidateQueries({ queryKey: ['books'] });
+        }}
+      />
     </section>
   );
 }
