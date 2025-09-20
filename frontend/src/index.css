@@ -1,4 +1,14 @@
 @import "tailwindcss";
+@plugin "@tailwindcss/typography";
+
+/* Theme variables */
+:root[data-theme='gotham'] {
+  --bg: #0b0f14;
+  --surface: #0f141a;
+  --fg: #e6edf3;
+  --muted: #9aa4b2;
+  --border: #1f2a37;
+}
 
 /* Base theming and full-height layout */
 html,
@@ -8,5 +18,8 @@ body,
 }
 
 body {
-  @apply bg-gray-50 text-gray-900 dark:bg-gray-900 dark:text-gray-100 antialiased;
+  background-color: var(--bg);
+  color: var(--fg);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
 }

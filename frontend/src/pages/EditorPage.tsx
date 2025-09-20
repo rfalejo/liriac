@@ -4,7 +4,7 @@ import FooterStatusBar from '../components/FooterStatusBar';
 
 export default function EditorPage() {
   return (
-    <div className="min-h-screen bg-gray-50 text-gray-900 dark:bg-gray-900 dark:text-gray-100 flex flex-col">
+    <div className="min-h-screen bg-[var(--bg)] text-[var(--fg)] flex flex-col">
       <TopAppBar />
       <EditorSurface />
       <FooterStatusBar />

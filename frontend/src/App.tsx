@@ -1,5 +1,10 @@
 import EditorPage from './pages/EditorPage';
+import { ThemeProvider } from './theme';
 
 export default function App() {
-  return <EditorPage />;
+  return (
+    <ThemeProvider>
+      <EditorPage />
+    </ThemeProvider>
+  );
 }
