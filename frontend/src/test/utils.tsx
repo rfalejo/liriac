@@ -3,6 +3,8 @@ import { render, renderHook } from '@testing-library/react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { MemoryRouter } from 'react-router-dom';
 import type { ReactNode } from 'react';
+import { BottomBarProvider } from '../features/bottombar';
+import { BottomBar, PromptPopover } from '../features/bottombar';
 
 // Test wrapper with necessary providers
 interface TestProvidersProps {
@@ -26,7 +28,14 @@ export function TestProviders({
 
   return (
     <QueryClientProvider client={queryClient}>
-      <MemoryRouter initialEntries={initialEntries}>{children}</MemoryRouter>
+      <MemoryRouter initialEntries={initialEntries}>
+        <BottomBarProvider>
+          {children}
+          {/* Anchor global UI similar to AppLayout */}
+          <PromptPopover />
+          <BottomBar />
+        </BottomBarProvider>
+      </MemoryRouter>
     </QueryClientProvider>
   );
 }

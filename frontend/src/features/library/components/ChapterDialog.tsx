@@ -49,9 +49,13 @@ export default function ChapterDialog({
   }, [isOpen, initial]);
 
   const titleValid = title.trim().length > 0;
-  const canSubmit = titleValid && !submitting && (mode === 'edit' || bookId !== undefined);
+  const canSubmit =
+    titleValid && !submitting && (mode === 'edit' || bookId !== undefined);
 
-  const parseFieldErrors = async (error: { response?: Response | null; error: string }) => {
+  const parseFieldErrors = async (error: {
+    response?: Response | null;
+    error: string;
+  }) => {
     try {
       const res = error.response;
       const data = await res?.clone().json();

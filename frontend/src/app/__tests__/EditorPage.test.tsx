@@ -57,7 +57,7 @@ describe('EditorPage', () => {
     );
 
     expect(screen.getByText('Editor')).toBeInTheDocument();
-    expect(screen.getByText('Book 1 — Chapter 2')).toBeInTheDocument();
+    expect(screen.getAllByText('Book 1 — Chapter 2').length).toBeGreaterThan(0);
     expect(screen.getByRole('main')).toContainElement(
       screen.getByRole('main').querySelector('.animate-pulse'),
     );
@@ -105,14 +105,17 @@ describe('EditorPage', () => {
     );
 
     expect(screen.getByText('Editor')).toBeInTheDocument();
-    expect(screen.getByText('Book 1 — Chapter 2 — Test Chapter')).toBeInTheDocument();
+    expect(
+      screen.getAllByText('Book 1 — Chapter 2 — Test Chapter').length,
+    ).toBeGreaterThan(0);
 
     const textarea = screen.getByRole('textbox', { name: 'Chapter content' });
     expect(textarea).toBeInTheDocument();
     expect(textarea).toHaveValue('This is the chapter content.');
 
-    expect(screen.getByText('Mode: Manual')).toBeInTheDocument();
-    expect(screen.getByText('Autosave: active (every 10s)')).toBeInTheDocument();
+    // Bottom bar shows mode and autosave
+    expect(screen.getByText(/Mode: Manual/)).toBeInTheDocument();
+    expect(screen.getByText(/Autosave: active \(every 10s\)/)).toBeInTheDocument();
   });
 
   it('should handle text editing', async () => {
@@ -165,7 +168,7 @@ describe('EditorPage', () => {
     // Simulate Ctrl+S
     await user.keyboard('{Control>}s{/Control}');
 
-    expect(screen.getByText('Save disabled (BL-014)')).toBeInTheDocument();
+    expect(screen.getByText(/Save disabled \(BL-014\)/)).toBeInTheDocument();
 
     // Message should disappear after timeout
     await waitFor(
@@ -200,7 +203,7 @@ describe('EditorPage', () => {
     // Simulate Cmd+S
     await user.keyboard('{Meta>}s{/Meta}');
 
-    expect(screen.getByText('Save disabled (BL-014)')).toBeInTheDocument();
+    expect(screen.getByText(/Save disabled \(BL-014\)/)).toBeInTheDocument();
   });
 
   it('should handle Escape keyboard shortcut', async () => {

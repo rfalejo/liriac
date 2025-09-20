@@ -40,7 +40,7 @@ describe('ChapterDialog', () => {
     );
 
     await userEvent.type(screen.getByLabelText('Title'), 'Intro');
-  // Order and Body fields removed; server appends new chapter at end with empty body
+    // Order and Body fields removed; server appends new chapter at end with empty body
 
     await userEvent.click(screen.getByRole('button', { name: 'Create' }));
 

@@ -69,7 +69,9 @@ export function ChaptersList({ bookId, bookTitle }: ChaptersListProps) {
       qc.setQueriesData(
         { queryKey: ['books', bookId, 'chapters', queryParams] },
         (old: unknown) => {
-          const prev = old as { ok: boolean; data?: { results?: ChapterList[] } } | undefined;
+          const prev = old as
+            | { ok: boolean; data?: { results?: ChapterList[] } }
+            | undefined;
           if (!prev || !prev.ok) return old;
           return { ...prev, data: { ...prev.data, results: res.data } };
         },
@@ -218,7 +220,11 @@ export function ChaptersList({ bookId, bookTitle }: ChaptersListProps) {
                   {chapter.title}
                 </button>
                 <div className="flex items-center gap-2">
-                  <div className="flex items-center gap-1" role="group" aria-label={`Reorder ${chapter.title}`}>
+                  <div
+                    className="flex items-center gap-1"
+                    role="group"
+                    aria-label={`Reorder ${chapter.title}`}
+                  >
                     <button
                       type="button"
                       aria-label={`Move ${chapter.title} up`}
@@ -234,7 +240,7 @@ export function ChaptersList({ bookId, bookTitle }: ChaptersListProps) {
                       disabled={idx === visible.length - 1}
                       onClick={() => moveItem(chapter.id, +1)}
                       className="px-2 py-1 text-xs rounded border border-zinc-300 hover:bg-zinc-100 disabled:opacity-50 dark:border-zinc-700 dark:hover:bg-zinc-800"
-                   >
+                    >
                       ↓
                     </button>
                   </div>
@@ -321,7 +327,9 @@ export function ChaptersList({ bookId, bookTitle }: ChaptersListProps) {
             Cancel
           </button>
           {reorderError && (
-            <span className="text-sm text-red-600" aria-live="polite">{reorderError}</span>
+            <span className="text-sm text-red-600" aria-live="polite">
+              {reorderError}
+            </span>
           )}
         </div>
       )}

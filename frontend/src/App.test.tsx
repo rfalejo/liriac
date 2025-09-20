@@ -61,7 +61,9 @@ describe('App', () => {
   it('renders Editor page on editor route', () => {
     renderWithRoute('/books/1/chapters/2');
     expect(screen.getByRole('heading', { name: /editor/i })).toBeInTheDocument();
-    expect(screen.getByText(/Book 1 — Chapter 2/i)).toBeInTheDocument();
+    // Text appears in both header and bottom bar; tolerate multiple matches
+    const matches = screen.getAllByText(/Book 1 — Chapter 2/i);
+    expect(matches.length).toBeGreaterThanOrEqual(1);
   });
 
   it('renders Not Found on unknown route', () => {

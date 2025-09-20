@@ -30,7 +30,10 @@ describe('Chapters reorder UI', () => {
       { id: 3, title: 'Three', order: 3, updated_at: new Date().toISOString() },
     ];
     mockUseBookChapters.mockReturnValue({
-      data: { ...mockApiResult, data: { count: 3, next: null, previous: null, results: chapters } },
+      data: {
+        ...mockApiResult,
+        data: { count: 3, next: null, previous: null, results: chapters },
+      },
       isLoading: false,
       error: null,
       refetch: vi.fn(),

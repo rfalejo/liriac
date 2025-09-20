@@ -2,6 +2,7 @@ import { useParams } from 'react-router-dom';
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { useChapter } from '../../features/editor/hooks';
 import { isOk } from '../../api/client';
+import { useBottomBar } from '../../features/bottombar';
 
 export function EditorPage() {
   const { bookId, chapterId } = useParams<{ bookId: string; chapterId: string }>();
@@ -10,8 +11,8 @@ export function EditorPage() {
 
   const { data: chapterResult, isLoading, error, refetch } = useChapter(chapterIdNum);
   const [content, setContent] = useState('');
-  const [statusMessage, setStatusMessage] = useState('');
   const textareaRef = useRef<HTMLTextAreaElement>(null);
+  const bar = useBottomBar();
 
   // Update content when chapter data changes
   useEffect(() => {
@@ -20,13 +21,29 @@ export function EditorPage() {
     }
   }, [chapterResult]);
 
-  // Clear transient status message after timeout
+  // Publish Bottom Bar contributions for Editor
   useEffect(() => {
-    if (statusMessage) {
-      const timer = setTimeout(() => setStatusMessage(''), 2000);
-      return () => clearTimeout(timer);
-    }
-  }, [statusMessage]);
+    const title =
+      chapterResult && isOk(chapterResult) && chapterResult.data.title
+        ? ` — ${chapterResult.data.title}`
+        : '';
+    bar.set({
+      left: `Book ${bookIdNum} — Chapter ${chapterIdNum}${title}`,
+      editor: {
+        modeLabel: 'Mode: Manual',
+        autosaveLabel: 'Autosave: active (every 10s)',
+      },
+      rightShortcuts: [
+        { keys: 'Shift+Tab', label: 'Prompt', action: () => bar.togglePrompt() },
+        { keys: 'Esc', label: 'Blur/Close' },
+        { keys: 'Ctrl/Cmd+S', label: 'Save (disabled)', disabled: true },
+      ],
+    });
+
+    return () => {
+      bar.set({});
+    };
+  }, [bookIdNum, chapterIdNum, chapterResult, bar]);
 
   // Keyboard shortcuts
   const handleKeyDown = useCallback(
@@ -34,7 +51,7 @@ export function EditorPage() {
       // Ctrl/Cmd+S - prevent default save and show message
       if ((event.ctrlKey || event.metaKey) && event.key === 's') {
         event.preventDefault();
-        setStatusMessage('Save disabled (BL-014)');
+        bar.pushMessage({ text: 'Save disabled (BL-014)' });
         return;
       }
 
@@ -43,8 +60,15 @@ export function EditorPage() {
         textareaRef.current?.blur();
         return;
       }
+
+      // Shift+Tab - open prompt popover
+      if (event.key === 'Tab' && event.shiftKey) {
+        event.preventDefault();
+        bar.togglePrompt();
+        return;
+      }
     },
-    [],
+    [bar],
   );
 
   const handleRetry = useCallback(() => {
@@ -132,30 +156,7 @@ export function EditorPage() {
         />
       </main>
 
-      {/* Status bar */}
-      <footer
-        role="status"
-        aria-live="polite"
-        className="flex-shrink-0 p-3 border-t border-zinc-200/70 bg-zinc-100/60 text-sm text-zinc-600 flex items-center justify-between font-mono uppercase tracking-wide dark:border-zinc-800 dark:bg-zinc-900/70 dark:text-zinc-400"
-      >
-        <div className="flex items-center space-x-4">
-          <span>Mode: Manual</span>
-          {chapter && (
-            <>
-              <span>•</span>
-              <span>Book: {bookIdNum}</span>
-              <span>•</span>
-              <span>Chapter: {chapterIdNum}</span>
-            </>
-          )}
-        </div>
-        <div className="flex items-center space-x-4">
-          {statusMessage && (
-            <span className="text-blue-600 font-medium">{statusMessage}</span>
-          )}
-          <span>Autosave: active (every 10s)</span>
-        </div>
-      </footer>
+      {/* Status moved to global Bottom Bar */}
     </div>
   );
 }

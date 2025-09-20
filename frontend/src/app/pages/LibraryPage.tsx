@@ -5,6 +5,7 @@ import { ChaptersList } from '../../features/library/ChaptersList';
 import type { Book } from '../../api/endpoints';
 import BookDialog from '../../features/library/components/BookDialog';
 import { useQueryClient } from '@tanstack/react-query';
+import { useBottomBar } from '../../features/bottombar';
 
 export function LibraryPage() {
   const [searchParams, setSearchParams] = useSearchParams();
@@ -12,6 +13,7 @@ export function LibraryPage() {
   const [isCreateOpen, setCreateOpen] = useState(false);
   const [isEditOpen, setEditOpen] = useState(false);
   const qc = useQueryClient();
+  const bar = useBottomBar();
 
   // Get selected book ID from URL params
   const bookIdParam = searchParams.get('book');
@@ -29,6 +31,28 @@ export function LibraryPage() {
   };
 
   // Clear selected book if URL param is removed
+  useEffect(() => {
+    // Publish Bottom Bar contributions for Library
+    bar.set({
+      left: 'Library',
+      middle: 'Manage your books and chapters',
+      rightShortcuts: [
+        { keys: '?', label: 'Shortcuts' },
+        { keys: '/', label: 'Search' },
+        {
+          keys: 'N',
+          label: 'New book',
+          action: () => setCreateOpen(true),
+        },
+      ],
+    });
+
+    return () => {
+      // Reset to defaults when leaving the page
+      bar.set({});
+    };
+  }, [bar]);
+
   useEffect(() => {
     if (!bookIdParam) {
       setSelectedBook(null);

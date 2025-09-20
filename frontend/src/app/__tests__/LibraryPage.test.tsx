@@ -42,7 +42,7 @@ describe('LibraryPage', () => {
   it('should render library page with heading and both panels', () => {
     renderWithProviders(<LibraryPage />);
 
-    expect(screen.getByText('Library')).toBeInTheDocument();
+    expect(screen.getAllByText('Library').length).toBeGreaterThan(0);
     expect(
       screen.getByText(/Manage your books and chapters with a command-line/i),
     ).toBeInTheDocument();
