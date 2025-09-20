@@ -162,6 +162,73 @@ paths:
               schema:
                 $ref: '#/components/schemas/Book'
           description: ''
+    put:
+      operationId: books_update
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this book.
+        required: true
+      tags:
+      - books
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Book'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/Book'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/Book'
+        required: true
+      security:
+      - cookieAuth: []
+      - basicAuth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Book'
+          description: ''
+    patch:
+      operationId: books_partial_update
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this book.
+        required: true
+      tags:
+      - books
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PatchedBook'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/PatchedBook'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/PatchedBook'
+      security:
+      - cookieAuth: []
+      - basicAuth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Book'
+          description: ''
   /api/v1/chapters/{id}/autosave/:
     post:
       operationId: chapters_autosave_create
@@ -510,7 +577,6 @@ components:
         slug:
           type: string
           maxLength: 200
-          pattern: ^[-a-zA-Z0-9_]+$
         created_at:
           type: string
           format: date-time
@@ -687,6 +753,27 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/Persona'
+    PatchedBook:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        title:
+          type: string
+          maxLength: 200
+        slug:
+          type: string
+          maxLength: 200
+        created_at:
+          type: string
+          format: date-time
+          readOnly: true
+        last_opened:
+          type: string
+          format: date-time
+          readOnly: true
+          nullable: true
     PatchedChapterDetail:
       type: object
       properties:
