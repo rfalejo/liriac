@@ -65,9 +65,16 @@ class ChapterDetailSerializer(serializers.ModelSerializer[Chapter]):
 
 
 class ChapterCreateSerializer(serializers.ModelSerializer[Chapter]):
+    """Create serializer for Chapter.
+
+    Order is intentionally excluded from the writable fields; the server will
+    append the new chapter to the end of the book sequence (last+1). Body is
+    optional and defaults to empty string. Checksum is required and validated.
+    """
+
     class Meta:
         model = Chapter
-        fields = ["id", "title", "order", "body", "checksum", "updated_at"]
+        fields = ["id", "title", "body", "checksum", "updated_at"]
         read_only_fields = ["id", "updated_at"]
 
     def validate_checksum(self, value: str) -> str:  # noqa: D401
@@ -100,3 +107,10 @@ class AutosaveSerializer(serializers.Serializer):  # type: ignore[type-arg]
     def validate(self, attrs: dict[str, Any]) -> dict[str, Any]:  # noqa: D401
         # Body/checksum consistency will be re-validated in service; keep lightweight here.
         return attrs
+
+
+class ChaptersReorderSerializer(serializers.Serializer):  # type: ignore[type-arg]
+    ordered_ids = serializers.ListField(
+        child=serializers.IntegerField(min_value=1), allow_empty=False
+    )
+

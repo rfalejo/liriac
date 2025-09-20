@@ -4,734 +4,786 @@
  */
 
 export interface paths {
-  '/api/v1/books/': {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
+    "/api/v1/books/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["books_list"];
+        put?: never;
+        post: operations["books_create"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
     };
-    get: operations['books_list'];
-    put?: never;
-    post: operations['books_create'];
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  '/api/v1/books/{book_pk}/chapters/': {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
+    "/api/v1/books/{book_pk}/chapters/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["books_chapters_list"];
+        put?: never;
+        post: operations["books_chapters_create"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
     };
-    get: operations['books_chapters_list'];
-    put?: never;
-    post: operations['books_chapters_create'];
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  '/api/v1/books/{id}/': {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
+    "/api/v1/books/{book_pk}/chapters/reorder/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** @description POST /api/v1/books/<book_pk>/chapters/reorder/
+         *
+         *     Payload: { "ordered_ids": [ ... all chapter IDs for this book ... ] } */
+        post: operations["books_chapters_reorder"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
     };
-    get: operations['books_retrieve'];
-    put: operations['books_update'];
-    post?: never;
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch: operations['books_partial_update'];
-    trace?: never;
-  };
-  '/api/v1/chapters/{id}/autosave/': {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
+    "/api/v1/books/{id}/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["books_retrieve"];
+        put: operations["books_update"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch: operations["books_partial_update"];
+        trace?: never;
     };
-    get?: never;
-    put?: never;
-    /** @description POST /api/v1/chapters/<id>/autosave/ */
-    post: operations['chapters_autosave_create'];
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  '/api/v1/chapters/{id}/': {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
+    "/api/v1/chapters/{id}/autosave/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** @description POST /api/v1/chapters/<id>/autosave/ */
+        post: operations["chapters_autosave_create"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
     };
-    get: operations['chapters_retrieve'];
-    put: operations['chapters_update'];
-    post?: never;
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch: operations['chapters_partial_update'];
-    trace?: never;
-  };
-  '/api/v1/health/': {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
+    "/api/v1/chapters/{id}/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["chapters_retrieve"];
+        put: operations["chapters_update"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch: operations["chapters_partial_update"];
+        trace?: never;
     };
-    /** @description Health check endpoint. */
-    get: operations['health_retrieve'];
-    put?: never;
-    post?: never;
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  '/api/v1/personas/': {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
+    "/api/v1/health/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** @description Health check endpoint. */
+        get: operations["health_retrieve"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
     };
-    get: operations['personas_list'];
-    put?: never;
-    post: operations['personas_create'];
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  '/api/v1/personas/{id}/': {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
+    "/api/v1/personas/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["personas_list"];
+        put?: never;
+        post: operations["personas_create"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
     };
-    get: operations['personas_retrieve'];
-    put: operations['personas_update'];
-    post?: never;
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch: operations['personas_partial_update'];
-    trace?: never;
-  };
+    "/api/v1/personas/{id}/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["personas_retrieve"];
+        put: operations["personas_update"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch: operations["personas_partial_update"];
+        trace?: never;
+    };
 }
 export type webhooks = Record<string, never>;
 export interface components {
-  schemas: {
-    Autosave: {
-      body: string;
-      checksum: string;
+    schemas: {
+        Autosave: {
+            body: string;
+            checksum: string;
+        };
+        Book: {
+            readonly id: number;
+            title: string;
+            slug: string;
+            /** Format: date-time */
+            readonly created_at: string;
+            /** Format: date-time */
+            readonly last_opened: string | null;
+        };
+        /** @description Create serializer for Chapter.
+         *
+         *     Order is intentionally excluded from the writable fields; the server will
+         *     append the new chapter to the end of the book sequence (last+1). Body is
+         *     optional and defaults to empty string. Checksum is required and validated. */
+        ChapterCreate: {
+            readonly id: number;
+            title: string;
+            body?: string;
+            checksum: string;
+            /** Format: date-time */
+            readonly updated_at: string;
+        };
+        ChapterDetail: {
+            readonly id: number;
+            readonly book: number;
+            title: string;
+            /** Format: int64 */
+            order: number;
+            body?: string;
+            checksum: string;
+            /** Format: date-time */
+            readonly created_at: string;
+            /** Format: date-time */
+            readonly updated_at: string;
+        };
+        ChapterList: {
+            readonly id: number;
+            title: string;
+            /** Format: int64 */
+            order: number;
+            /** Format: date-time */
+            readonly updated_at: string;
+        };
+        ChaptersReorder: {
+            ordered_ids: number[];
+        };
+        PaginatedBookList: {
+            /** @example 123 */
+            count: number;
+            /**
+             * Format: uri
+             * @example http://api.example.org/accounts/?page=4
+             */
+            next?: string | null;
+            /**
+             * Format: uri
+             * @example http://api.example.org/accounts/?page=2
+             */
+            previous?: string | null;
+            results: components["schemas"]["Book"][];
+        };
+        PaginatedChapterListList: {
+            /** @example 123 */
+            count: number;
+            /**
+             * Format: uri
+             * @example http://api.example.org/accounts/?page=4
+             */
+            next?: string | null;
+            /**
+             * Format: uri
+             * @example http://api.example.org/accounts/?page=2
+             */
+            previous?: string | null;
+            results: components["schemas"]["ChapterList"][];
+        };
+        PaginatedPersonaList: {
+            /** @example 123 */
+            count: number;
+            /**
+             * Format: uri
+             * @example http://api.example.org/accounts/?page=4
+             */
+            next?: string | null;
+            /**
+             * Format: uri
+             * @example http://api.example.org/accounts/?page=2
+             */
+            previous?: string | null;
+            results: components["schemas"]["Persona"][];
+        };
+        PatchedBook: {
+            readonly id?: number;
+            title?: string;
+            slug?: string;
+            /** Format: date-time */
+            readonly created_at?: string;
+            /** Format: date-time */
+            readonly last_opened?: string | null;
+        };
+        PatchedChapterDetail: {
+            readonly id?: number;
+            readonly book?: number;
+            title?: string;
+            /** Format: int64 */
+            order?: number;
+            body?: string;
+            checksum?: string;
+            /** Format: date-time */
+            readonly created_at?: string;
+            /** Format: date-time */
+            readonly updated_at?: string;
+        };
+        PatchedPersona: {
+            readonly id?: number;
+            name?: string;
+            role?: string;
+            notes?: string;
+            /** Format: date-time */
+            readonly created_at?: string;
+        };
+        Persona: {
+            readonly id: number;
+            name: string;
+            role?: string;
+            notes?: string;
+            /** Format: date-time */
+            readonly created_at: string;
+        };
     };
-    Book: {
-      readonly id: number;
-      title: string;
-      slug: string;
-      /** Format: date-time */
-      readonly created_at: string;
-      /** Format: date-time */
-      readonly last_opened: string | null;
-    };
-    ChapterCreate: {
-      readonly id: number;
-      title: string;
-      /** Format: int64 */
-      order: number;
-      body?: string;
-      checksum: string;
-      /** Format: date-time */
-      readonly updated_at: string;
-    };
-    ChapterDetail: {
-      readonly id: number;
-      readonly book: number;
-      title: string;
-      /** Format: int64 */
-      order: number;
-      body?: string;
-      checksum: string;
-      /** Format: date-time */
-      readonly created_at: string;
-      /** Format: date-time */
-      readonly updated_at: string;
-    };
-    ChapterList: {
-      readonly id: number;
-      title: string;
-      /** Format: int64 */
-      order: number;
-      /** Format: date-time */
-      readonly updated_at: string;
-    };
-    PaginatedBookList: {
-      /** @example 123 */
-      count: number;
-      /**
-       * Format: uri
-       * @example http://api.example.org/accounts/?page=4
-       */
-      next?: string | null;
-      /**
-       * Format: uri
-       * @example http://api.example.org/accounts/?page=2
-       */
-      previous?: string | null;
-      results: components['schemas']['Book'][];
-    };
-    PaginatedChapterListList: {
-      /** @example 123 */
-      count: number;
-      /**
-       * Format: uri
-       * @example http://api.example.org/accounts/?page=4
-       */
-      next?: string | null;
-      /**
-       * Format: uri
-       * @example http://api.example.org/accounts/?page=2
-       */
-      previous?: string | null;
-      results: components['schemas']['ChapterList'][];
-    };
-    PaginatedPersonaList: {
-      /** @example 123 */
-      count: number;
-      /**
-       * Format: uri
-       * @example http://api.example.org/accounts/?page=4
-       */
-      next?: string | null;
-      /**
-       * Format: uri
-       * @example http://api.example.org/accounts/?page=2
-       */
-      previous?: string | null;
-      results: components['schemas']['Persona'][];
-    };
-    PatchedBook: {
-      readonly id?: number;
-      title?: string;
-      slug?: string;
-      /** Format: date-time */
-      readonly created_at?: string;
-      /** Format: date-time */
-      readonly last_opened?: string | null;
-    };
-    PatchedChapterDetail: {
-      readonly id?: number;
-      readonly book?: number;
-      title?: string;
-      /** Format: int64 */
-      order?: number;
-      body?: string;
-      checksum?: string;
-      /** Format: date-time */
-      readonly created_at?: string;
-      /** Format: date-time */
-      readonly updated_at?: string;
-    };
-    PatchedPersona: {
-      readonly id?: number;
-      name?: string;
-      role?: string;
-      notes?: string;
-      /** Format: date-time */
-      readonly created_at?: string;
-    };
-    Persona: {
-      readonly id: number;
-      name: string;
-      role?: string;
-      notes?: string;
-      /** Format: date-time */
-      readonly created_at: string;
-    };
-  };
-  responses: never;
-  parameters: never;
-  requestBodies: never;
-  headers: never;
-  pathItems: never;
+    responses: never;
+    parameters: never;
+    requestBodies: never;
+    headers: never;
+    pathItems: never;
 }
 export type $defs = Record<string, never>;
 export interface operations {
-  books_list: {
-    parameters: {
-      query?: {
-        /** @description Which field to use when ordering the results. */
-        ordering?: string;
-        /** @description A page number within the paginated result set. */
-        page?: number;
-        /** @description A search term. */
-        search?: string;
-      };
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    requestBody?: never;
-    responses: {
-      200: {
-        headers: {
-          [name: string]: unknown;
+    books_list: {
+        parameters: {
+            query?: {
+                /** @description Which field to use when ordering the results. */
+                ordering?: string;
+                /** @description A page number within the paginated result set. */
+                page?: number;
+                /** @description A search term. */
+                search?: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
         };
-        content: {
-          'application/json': components['schemas']['PaginatedBookList'];
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PaginatedBookList"];
+                };
+            };
         };
-      };
     };
-  };
-  books_create: {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    requestBody: {
-      content: {
-        'application/json': components['schemas']['Book'];
-        'application/x-www-form-urlencoded': components['schemas']['Book'];
-        'multipart/form-data': components['schemas']['Book'];
-      };
-    };
-    responses: {
-      201: {
-        headers: {
-          [name: string]: unknown;
+    books_create: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
         };
-        content: {
-          'application/json': components['schemas']['Book'];
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["Book"];
+                "application/x-www-form-urlencoded": components["schemas"]["Book"];
+                "multipart/form-data": components["schemas"]["Book"];
+            };
         };
-      };
-    };
-  };
-  books_chapters_list: {
-    parameters: {
-      query?: {
-        /** @description Which field to use when ordering the results. */
-        ordering?: string;
-        /** @description A page number within the paginated result set. */
-        page?: number;
-        /** @description A search term. */
-        search?: string;
-      };
-      header?: never;
-      path: {
-        book_pk: number;
-      };
-      cookie?: never;
-    };
-    requestBody?: never;
-    responses: {
-      200: {
-        headers: {
-          [name: string]: unknown;
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Book"];
+                };
+            };
         };
-        content: {
-          'application/json': components['schemas']['PaginatedChapterListList'];
+    };
+    books_chapters_list: {
+        parameters: {
+            query?: {
+                /** @description Which field to use when ordering the results. */
+                ordering?: string;
+                /** @description A page number within the paginated result set. */
+                page?: number;
+                /** @description A search term. */
+                search?: string;
+            };
+            header?: never;
+            path: {
+                book_pk: number;
+            };
+            cookie?: never;
         };
-      };
-    };
-  };
-  books_chapters_create: {
-    parameters: {
-      query?: never;
-      header?: never;
-      path: {
-        book_pk: number;
-      };
-      cookie?: never;
-    };
-    requestBody: {
-      content: {
-        'application/json': components['schemas']['ChapterCreate'];
-        'application/x-www-form-urlencoded': components['schemas']['ChapterCreate'];
-        'multipart/form-data': components['schemas']['ChapterCreate'];
-      };
-    };
-    responses: {
-      201: {
-        headers: {
-          [name: string]: unknown;
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PaginatedChapterListList"];
+                };
+            };
         };
-        content: {
-          'application/json': components['schemas']['ChapterList'];
+    };
+    books_chapters_create: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                book_pk: number;
+            };
+            cookie?: never;
         };
-      };
-    };
-  };
-  books_retrieve: {
-    parameters: {
-      query?: never;
-      header?: never;
-      path: {
-        /** @description A unique integer value identifying this book. */
-        id: number;
-      };
-      cookie?: never;
-    };
-    requestBody?: never;
-    responses: {
-      200: {
-        headers: {
-          [name: string]: unknown;
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ChapterCreate"];
+                "application/x-www-form-urlencoded": components["schemas"]["ChapterCreate"];
+                "multipart/form-data": components["schemas"]["ChapterCreate"];
+            };
         };
-        content: {
-          'application/json': components['schemas']['Book'];
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ChapterList"];
+                };
+            };
         };
-      };
     };
-  };
-  books_update: {
-    parameters: {
-      query?: never;
-      header?: never;
-      path: {
-        /** @description A unique integer value identifying this book. */
-        id: number;
-      };
-      cookie?: never;
-    };
-    requestBody: {
-      content: {
-        'application/json': components['schemas']['Book'];
-        'application/x-www-form-urlencoded': components['schemas']['Book'];
-        'multipart/form-data': components['schemas']['Book'];
-      };
-    };
-    responses: {
-      200: {
-        headers: {
-          [name: string]: unknown;
+    books_chapters_reorder: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                book_pk: number;
+            };
+            cookie?: never;
         };
-        content: {
-          'application/json': components['schemas']['Book'];
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ChaptersReorder"];
+                "application/x-www-form-urlencoded": components["schemas"]["ChaptersReorder"];
+                "multipart/form-data": components["schemas"]["ChaptersReorder"];
+            };
         };
-      };
-    };
-  };
-  books_partial_update: {
-    parameters: {
-      query?: never;
-      header?: never;
-      path: {
-        /** @description A unique integer value identifying this book. */
-        id: number;
-      };
-      cookie?: never;
-    };
-    requestBody?: {
-      content: {
-        'application/json': components['schemas']['PatchedBook'];
-        'application/x-www-form-urlencoded': components['schemas']['PatchedBook'];
-        'multipart/form-data': components['schemas']['PatchedBook'];
-      };
-    };
-    responses: {
-      200: {
-        headers: {
-          [name: string]: unknown;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ChapterList"][];
+                };
+            };
         };
-        content: {
-          'application/json': components['schemas']['Book'];
+    };
+    books_retrieve: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description A unique integer value identifying this book. */
+                id: number;
+            };
+            cookie?: never;
         };
-      };
-    };
-  };
-  chapters_autosave_create: {
-    parameters: {
-      query?: never;
-      header?: never;
-      path: {
-        id: number;
-      };
-      cookie?: never;
-    };
-    requestBody: {
-      content: {
-        'application/json': components['schemas']['Autosave'];
-        'application/x-www-form-urlencoded': components['schemas']['Autosave'];
-        'multipart/form-data': components['schemas']['Autosave'];
-      };
-    };
-    responses: {
-      200: {
-        headers: {
-          [name: string]: unknown;
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Book"];
+                };
+            };
         };
-        content: {
-          'application/json': {
-            saved: boolean;
-            checksum: string;
-            /** Format: date-time */
-            saved_at: string;
-          };
+    };
+    books_update: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description A unique integer value identifying this book. */
+                id: number;
+            };
+            cookie?: never;
         };
-      };
-      400: {
-        headers: {
-          [name: string]: unknown;
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["Book"];
+                "application/x-www-form-urlencoded": components["schemas"]["Book"];
+                "multipart/form-data": components["schemas"]["Book"];
+            };
         };
-        content: {
-          'application/json': unknown;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Book"];
+                };
+            };
         };
-      };
-      404: {
-        headers: {
-          [name: string]: unknown;
+    };
+    books_partial_update: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description A unique integer value identifying this book. */
+                id: number;
+            };
+            cookie?: never;
         };
-        content: {
-          'application/json': unknown;
+        requestBody?: {
+            content: {
+                "application/json": components["schemas"]["PatchedBook"];
+                "application/x-www-form-urlencoded": components["schemas"]["PatchedBook"];
+                "multipart/form-data": components["schemas"]["PatchedBook"];
+            };
         };
-      };
-    };
-  };
-  chapters_retrieve: {
-    parameters: {
-      query?: never;
-      header?: never;
-      path: {
-        /** @description A unique integer value identifying this chapter. */
-        id: number;
-      };
-      cookie?: never;
-    };
-    requestBody?: never;
-    responses: {
-      200: {
-        headers: {
-          [name: string]: unknown;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Book"];
+                };
+            };
         };
-        content: {
-          'application/json': components['schemas']['ChapterDetail'];
+    };
+    chapters_autosave_create: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
         };
-      };
-    };
-  };
-  chapters_update: {
-    parameters: {
-      query?: never;
-      header?: never;
-      path: {
-        /** @description A unique integer value identifying this chapter. */
-        id: number;
-      };
-      cookie?: never;
-    };
-    requestBody: {
-      content: {
-        'application/json': components['schemas']['ChapterDetail'];
-        'application/x-www-form-urlencoded': components['schemas']['ChapterDetail'];
-        'multipart/form-data': components['schemas']['ChapterDetail'];
-      };
-    };
-    responses: {
-      200: {
-        headers: {
-          [name: string]: unknown;
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["Autosave"];
+                "application/x-www-form-urlencoded": components["schemas"]["Autosave"];
+                "multipart/form-data": components["schemas"]["Autosave"];
+            };
         };
-        content: {
-          'application/json': components['schemas']['ChapterDetail'];
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        saved: boolean;
+                        checksum: string;
+                        /** Format: date-time */
+                        saved_at: string;
+                    };
+                };
+            };
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
         };
-      };
     };
-  };
-  chapters_partial_update: {
-    parameters: {
-      query?: never;
-      header?: never;
-      path: {
-        /** @description A unique integer value identifying this chapter. */
-        id: number;
-      };
-      cookie?: never;
-    };
-    requestBody?: {
-      content: {
-        'application/json': components['schemas']['PatchedChapterDetail'];
-        'application/x-www-form-urlencoded': components['schemas']['PatchedChapterDetail'];
-        'multipart/form-data': components['schemas']['PatchedChapterDetail'];
-      };
-    };
-    responses: {
-      200: {
-        headers: {
-          [name: string]: unknown;
+    chapters_retrieve: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description A unique integer value identifying this chapter. */
+                id: number;
+            };
+            cookie?: never;
         };
-        content: {
-          'application/json': components['schemas']['ChapterDetail'];
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ChapterDetail"];
+                };
+            };
         };
-      };
     };
-  };
-  health_retrieve: {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    requestBody?: never;
-    responses: {
-      200: {
-        headers: {
-          [name: string]: unknown;
+    chapters_update: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description A unique integer value identifying this chapter. */
+                id: number;
+            };
+            cookie?: never;
         };
-        content: {
-          'application/json': {
-            status: string;
-          };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ChapterDetail"];
+                "application/x-www-form-urlencoded": components["schemas"]["ChapterDetail"];
+                "multipart/form-data": components["schemas"]["ChapterDetail"];
+            };
         };
-      };
-    };
-  };
-  personas_list: {
-    parameters: {
-      query?: {
-        /** @description Which field to use when ordering the results. */
-        ordering?: string;
-        /** @description A page number within the paginated result set. */
-        page?: number;
-        /** @description A search term. */
-        search?: string;
-      };
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    requestBody?: never;
-    responses: {
-      200: {
-        headers: {
-          [name: string]: unknown;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ChapterDetail"];
+                };
+            };
         };
-        content: {
-          'application/json': components['schemas']['PaginatedPersonaList'];
+    };
+    chapters_partial_update: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description A unique integer value identifying this chapter. */
+                id: number;
+            };
+            cookie?: never;
         };
-      };
-    };
-  };
-  personas_create: {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    requestBody: {
-      content: {
-        'application/json': components['schemas']['Persona'];
-        'application/x-www-form-urlencoded': components['schemas']['Persona'];
-        'multipart/form-data': components['schemas']['Persona'];
-      };
-    };
-    responses: {
-      201: {
-        headers: {
-          [name: string]: unknown;
+        requestBody?: {
+            content: {
+                "application/json": components["schemas"]["PatchedChapterDetail"];
+                "application/x-www-form-urlencoded": components["schemas"]["PatchedChapterDetail"];
+                "multipart/form-data": components["schemas"]["PatchedChapterDetail"];
+            };
         };
-        content: {
-          'application/json': components['schemas']['Persona'];
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ChapterDetail"];
+                };
+            };
         };
-      };
     };
-  };
-  personas_retrieve: {
-    parameters: {
-      query?: never;
-      header?: never;
-      path: {
-        /** @description A unique integer value identifying this persona. */
-        id: number;
-      };
-      cookie?: never;
-    };
-    requestBody?: never;
-    responses: {
-      200: {
-        headers: {
-          [name: string]: unknown;
+    health_retrieve: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
         };
-        content: {
-          'application/json': components['schemas']['Persona'];
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        status: string;
+                    };
+                };
+            };
         };
-      };
     };
-  };
-  personas_update: {
-    parameters: {
-      query?: never;
-      header?: never;
-      path: {
-        /** @description A unique integer value identifying this persona. */
-        id: number;
-      };
-      cookie?: never;
-    };
-    requestBody: {
-      content: {
-        'application/json': components['schemas']['Persona'];
-        'application/x-www-form-urlencoded': components['schemas']['Persona'];
-        'multipart/form-data': components['schemas']['Persona'];
-      };
-    };
-    responses: {
-      200: {
-        headers: {
-          [name: string]: unknown;
+    personas_list: {
+        parameters: {
+            query?: {
+                /** @description Which field to use when ordering the results. */
+                ordering?: string;
+                /** @description A page number within the paginated result set. */
+                page?: number;
+                /** @description A search term. */
+                search?: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
         };
-        content: {
-          'application/json': components['schemas']['Persona'];
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PaginatedPersonaList"];
+                };
+            };
         };
-      };
     };
-  };
-  personas_partial_update: {
-    parameters: {
-      query?: never;
-      header?: never;
-      path: {
-        /** @description A unique integer value identifying this persona. */
-        id: number;
-      };
-      cookie?: never;
-    };
-    requestBody?: {
-      content: {
-        'application/json': components['schemas']['PatchedPersona'];
-        'application/x-www-form-urlencoded': components['schemas']['PatchedPersona'];
-        'multipart/form-data': components['schemas']['PatchedPersona'];
-      };
-    };
-    responses: {
-      200: {
-        headers: {
-          [name: string]: unknown;
+    personas_create: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
         };
-        content: {
-          'application/json': components['schemas']['Persona'];
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["Persona"];
+                "application/x-www-form-urlencoded": components["schemas"]["Persona"];
+                "multipart/form-data": components["schemas"]["Persona"];
+            };
         };
-      };
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Persona"];
+                };
+            };
+        };
     };
-  };
+    personas_retrieve: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description A unique integer value identifying this persona. */
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Persona"];
+                };
+            };
+        };
+    };
+    personas_update: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description A unique integer value identifying this persona. */
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["Persona"];
+                "application/x-www-form-urlencoded": components["schemas"]["Persona"];
+                "multipart/form-data": components["schemas"]["Persona"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Persona"];
+                };
+            };
+        };
+    };
+    personas_partial_update: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description A unique integer value identifying this persona. */
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: {
+            content: {
+                "application/json": components["schemas"]["PatchedPersona"];
+                "application/x-www-form-urlencoded": components["schemas"]["PatchedPersona"];
+                "multipart/form-data": components["schemas"]["PatchedPersona"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Persona"];
+                };
+            };
+        };
+    };
 }

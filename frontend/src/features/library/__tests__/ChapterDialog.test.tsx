@@ -40,9 +40,7 @@ describe('ChapterDialog', () => {
     );
 
     await userEvent.type(screen.getByLabelText('Title'), 'Intro');
-    await userEvent.clear(screen.getByLabelText('Order'));
-    await userEvent.type(screen.getByLabelText('Order'), '1');
-    await userEvent.type(screen.getByLabelText('Body (optional)'), 'Hello');
+  // Order and Body fields removed; server appends new chapter at end with empty body
 
     await userEvent.click(screen.getByRole('button', { name: 'Create' }));
 
@@ -50,7 +48,7 @@ describe('ChapterDialog', () => {
     expect(onSuccess).toHaveBeenCalledWith({ id: 10, title: 'Intro', order: 1 });
   });
 
-  it('edits a chapter title and order', async () => {
+  it('edits a chapter title only', async () => {
     updateChapter.mockResolvedValue({
       ok: true,
       data: {
@@ -81,12 +79,11 @@ describe('ChapterDialog', () => {
 
     await userEvent.clear(screen.getByLabelText('Title'));
     await userEvent.type(screen.getByLabelText('Title'), 'Revised');
-    await userEvent.clear(screen.getByLabelText('Order'));
-    await userEvent.type(screen.getByLabelText('Order'), '2');
+    // Order field removed; DnD list manages ordering
 
     await userEvent.click(screen.getByRole('button', { name: 'Save' }));
 
-    expect(updateChapter).toHaveBeenCalledWith(5, { title: 'Revised', order: 2 });
+    expect(updateChapter).toHaveBeenCalledWith(5, { title: 'Revised' });
     expect(onSuccess).toHaveBeenCalledWith({ id: 5, title: 'Revised', order: 2 });
   });
 });

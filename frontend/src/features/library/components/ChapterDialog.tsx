@@ -12,7 +12,7 @@ interface ChapterDialogProps {
   // For create: we need the parent book id
   bookId?: number;
   // For edit: we need the chapter id and initial values
-  initial?: (Pick<ChapterList, 'id' | 'title' | 'order'> & { body?: string }) | null;
+  initial?: Pick<ChapterList, 'id' | 'title' | 'order'> | null;
   isOpen: boolean;
   onClose: () => void;
   onSuccess?: (_chapter: { id: number; title: string; order: number }) => void;
@@ -33,8 +33,6 @@ export default function ChapterDialog({
   const dialogRef = useRef<HTMLDivElement>(null);
 
   const [title, setTitle] = useState(initial?.title ?? '');
-  const [order, setOrder] = useState<number | ''>(initial?.order ?? '');
-  const [body, setBody] = useState(initial?.body ?? '');
   const [submitting, setSubmitting] = useState(false);
   const [fieldErrors, setFieldErrors] = useState<Record<string, string[]>>({});
   const [generalError, setGeneralError] = useState<string | null>(null);
@@ -42,8 +40,7 @@ export default function ChapterDialog({
   useEffect(() => {
     if (!isOpen) return;
     setTitle(initial?.title ?? '');
-    setOrder(initial?.order ?? '');
-    setBody(initial?.body ?? '');
+    // order is not editable in dialog anymore
     setFieldErrors({});
     setGeneralError(null);
     setTimeout(() => {
@@ -52,12 +49,7 @@ export default function ChapterDialog({
   }, [isOpen, initial]);
 
   const titleValid = title.trim().length > 0;
-  const orderValid = typeof order === 'number' && Number.isFinite(order) && order > 0;
-  const canSubmit =
-    titleValid &&
-    orderValid &&
-    !submitting &&
-    (mode === 'edit' || bookId !== undefined);
+  const canSubmit = titleValid && !submitting && (mode === 'edit' || bookId !== undefined);
 
   const parseFieldErrors = async (error: { response?: Response | null; error: string }) => {
     try {
@@ -87,12 +79,10 @@ export default function ChapterDialog({
     setGeneralError(null);
 
     if (mode === 'create') {
-      const safeBody = body ?? '';
-      const checksum = await sha256Hex(safeBody);
+      // New chapters start empty and are appended to the end by the server.
+      const checksum = await sha256Hex('');
       const result = await createChapter(bookId!, {
         title: title.trim(),
-        order: order as number,
-        body: safeBody,
         checksum,
       });
       setSubmitting(false);
@@ -106,7 +96,6 @@ export default function ChapterDialog({
     } else {
       const result = await updateChapter(initial!.id, {
         title: title.trim(),
-        order: order as number,
       });
       setSubmitting(false);
       if (isOk(result)) {
@@ -141,7 +130,7 @@ export default function ChapterDialog({
         <p id={descId} className="text-sm text-zinc-600 dark:text-zinc-400 mt-1">
           {mode === 'create'
             ? 'Create a new chapter under the selected book.'
-            : 'Update the title or order of this chapter.'}
+            : 'Update the title of this chapter.'}
         </p>
 
         <form onSubmit={onSubmit} className="mt-4 space-y-3">
@@ -164,48 +153,7 @@ export default function ChapterDialog({
             )}
           </div>
 
-          <div>
-            <label htmlFor="chapter-order" className="block text-sm font-medium">
-              Order
-            </label>
-            <input
-              id="chapter-order"
-              type="number"
-              min={1}
-              value={order}
-              onChange={(e) => {
-                const v = e.target.value;
-                setOrder(v === '' ? '' : Number(v));
-              }}
-              required
-              className="mt-1 w-full rounded-md border border-zinc-300 bg-white px-3 py-2 text-sm shadow-sm focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-500 dark:border-zinc-700 dark:bg-zinc-950"
-            />
-            {fieldErrors.order && (
-              <p className="mt-1 text-sm text-red-600" aria-live="polite">
-                {fieldErrors.order.join(' ')}
-              </p>
-            )}
-          </div>
-
-          {mode === 'create' && (
-            <div>
-              <label htmlFor="chapter-body" className="block text-sm font-medium">
-                Body (optional)
-              </label>
-              <textarea
-                id="chapter-body"
-                value={body}
-                onChange={(e) => setBody(e.target.value)}
-                rows={4}
-                className="mt-1 w-full rounded-md border border-zinc-300 bg-white px-3 py-2 text-sm shadow-sm focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-500 dark:border-zinc-700 dark:bg-zinc-950"
-              />
-              {fieldErrors.body && (
-                <p className="mt-1 text-sm text-red-600" aria-live="polite">
-                  {fieldErrors.body.join(' ')}
-                </p>
-              )}
-            </div>
-          )}
+          {/* Order and Body fields removed (BL-012D). New chapters start empty; ordering via DnD. */}
 
           {generalError && (
             <div

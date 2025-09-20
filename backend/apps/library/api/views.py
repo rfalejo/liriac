@@ -1,8 +1,11 @@
 from __future__ import annotations
 
+import logging
 from typing import Any
 
 from django.core.exceptions import ValidationError
+from django.db import transaction
+from django.db.models import F
 from django.shortcuts import get_object_or_404
 from drf_spectacular.utils import extend_schema
 from rest_framework import generics, mixins, status, viewsets
@@ -20,6 +23,7 @@ from .serializers import (
     ChapterCreateSerializer,
     ChapterDetailSerializer,
     ChapterListSerializer,
+    ChaptersReorderSerializer,
     PersonaSerializer,
 )
 
@@ -82,7 +86,18 @@ class BookChapterListCreateAPIView(generics.GenericAPIView[Chapter]):
         book = get_object_or_404(Book, pk=book_pk)
         serializer = ChapterCreateSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
-        chapter = Chapter.objects.create(book=book, **serializer.validated_data)
+        # Compute next order atomically; ignore any client-sent 'order' if present
+        with transaction.atomic():
+            last = (
+                Chapter.objects.select_for_update()
+                .filter(book=book)
+                .order_by("-order")
+                .first()
+            )
+            next_order = (last.order if last else 0) + 1
+            payload = dict(serializer.validated_data)
+            payload.setdefault("body", "")
+            chapter = Chapter.objects.create(book=book, order=next_order, **payload)
         out = ChapterListSerializer(instance=chapter).data
         return Response(out, status=status.HTTP_201_CREATED)
 
@@ -127,7 +142,7 @@ class ChapterAutosaveAPIView(APIView):
         data = serializer.validated_data
         try:
             result = AutosaveService.autosave(
-                chapter_id=chapter.id,
+                chapter_id=int(chapter.pk),
                 body=data["body"],
                 checksum=data["checksum"],
             )
@@ -137,3 +152,62 @@ class ChapterAutosaveAPIView(APIView):
             {"saved": result.saved, "checksum": result.checksum, "saved_at": result.saved_at},
             status=status.HTTP_200_OK,
         )
+
+
+class BookChaptersReorderAPIView(APIView):
+    """POST /api/v1/books/<book_pk>/chapters/reorder/
+
+    Payload: { "ordered_ids": [ ... all chapter IDs for this book ... ] }
+    """
+
+    logger = logging.getLogger(__name__)
+
+    @extend_schema(
+        operation_id="books_chapters_reorder",
+        request=ChaptersReorderSerializer,
+        responses={200: ChapterListSerializer(many=True)},
+        tags=["books"],
+    )
+    def post(self, request: Request, book_pk: int, *args: Any, **kwargs: Any) -> Response:
+        get_object_or_404(Book, pk=book_pk)  # ensure book exists
+        serializer = ChaptersReorderSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        ordered_ids = serializer.validated_data["ordered_ids"]
+
+        # Fetch actual ids for the book
+        qs = Chapter.objects.filter(book_id=book_pk).order_by("order")
+        current_ids = list(qs.values_list("id", flat=True))
+        # Validation: must match set exactly and lengths equal
+        if len(ordered_ids) != len(current_ids):
+            return Response(
+                {"ordered_ids": ["Payload must include all chapters for this book."]},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+        if set(ordered_ids) != set(current_ids):
+            return Response(
+                {"ordered_ids": ["IDs must match chapters of the specified book exactly."]},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+        # Renumber atomically with row locking to avoid races
+        with transaction.atomic():
+            # Lock rows and shift orders by +N to avoid unique collisions during renumbering
+            chapters_qs = Chapter.objects.select_for_update().filter(
+                id__in=ordered_ids, book_id=book_pk
+            )
+            chapters = list(chapters_qs)
+            n = len(chapters)
+            chapters_qs.update(order=F("order") + n)
+            # Refresh objects with shifted orders (not strictly needed for next step)
+            by_id = {int(c.pk): c for c in chapters}
+            # Assign final sequential orders 1..N following provided ordered_ids
+            for idx, ch_id in enumerate(ordered_ids, start=1):
+                ch = by_id[ch_id]
+                ch.order = idx
+            Chapter.objects.bulk_update(chapters, ["order"])
+
+        updated = Chapter.objects.filter(book_id=book_pk).order_by("order")
+        self.logger.info(
+            "chapters_reordered",
+            extra={"book_id": book_pk, "count": len(ordered_ids)},
+        )
+        return Response(ChapterListSerializer(updated, many=True).data, status=status.HTTP_200_OK)

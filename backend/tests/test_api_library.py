@@ -88,19 +88,19 @@ def test_chapters_nested_list_create_and_detail_patch_restrict_body_checksum() -
     assert data["count"] == 2
     assert all("body" not in ch for ch in data["results"])  # list serializer excludes body
 
-    # Create new chapter under book
+    # Create new chapter under book (order/body omitted per BL-012D; appends to end)
     resp_create = client.post(
         f"/api/v1/books/{book.id}/chapters/",
         {
             "title": "Three",
-            "order": 3,
-            "body": "Third body",
-            "checksum": checksum("Third body"),
+            "checksum": checksum(""),
         },
         format="json",
     )
     assert resp_create.status_code == 201
-    assert resp_create.json()["title"] == "Three"
+    created = resp_create.json()
+    assert created["title"] == "Three"
+    assert created["order"] == 3
 
     # Detail includes body/checksum
     resp_detail = client.get(f"/api/v1/chapters/{c1.id}/")
@@ -152,3 +152,42 @@ def test_personas_list_create_search_and_patch() -> None:
     resp_patch = client.patch(f"/api/v1/personas/{p.id}/", {"role": "lead"}, format="json")
     assert resp_patch.status_code == 200
     assert resp_patch.json()["role"] == "lead"
+
+
+@pytest.mark.django_db()
+def test_chapters_reorder_happy_and_validation() -> None:
+    client = APIClient()
+    book = Book.objects.create(title="Book", slug="book")
+    # Create three chapters out of order
+    c1 = Chapter.objects.create(book=book, title="A", order=1, body="", checksum=checksum(""))
+    c2 = Chapter.objects.create(book=book, title="B", order=2, body="", checksum=checksum(""))
+    c3 = Chapter.objects.create(book=book, title="C", order=3, body="", checksum=checksum(""))
+
+    # Happy path: reverse order
+    resp = client.post(
+        f"/api/v1/books/{book.id}/chapters/reorder/",
+        {"ordered_ids": [c3.id, c2.id, c1.id]},
+        format="json",
+    )
+    assert resp.status_code == 200
+    data = resp.json()
+    assert [row["id"] for row in data] == [c3.id, c2.id, c1.id]
+    assert [row["order"] for row in data] == [1, 2, 3]
+
+    # Validation: missing one id
+    resp_bad = client.post(
+        f"/api/v1/books/{book.id}/chapters/reorder/",
+        {"ordered_ids": [c3.id, c2.id]},
+        format="json",
+    )
+    assert resp_bad.status_code == 400
+
+    # Validation: foreign id
+    other = Book.objects.create(title="Other", slug="other")
+    foreign = Chapter.objects.create(book=other, title="X", order=1, body="", checksum=checksum(""))
+    resp_bad2 = client.post(
+        f"/api/v1/books/{book.id}/chapters/reorder/",
+        {"ordered_ids": [c3.id, c2.id, foreign.id]},
+        format="json",
+    )
+    assert resp_bad2.status_code == 400

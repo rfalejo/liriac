@@ -44,12 +44,6 @@ export function AppLayout({ children }: PropsWithChildren) {
       <main className="max-w-7xl w-full mx-auto px-4 py-8 flex-1 flex flex-col gap-6">
         {children}
       </main>
-      <footer className="border-t border-zinc-200/70 bg-zinc-100/40 backdrop-blur py-2 text-xs text-zinc-500 dark:border-zinc-800 dark:bg-zinc-900/60 dark:text-zinc-400">
-        <div className="max-w-7xl mx-auto px-4 flex items-center justify-between font-mono uppercase tracking-wide">
-          <span aria-live="polite">{isDark ? 'mode: dark' : 'mode: light'}</span>
-          <span>© {new Date().getFullYear()} liriac</span>
-        </div>
-      </footer>
     </div>
   );
 }

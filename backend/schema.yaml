@@ -139,6 +139,46 @@ paths:
               schema:
                 $ref: '#/components/schemas/ChapterList'
           description: ''
+  /api/v1/books/{book_pk}/chapters/reorder/:
+    post:
+      operationId: books_chapters_reorder
+      description: |-
+        POST /api/v1/books/<book_pk>/chapters/reorder/
+
+        Payload: { "ordered_ids": [ ... all chapter IDs for this book ... ] }
+      parameters:
+      - in: path
+        name: book_pk
+        schema:
+          type: integer
+        required: true
+      tags:
+      - books
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ChaptersReorder'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/ChaptersReorder'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/ChaptersReorder'
+        required: true
+      security:
+      - cookieAuth: []
+      - basicAuth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/ChapterList'
+          description: ''
   /api/v1/books/{id}/:
     get:
       operationId: books_retrieve
@@ -594,6 +634,12 @@ components:
       - title
     ChapterCreate:
       type: object
+      description: |-
+        Create serializer for Chapter.
+
+        Order is intentionally excluded from the writable fields; the server will
+        append the new chapter to the end of the book sequence (last+1). Body is
+        optional and defaults to empty string. Checksum is required and validated.
       properties:
         id:
           type: integer
@@ -601,11 +647,6 @@ components:
         title:
           type: string
           maxLength: 200
-        order:
-          type: integer
-          maximum: 9223372036854775807
-          minimum: 0
-          format: int64
         body:
           type: string
         checksum:
@@ -619,7 +660,6 @@ components:
       required:
       - checksum
       - id
-      - order
       - title
       - updated_at
     ChapterDetail:
@@ -684,6 +724,16 @@ components:
       - order
       - title
       - updated_at
+    ChaptersReorder:
+      type: object
+      properties:
+        ordered_ids:
+          type: array
+          items:
+            type: integer
+            minimum: 1
+      required:
+      - ordered_ids
     PaginatedBookList:
       type: object
       required:

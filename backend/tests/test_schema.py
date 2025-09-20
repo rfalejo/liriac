@@ -21,6 +21,7 @@ def test_openapi_schema_smoke() -> None:
     required_paths = [
         "/api/v1/books/",
         "/api/v1/books/{book_pk}/chapters/",
+        "/api/v1/books/{book_pk}/chapters/reorder/",
         "/api/v1/chapters/{id}/autosave/",
         "/api/v1/personas/",
         "/api/v1/health/",

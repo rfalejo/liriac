@@ -76,9 +76,8 @@ export async function getChapter(id: number) {
 // Chapter create/update
 export interface CreateChapterPayload {
   title: string;
-  order: number;
-  body?: string;
   checksum: string;
+  body?: string;
 }
 export async function createChapter(bookId: number, payload: CreateChapterPayload) {
   return request<ChapterList>(`/api/v1/books/${bookId}/chapters/`, {
@@ -95,6 +94,20 @@ export async function updateChapter(id: number, payload: UpdateChapterPayload) {
   return request<ChapterDetail>(`/api/v1/chapters/${id}/`, {
     json: payload,
     method: 'PATCH',
+  });
+}
+
+// Chapters reorder (book scoped)
+export interface ReorderChaptersPayload {
+  ordered_ids: number[];
+}
+export async function reorderBookChapters(
+  bookId: number,
+  payload: ReorderChaptersPayload,
+) {
+  return request<ChapterList[]>(`/api/v1/books/${bookId}/chapters/reorder/`, {
+    json: payload,
+    method: 'POST',
   });
 }
 
