@@ -23,6 +23,19 @@ export default function EditorSurface() {
   const [commandOpen, setCommandOpen] = useState(false);
   const [commandInput, setCommandInput] = useState('');
 
+  // Show a one-time toast when smart punctuation first triggers
+  const smartToastShown = useRef(false);
+
+  function showSmartToastOnce() {
+    if (smartToastShown.current) return;
+    smartToastShown.current = true;
+    window.dispatchEvent(
+      new CustomEvent('toast:show', {
+        detail: { text: 'Smart punctuation enabled (quotes and em-dashes).' },
+      }),
+    );
+  }
+
   useEffect(() => {
     const el = textareaRef.current;
     if (!el) return;
@@ -32,8 +45,58 @@ export default function EditorSurface() {
   }, []);
 
   function handleInput(e: React.FormEvent<HTMLTextAreaElement>) {
-    const value = (e.currentTarget as HTMLTextAreaElement).value;
-    const tokens = mockTokenize(value);
+    const el = e.currentTarget as HTMLTextAreaElement;
+    let value = el.value;
+    const start = el.selectionStart ?? value.length;
+    const end = el.selectionEnd ?? start;
+
+    // Inline smart punctuation heuristics focused around the caret
+    // 1) Em-dash: turn "--" immediately before caret into "—"
+    if (start === end && start >= 2 && value.slice(start - 2, start) === '--') {
+      value = value.slice(0, start - 2) + '—' + value.slice(start);
+      const nextPos = start - 1; // caret moves back by one due to replacement
+      el.value = value;
+      el.selectionStart = el.selectionEnd = nextPos;
+      showSmartToastOnce();
+    }
+
+    // 2) Smart quotes for the just-typed straight quotes near caret
+    // Handle double quotes
+    if (start === end && start >= 1 && value[start - 1] === '"') {
+      const before = value.slice(0, start - 1);
+      const prevNonSpace = before.match(/[^\s\(\[\{]$/)?.[0];
+      const isOpening = !prevNonSpace || /[\s\(\[\{]/.test(before.slice(-1));
+      const curly = isOpening ? '“' : '”';
+      value = value.slice(0, start - 1) + curly + value.slice(start);
+      el.value = value;
+      el.selectionStart = el.selectionEnd = start;
+      showSmartToastOnce();
+    }
+
+    // Handle single quotes vs apostrophes
+    if (start === end && start >= 1 && value[start - 1] === "'") {
+      const before = value.slice(0, start - 1);
+      const after = value.slice(start);
+      // Apostrophe in contractions: letter'letter
+      if (/[A-Za-z]$/.test(before) && /^[A-Za-z]/.test(after)) {
+        const curly = '’';
+        value = value.slice(0, start - 1) + curly + value.slice(start);
+        el.value = value;
+        el.selectionStart = el.selectionEnd = start;
+        showSmartToastOnce();
+      } else {
+        const prevNonSpace = before.match(/[^\s\(\[\{]$/)?.[0];
+        const isOpening = !prevNonSpace || /[\s\(\[\{]/.test(before.slice(-1));
+        const curly = isOpening ? '‘' : '’';
+        value = value.slice(0, start - 1) + curly + value.slice(start);
+        el.value = value;
+        el.selectionStart = el.selectionEnd = start;
+        showSmartToastOnce();
+      }
+    }
+
+    // Update stats after any transformation
+    const tokens = mockTokenize(el.value);
     window.dispatchEvent(new CustomEvent('editor:stats', { detail: { tokens } }));
   }
 

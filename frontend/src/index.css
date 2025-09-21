@@ -55,3 +55,45 @@ body {
 *::-webkit-scrollbar-track {
   background: transparent;
 }
+
+/* Typography: screen-optimized reading */
+:root {
+  --font-serif: ui-serif, "Source Serif 4", Georgia, Cambria, "Times New Roman", serif;
+}
+
+/* Global text rendering hints */
+html {
+  text-rendering: optimizeLegibility;
+  -webkit-text-size-adjust: 100%;
+}
+
+/* Selection: calmer highlight */
+::selection {
+  background: rgba(255, 255, 255, 0.12);
+  color: var(--fg);
+}
+
+/* Editor surface type settings */
+#editor {
+  font-family: var(--font-serif);
+  font-variant-ligatures: common-ligatures contextual;
+  font-feature-settings: "liga" 1, "calt" 1, "onum" 1; /* oldstyle nums feel more bookish */
+  hyphens: auto;
+  text-wrap: pretty;
+  hanging-punctuation: first allow-end;
+}
+
+/* Prefer slightly calmer caret than pure white (the component also sets caret via class) */
+#editor {
+  caret-color: color-mix(in oklab, var(--fg) 92%, transparent);
+}
+
+/* Respect reduced motion */
+@media (prefers-reduced-motion: reduce) {
+  * {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+    scroll-behavior: auto !important;
+  }
+}
