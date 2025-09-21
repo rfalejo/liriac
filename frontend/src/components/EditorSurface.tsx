@@ -16,6 +16,7 @@ const COMMANDS: Command[] = [
   { id: 'insert-break', label: 'insert scene break', hint: 'Add a scene separator' },
   { id: 'count', label: 'count words', hint: 'Show word count' },
   { id: 'timer-start', label: 'timer start 25m', hint: 'Start a 25m session' },
+  { id: 'goto', label: 'goto', hint: 'Jump: /goto top | last-edit | scene N', aliases: ['/goto'] },
 ];
 
 export default function EditorSurface() {
@@ -43,6 +44,50 @@ export default function EditorSurface() {
     const tokens = mockTokenize(el.value || '');
     window.dispatchEvent(new CustomEvent('editor:stats', { detail: { tokens } }));
   }, []);
+
+  // Track last edit position for /goto last-edit
+  const lastEditRef = useRef<number | null>(null);
+
+  // Scene helpers
+  function getSceneOffsets(text: string): number[] {
+    // Scenes are separated by blank-line + *** + blank-line
+    const breaks: number[] = [0];
+    const re = /\n\*\*\*\n/g;
+    let m: RegExpExecArray | null;
+    while ((m = re.exec(text)) !== null) {
+      breaks.push(m.index + m[0].length);
+    }
+    return breaks;
+  }
+
+  function jumpToOffset(el: HTMLTextAreaElement, offset: number) {
+    const pos = Math.max(0, Math.min(offset, el.value.length));
+    el.selectionStart = el.selectionEnd = pos;
+    typewriterScroll(el);
+    // Ensure focus is on the editor
+    el.focus();
+  }
+
+  function gotoScene(n: number) {
+    const el = textareaRef.current;
+    if (!el) return;
+    const offs = getSceneOffsets(el.value);
+    const idx = Math.max(0, Math.min(n - 1, offs.length - 1));
+    jumpToOffset(el, offs[idx]);
+  }
+
+  function gotoTop() {
+    const el = textareaRef.current;
+    if (!el) return;
+    jumpToOffset(el, 0);
+  }
+
+  function gotoLastEdit() {
+    const el = textareaRef.current;
+    const pos = lastEditRef.current;
+    if (!el || pos == null) return;
+    jumpToOffset(el, pos);
+  }
 
   // Compute caret Y (relative to content) using a hidden mirror element
   function getCaretTop(el: HTMLTextAreaElement): number {
@@ -143,6 +188,8 @@ export default function EditorSurface() {
 
     // Typewriter scroll: keep caret ~40% from top
     typewriterScroll(el);
+    // Track last edit position
+    lastEditRef.current = el.selectionStart ?? el.value.length;
 
     // Update stats after any transformation
     const tokens = mockTokenize(el.value);
@@ -175,6 +222,23 @@ export default function EditorSurface() {
       }
     }
 
+    // Navigation without UI: jump between scene breaks
+    if ((e.metaKey || e.ctrlKey) && e.altKey && (e.key === 'ArrowLeft' || e.key === 'ArrowRight')) {
+      e.preventDefault();
+      const el = e.currentTarget as HTMLTextAreaElement;
+      const pos = el.selectionStart ?? 0;
+      const offs = getSceneOffsets(el.value);
+      // Find current scene index
+      let idx = 0;
+      for (let i = 0; i < offs.length; i++) {
+        if (offs[i] <= pos) idx = i;
+        else break;
+      }
+      const nextIdx = e.key === 'ArrowLeft' ? Math.max(0, idx - 1) : Math.min(offs.length - 1, idx + 1);
+      jumpToOffset(el, offs[nextIdx]);
+      return;
+    }
+
     // After navigation keys, re-center the caret (typewriter scroll)
     const navKeys = new Set(['ArrowUp', 'ArrowDown', 'PageUp', 'PageDown', 'Home', 'End', 'Enter']);
     if (navKeys.has(e.key)) {
@@ -187,6 +251,36 @@ export default function EditorSurface() {
 
   function executeCommand(cmd: Command, rawInput: string) {
     // Minimal behavior for demo; real handlers would manipulate text/selection.
+
+    // Goto navigation: /goto top | last-edit | scene N | N
+    if (cmd.id === 'goto') {
+      const raw = rawInput.trim();
+      const norm = raw.startsWith('/') ? raw.slice(1) : raw;
+      const parts = norm.split(/\s+/).filter(Boolean); // e.g., ['goto','scene','3']
+      const args = parts.slice(1);
+
+      if (args.length === 0) {
+        // No args: do nothing
+      } else {
+        const head = args[0].toLowerCase();
+        if (head === 'top') {
+          gotoTop();
+        } else if (head === 'last-edit' || head === 'last' || head === 'lastedit') {
+          gotoLastEdit();
+        } else if (head === 'scene' && args[1]) {
+          const n = parseInt(args[1], 10);
+          if (!Number.isNaN(n) && n > 0) gotoScene(n);
+        } else {
+          // Maybe a plain number: /goto 3
+          const n = parseInt(head, 10);
+          if (!Number.isNaN(n) && n > 0) gotoScene(n);
+        }
+      }
+
+      setCommandOpen(false);
+      setCommandInput('');
+      return;
+    }
 
     // Example: insert scene break where the caret is
     if (cmd.id === 'insert-break') {
