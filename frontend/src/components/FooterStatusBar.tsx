@@ -5,14 +5,11 @@ export default function FooterStatusBar({ tokens = 0 }: { tokens?: number }) {
         <span>
           <span className="font-medium text-[var(--fg)]">Mode:</span> Write
         </span>
-        <span className="hidden sm:inline text-[var(--muted)]">•</span>
-        <span>
+        <span className="footer-sep">
           <span className="font-medium text-[var(--fg)]">Tokens:</span> {tokens}
         </span>
-        <span className="hidden sm:inline text-[var(--muted)]">•</span>
-        <span>Ln 12, Col 1</span>
-        <span className="hidden sm:inline text-[var(--muted)]">•</span>
-        <span>Autosave: active (every 10s)</span>
+        <span className="footer-sep">Ln 12, Col 1</span>
+        <span className="footer-sep">Autosave: active (every 10s)</span>
       </div>
     </footer>
   );

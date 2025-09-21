@@ -62,6 +62,13 @@ body {
   background: transparent;
 }
 
+/* Footer subtle separators: hairline dividers */
+.footer-sep {
+  border-left: 1px solid color-mix(in oklab, var(--muted) 40%, transparent);
+  padding-left: 0.75rem; /* space after divider */
+  margin-left: 0.75rem;  /* space before divider */
+}
+
 /* Typography: screen-optimized reading */
 :root {
   --font-serif: ui-serif, "Source Serif 4", Georgia, Cambria, "Times New Roman", serif;
