@@ -45,6 +45,9 @@ export default function ContextEditorTab({ tokens }: { tokens: number }) {
   const [characterModalOpen, setCharacterModalOpen] = useState(false);
   const [characterEditId, setCharacterEditId] = useState<string | null>(null);
 
+  const [worldModalOpen, setWorldModalOpen] = useState(false);
+  const [worldEditId, setWorldEditId] = useState<string | null>(null);
+
   const handleToggle = useCallback((sectionId: string, itemId: string, nextChecked: boolean) => {
     // Update local state so the checkbox reflects the new value
     setSections((prev) =>
@@ -69,9 +72,27 @@ export default function ContextEditorTab({ tokens }: { tokens: number }) {
             key={section.id}
             section={section}
             onToggle={handleToggle}
-            addButtonLabel={section.id === 'characters' ? 'Add character' : undefined}
-            onAdd={section.id === 'characters' ? () => setCharacterModalOpen(true) : undefined}
-            onEdit={section.id === 'characters' ? (_sid, itemId) => setCharacterEditId(itemId) : undefined}
+            addButtonLabel={
+              section.id === 'characters'
+                ? 'Add character'
+                : section.id === 'world'
+                ? 'Add world info'
+                : undefined
+            }
+            onAdd={
+              section.id === 'characters'
+                ? () => setCharacterModalOpen(true)
+                : section.id === 'world'
+                ? () => setWorldModalOpen(true)
+                : undefined
+            }
+            onEdit={
+              section.id === 'characters'
+                ? (_sid, itemId) => setCharacterEditId(itemId)
+                : section.id === 'world'
+                ? (_sid, itemId) => setWorldEditId(itemId)
+                : undefined
+            }
           />
         ))}
       </div>
@@ -147,7 +168,7 @@ export default function ContextEditorTab({ tokens }: { tokens: number }) {
             };
           }}
           onCancel={() => setCharacterEditId(null)}
-          onSave={(draft) => {
+          onSave={(draft: any) => {
             const label =
               draft.role && draft.role.trim()
                 ? `${draft.name.trim()} — ${draft.role.trim()}`
@@ -169,6 +190,76 @@ export default function ContextEditorTab({ tokens }: { tokens: number }) {
             setCharacterEditId(null);
             window.dispatchEvent(
               new CustomEvent('toast:show', { detail: { text: 'Character updated.' } }),
+            );
+          }}
+        />
+      )}
+
+      <ItemEditorModal
+        open={worldModalOpen}
+        type="world"
+        mode="create"
+        onCancel={() => setWorldModalOpen(false)}
+        onSave={(draft: any) => {
+          const title = (draft.title ?? '').trim();
+          if (!title) return;
+          const newItem = {
+            id: `wi-${Date.now()}`,
+            label: title,
+            tokens: 100,
+            checked: !!draft.checked,
+          } as const;
+
+          setSections((prev) =>
+            prev.map((s) =>
+              s.id === 'world'
+                ? { ...s, items: [newItem, ...s.items] }
+                : s,
+            ),
+          );
+
+          setWorldModalOpen(false);
+          window.dispatchEvent(
+            new CustomEvent('toast:show', { detail: { text: 'World info added.' } }),
+          );
+        }}
+      />
+
+      {worldEditId && (
+        <ItemEditorModal
+          open={!!worldEditId}
+          type="world"
+          mode="edit"
+          initialValue={() => {
+            const item =
+              sections.find((s) => s.id === 'world')?.items.find((it) => it.id === worldEditId);
+            if (!item) return { title: '', summary: '', facts: '', checked: true };
+            return {
+              title: item.label ?? '',
+              summary: '',
+              facts: '',
+              checked: !!item.checked,
+            };
+          }}
+          onCancel={() => setWorldEditId(null)}
+          onSave={(draft: any) => {
+            const title = (draft.title ?? '').trim();
+            setSections((prev) =>
+              prev.map((s) =>
+                s.id === 'world'
+                  ? {
+                      ...s,
+                      items: s.items.map((it) =>
+                        it.id === worldEditId ? { ...it, label: title || it.label, checked: !!draft.checked } : it,
+                      ),
+                    }
+                  : s,
+              ),
+            );
+
+            setWorldEditId(null);
+            window.dispatchEvent(
+              new CustomEvent('toast:show', { detail: { text: 'World info updated.' } }),
             );
           }}
         />
