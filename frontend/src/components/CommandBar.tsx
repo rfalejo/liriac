@@ -34,6 +34,34 @@ function useFilteredCommands(commands: Command[], query: string) {
   }, [commands, query]);
 }
 
+function normalizeCmd(s: string) {
+  return s.replace(/^\//, '');
+}
+
+function computeSuggestion(commands: Command[], value: string): string | null {
+  if (!value.trim().startsWith('/')) return null;
+  const q = normalizeCmd(value.trim()).toLowerCase();
+  if (!q) return null;
+  for (const c of commands) {
+    const label = c.label.toLowerCase();
+    if (label.startsWith(q)) return c.label;
+    for (const a of c.aliases ?? []) {
+      const an = normalizeCmd(a).toLowerCase();
+      if (an.startsWith(q)) return c.label;
+    }
+  }
+  return null;
+}
+
+function findCommand(commands: Command[], input: string): Command | undefined {
+  const q = normalizeCmd(input.trim()).toLowerCase();
+  return commands.find(
+    (c) =>
+      c.label.toLowerCase() === q ||
+      (c.aliases ?? []).some((a) => normalizeCmd(a).toLowerCase() === q),
+  );
+}
+
 export default function CommandBar({
   open,
   value,
@@ -43,11 +71,14 @@ export default function CommandBar({
   commands,
 }: CommandBarProps) {
   const inputRef = useRef<HTMLInputElement | null>(null);
-  const [activeIdx, setActiveIdx] = useState(0);
-  const filtered = useFilteredCommands(commands, value);
   const [history, setHistory] = useState<string[]>([]);
   const [histIdx, setHistIdx] = useState<number | null>(null);
   const HIST_KEY = 'liriac:cmdHistory';
+  const suggestion = computeSuggestion(commands, value);
+  const completionTail =
+    suggestion && value.trim().startsWith('/')
+      ? suggestion.slice(normalizeCmd(value.trim()).length)
+      : '';
 
   // Load history once on mount
   useEffect(() => {
@@ -74,7 +105,7 @@ export default function CommandBar({
   }, [open]);
 
   useEffect(() => {
-    setActiveIdx(0);
+    // no-op: active suggestion handled by inline autocomplete
   }, [value]);
 
   function addToHistory(entry: string) {
@@ -106,10 +137,6 @@ export default function CommandBar({
         setHistIdx(nextIdx);
         onChange(history[nextIdx]);
         return;
-      } else {
-        e.preventDefault();
-        setActiveIdx((i) => Math.max(i - 1, 0));
-        return;
       }
     }
 
@@ -125,29 +152,31 @@ export default function CommandBar({
           onChange(history[nextIdx]);
         }
         return;
-      } else {
-        e.preventDefault();
-        setActiveIdx((i) => Math.min(i + 1, Math.max(filtered.length - 1, 0)));
-        return;
       }
     }
 
-    if (e.key === 'Tab') {
+    // Accept autocomplete with Tab, or ArrowRight at end
+    if (
+      (e.key === 'Tab' || e.key === 'ArrowRight') &&
+      suggestion &&
+      completionTail &&
+      (e.currentTarget.selectionStart ?? 0) === value.length
+    ) {
       e.preventDefault();
-      const pick = filtered[activeIdx];
-      if (pick) {
-        onChange(pick.label);
-      }
+      onChange('/' + suggestion);
       return;
     }
 
     if (e.key === 'Enter') {
       e.preventDefault();
-      const pick = filtered[activeIdx] ?? filtered[0];
-      if (pick) {
-        const entry = (value || pick.label).trim();
+      const chosen =
+        findCommand(commands, value) ??
+        (suggestion ? commands.find((c) => c.label === suggestion) : undefined);
+
+      if (chosen) {
+        const entry = (value || '/' + chosen.label).trim();
         if (entry) addToHistory(entry);
-        onExecute(pick, value);
+        onExecute(chosen, value);
       } else {
         onClose();
       }
@@ -162,43 +191,35 @@ export default function CommandBar({
       <div className="pointer-events-auto overflow-hidden rounded-md border border-[var(--border)] bg-[var(--surface)]/95 shadow-lg backdrop-blur">
         <div className="flex items-center gap-2 px-3 py-2">
           <span className="select-none text-[var(--muted)]">{'>'}</span>
-          <input
-            ref={inputRef}
-            value={value}
-            onChange={(e) => {
-              if (histIdx !== null) setHistIdx(null);
-              onChange(e.target.value);
-            }}
-            onKeyDown={handleKeyDown}
-            placeholder="Type a command…"
-            className="w-full bg-transparent py-1 text-sm text-[var(--fg)] outline-none placeholder:text-[var(--muted)]"
-            aria-label="Command input"
-          />
+          <div className="relative flex-1">
+            <input
+              ref={inputRef}
+              value={value}
+              onChange={(e) => {
+                if (histIdx !== null) setHistIdx(null);
+                onChange(e.target.value);
+              }}
+              onKeyDown={handleKeyDown}
+              placeholder="Type a command…"
+              className="w-full bg-transparent py-1 text-sm text-[var(--fg)] outline-none placeholder:text-[var(--muted)]"
+              aria-label="Command input"
+            />
+            {completionTail && (
+              <div className="pointer-events-none absolute inset-0 flex items-center">
+                <span className="invisible">{value}</span>
+                <span className="text-[var(--muted)] opacity-50">{completionTail}</span>
+              </div>
+            )}
+          </div>
+          <span
+            className={`hidden sm:inline text-[10px] text-[var(--muted)] ml-2 ${completionTail ? 'opacity-60' : 'opacity-0'}`}
+          >
+            Tab to autocomplete
+          </span>
           <kbd className="hidden sm:inline rounded border border-[var(--border)] bg-black/20 px-1.5 py-0.5 text-[10px] text-[var(--muted)]">
             Esc
           </kbd>
         </div>
-        {filtered.length > 0 && (
-          <ul className="max-h-64 overflow-auto border-t border-[var(--border)]">
-            {filtered.map((cmd, idx) => (
-              <li
-                key={cmd.id}
-                className={[
-                  'flex cursor-pointer items-start gap-2 px-3 py-2 text-sm',
-                  idx === activeIdx ? 'bg-white/5 text-[var(--fg)]' : 'text-[var(--muted)] hover:text-[var(--fg)] hover:bg-white/5',
-                ].join(' ')}
-                onMouseEnter={() => setActiveIdx(idx)}
-                onMouseDown={(e) => {
-                  e.preventDefault();
-                  onExecute(cmd, value);
-                }}
-              >
-                <span className="text-[var(--fg)]">{cmd.label}</span>
-                {cmd.hint && <span className="ml-auto text-xs italic opacity-70">{cmd.hint}</span>}
-              </li>
-            ))}
-          </ul>
-        )}
       </div>
     </div>
   );
