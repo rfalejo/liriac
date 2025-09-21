@@ -5,34 +5,7 @@ import { typewriterScroll } from '../utils/caret';
 import { gotoScene as utilGotoScene, gotoTop as utilGotoTop, jumpToOffset, getSceneOffsets } from '../utils/scenes';
 import { useSmartPunctuation } from '../hooks/useSmartPunctuation';
 import { COMMANDS as REGISTRY, executeCommand, type Command as Cmd } from '../commands/commands';
-
-function normalizeCmd(s: string) {
-  return s.replace(/^\//, '');
-}
-
-function computeSuggestion(commands: CommandBarCommand[], value: string): string | null {
-  if (!value.trim().startsWith('/')) return null;
-  const q = normalizeCmd(value.trim()).toLowerCase();
-  if (!q) return null;
-  for (const c of commands) {
-    const label = c.label.toLowerCase();
-    if (label.startsWith(q)) return c.label;
-    for (const a of c.aliases ?? []) {
-      const an = normalizeCmd(a).toLowerCase();
-      if (an.startsWith(q)) return c.label;
-    }
-  }
-  return null;
-}
-
-function findCommand(commands: CommandBarCommand[], input: string): CommandBarCommand | undefined {
-  const q = normalizeCmd(input.trim()).toLowerCase();
-  return commands.find(
-    (c) =>
-      c.label.toLowerCase() === q ||
-      (c.aliases ?? []).some((a) => normalizeCmd(a).toLowerCase() === q),
-  );
-}
+import { computeSuggestion, normalizeCmd } from '../commands/commandUtils';
 
 export default function EditorSurface({ disabled = false }: { disabled?: boolean }) {
   const textareaRef = useRef<HTMLTextAreaElement | null>(null);
@@ -199,7 +172,7 @@ export default function EditorSurface({ disabled = false }: { disabled?: boolean
   const suggestion = computeSuggestion(suggestions, commandInput);
   const completionTail =
     suggestion && commandInput.trim().startsWith('/')
-      ? suggestion.slice(commandInput.trim().replace(/^\//, '').length)
+      ? suggestion.slice(normalizeCmd(commandInput.trim()).length)
       : '';
 
   return (
