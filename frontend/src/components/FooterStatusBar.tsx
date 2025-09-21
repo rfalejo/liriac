@@ -6,7 +6,7 @@ export default function FooterStatusBar({ tokens = 0 }: { tokens?: number }) {
           <span className="font-medium text-[var(--fg)]">Mode:</span> Write
         </span>
         <span className="footer-sep">
-          <span className="font-medium text-[var(--fg)]">Tokens:</span> {tokens}
+          <span className="font-medium text-[var(--fg)]">Context:</span> 10%
         </span>
         <span className="footer-sep">Ln 12, Col 1</span>
         <span className="footer-sep">Autosave: active (every 10s)</span>
