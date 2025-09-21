@@ -157,19 +157,9 @@ export default function ContextEditor({
           <h2 id="context-editor-title" className="text-sm font-medium text-[var(--fg)]">
             Context Editor (preview)
           </h2>
-          <button
-            onClick={onClose}
-            className="rounded border border-[var(--border)] bg-black/20 px-2 py-1 text-xs text-[var(--muted)] hover:bg-black/30"
-            aria-label="Close context editor"
-          >
-            Close
-          </button>
         </div>
 
         <div className="p-4 space-y-4">
-          <div className="flex items-center justify-end">
-            <div className="text-xs text-[var(--muted)]">Budget: {budget} tokens</div>
-          </div>
 
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
             <div className="space-y-3">
