@@ -27,7 +27,9 @@ export default function Settings({
       }}
       onClear={() => {
         window.dispatchEvent(
-          new CustomEvent('toast:show', { detail: { text: 'Context cleared (mock).' } }),
+          new CustomEvent('toast:show', {
+            detail: { text: 'Context cleared (mock).' },
+          }),
         );
       }}
       containerRef={containerRef}

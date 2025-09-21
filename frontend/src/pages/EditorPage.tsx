@@ -43,7 +43,11 @@ export default function EditorPage() {
     <div className="min-h-screen bg-[var(--bg)] text-[var(--fg)] flex flex-col">
       <TopAppBar />
       <EditorSurface disabled={contextOpen} />
-      <Settings open={contextOpen} tokens={tokens} onClose={() => setContextOpen(false)} />
+      <Settings
+        open={contextOpen}
+        tokens={tokens}
+        onClose={() => setContextOpen(false)}
+      />
       <FooterStatusBar tokens={tokens} onOpenContext={() => setContextOpen(true)} />
     </div>
   );

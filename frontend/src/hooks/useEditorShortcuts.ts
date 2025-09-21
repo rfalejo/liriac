@@ -35,7 +35,11 @@ export function useEditorShortcuts({
     }
 
     // Scene navigation
-    if ((e.metaKey || e.ctrlKey) && e.altKey && (e.key === 'ArrowLeft' || e.key === 'ArrowRight')) {
+    if (
+      (e.metaKey || e.ctrlKey) &&
+      e.altKey &&
+      (e.key === 'ArrowLeft' || e.key === 'ArrowRight')
+    ) {
       e.preventDefault();
       const el = e.currentTarget as HTMLTextAreaElement;
       const pos = el.selectionStart ?? 0;
@@ -45,14 +49,25 @@ export function useEditorShortcuts({
         if (offs[i] <= pos) idx = i;
         else break;
       }
-      const nextIdx = e.key === 'ArrowLeft' ? Math.max(0, idx - 1) : Math.min(offs.length - 1, idx + 1);
+      const nextIdx =
+        e.key === 'ArrowLeft'
+          ? Math.max(0, idx - 1)
+          : Math.min(offs.length - 1, idx + 1);
       jumpToOffset(el, offs[nextIdx]);
       setTimeout(() => typewriterScroll(el), 0);
       return;
     }
 
     // Recenter caret after nav keys
-    const navKeys = new Set(['ArrowUp', 'ArrowDown', 'PageUp', 'PageDown', 'Home', 'End', 'Enter']);
+    const navKeys = new Set([
+      'ArrowUp',
+      'ArrowDown',
+      'PageUp',
+      'PageDown',
+      'Home',
+      'End',
+      'Enter',
+    ]);
     if (navKeys.has(e.key)) {
       setTimeout(() => {
         const el = textareaRef.current;

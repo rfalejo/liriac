@@ -16,7 +16,12 @@ export const INITIAL_SECTIONS: ContextSection[] = [
     title: 'Characters',
     defaultOpen: false,
     items: [
-      { id: 'char-michelle', label: 'Michelle — Protagonist', tokens: 120, checked: true },
+      {
+        id: 'char-michelle',
+        label: 'Michelle — Protagonist',
+        tokens: 120,
+        checked: true,
+      },
       { id: 'char-arturo', label: 'Arturo — Supporting', tokens: 80, checked: true },
       { id: 'char-port', label: 'Port Authority — Minor', tokens: 40, checked: false },
     ],

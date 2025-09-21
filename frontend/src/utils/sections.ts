@@ -1,4 +1,7 @@
-import type { ContextSection, ContextItem } from '../components/settings/ContextSectionList';
+import type {
+  ContextSection,
+  ContextItem,
+} from '../components/settings/ContextSectionList';
 
 export function toggleItem(
   sections: ContextSection[],
@@ -21,7 +24,9 @@ export function addItem(
   sectionId: string,
   item: ContextItem,
 ): ContextSection[] {
-  return sections.map((s) => (s.id === sectionId ? { ...s, items: [item, ...s.items] } : s));
+  return sections.map((s) =>
+    s.id === sectionId ? { ...s, items: [item, ...s.items] } : s,
+  );
 }
 
 export function editItem(

@@ -1,7 +1,11 @@
 import { useRef, useState, useMemo } from 'react';
 import CommandBar, { type Command as CommandBarCommand } from './CommandBar';
 import { typewriterScroll } from '../utils/caret';
-import { gotoScene as utilGotoScene, gotoTop as utilGotoTop, jumpToOffset } from '../utils/scenes';
+import {
+  gotoScene as utilGotoScene,
+  gotoTop as utilGotoTop,
+  jumpToOffset,
+} from '../utils/scenes';
 import { useSmartPunctuation } from '../hooks/useSmartPunctuation';
 import { COMMANDS as REGISTRY, type Command as Cmd } from '../commands/commands';
 import { useEditorStats } from '../hooks/useEditorStats';
@@ -97,10 +101,7 @@ export default function EditorSurface({ disabled = false }: { disabled?: boolean
     <main className="flex flex-col flex-1 min-h-0">
       <div className="mx-auto flex flex-1 min-h-0 w-full max-w-4xl flex-col px-4 py-8 sm:px-6 sm:py-10 lg:max-w-3xl">
         <div className="mt-6 flex-1 min-h-0 flex flex-col border-b border-[var(--border)] bg-[var(--surface)]/80 transition-colors duration-150">
-          <label
-            htmlFor="editor"
-            className="sr-only"
-          >
+          <label htmlFor="editor" className="sr-only">
             Chapter body
           </label>
           <textarea

@@ -25,7 +25,9 @@ export default function FooterStatusBar({
           <span className="font-medium text-[var(--fg)]">Context:</span> 10%
         </span>
         <span className="footer-sep hidden sm:inline">Ln 12, Col 1</span>
-        <span className="footer-sep hidden md:inline">Autosave: active (every 10s)</span>
+        <span className="footer-sep hidden md:inline">
+          Autosave: active (every 10s)
+        </span>
       </div>
     </footer>
   );

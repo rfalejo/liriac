@@ -9,7 +9,10 @@ export function normalizeCmd(s: string): string {
   return s.replace(/^\//, '');
 }
 
-export function computeSuggestion(commands: CommandLike[], value: string): string | null {
+export function computeSuggestion(
+  commands: CommandLike[],
+  value: string,
+): string | null {
   if (!value.trim().startsWith('/')) return null;
   const q = normalizeCmd(value.trim()).toLowerCase();
   if (!q) return null;
@@ -24,7 +27,10 @@ export function computeSuggestion(commands: CommandLike[], value: string): strin
   return null;
 }
 
-export function findCommand(commands: CommandLike[], input: string): CommandLike | undefined {
+export function findCommand(
+  commands: CommandLike[],
+  input: string,
+): CommandLike | undefined {
   const q = normalizeCmd(input.trim()).toLowerCase();
   return commands.find(
     (c) =>
@@ -33,7 +39,10 @@ export function findCommand(commands: CommandLike[], input: string): CommandLike
   );
 }
 
-export function useFilteredCommands(commands: CommandLike[], query: string): CommandLike[] {
+export function useFilteredCommands(
+  commands: CommandLike[],
+  query: string,
+): CommandLike[] {
   const q = query.trim().toLowerCase();
   if (!q) return commands.slice(0, 6);
   const parts = q.split(/\s+/g);

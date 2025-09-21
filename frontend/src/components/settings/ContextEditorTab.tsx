@@ -16,9 +16,12 @@ export default function ContextEditorTab({ tokens }: { tokens: number }) {
 
   const { character, world } = useContextModals();
 
-  const handleToggle = useCallback((sectionId: string, itemId: string, nextChecked: boolean) => {
-    setSections((prev) => toggleItem(prev, sectionId, itemId, nextChecked));
-  }, []);
+  const handleToggle = useCallback(
+    (sectionId: string, itemId: string, nextChecked: boolean) => {
+      setSections((prev) => toggleItem(prev, sectionId, itemId, nextChecked));
+    },
+    [],
+  );
 
   return (
     <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
@@ -32,22 +35,22 @@ export default function ContextEditorTab({ tokens }: { tokens: number }) {
               section.id === 'characters'
                 ? 'Add character'
                 : section.id === 'world'
-                ? 'Add world info'
-                : undefined
+                  ? 'Add world info'
+                  : undefined
             }
             onAdd={
               section.id === 'characters'
                 ? () => character.openCreate()
                 : section.id === 'world'
-                ? () => world.openCreate()
-                : undefined
+                  ? () => world.openCreate()
+                  : undefined
             }
             onEdit={
               section.id === 'characters'
                 ? (_sid, itemId) => character.startEdit(itemId)
                 : section.id === 'world'
-                ? (_sid, itemId) => world.startEdit(itemId)
-                : undefined
+                  ? (_sid, itemId) => world.startEdit(itemId)
+                  : undefined
             }
           />
         ))}
@@ -65,7 +68,11 @@ export default function ContextEditorTab({ tokens }: { tokens: number }) {
         <ContextStyleTonePanel
           defaultOpen={false}
           items={[
-            { id: 'sg-house', description: 'House style: concise, sensory details', checked: true },
+            {
+              id: 'sg-house',
+              description: 'House style: concise, sensory details',
+              checked: true,
+            },
           ]}
         />
 
@@ -106,8 +113,9 @@ export default function ContextEditorTab({ tokens }: { tokens: number }) {
           type="character"
           mode="edit"
           initialValue={() => {
-            const item =
-              sections.find((s) => s.id === 'characters')?.items.find((it) => it.id === character.editId);
+            const item = sections
+              .find((s) => s.id === 'characters')
+              ?.items.find((it) => it.id === character.editId);
             if (!item) return { name: '', role: '', summary: '', checked: true };
             const [name, rolePart] = item.label.split('—').map((s) => s.trim());
             return {
@@ -170,8 +178,9 @@ export default function ContextEditorTab({ tokens }: { tokens: number }) {
           type="world"
           mode="edit"
           initialValue={() => {
-            const item =
-              sections.find((s) => s.id === 'world')?.items.find((it) => it.id === world.editId);
+            const item = sections
+              .find((s) => s.id === 'world')
+              ?.items.find((it) => it.id === world.editId);
             if (!item) return { title: '', summary: '', facts: '', checked: true };
             return {
               title: item.label ?? '',
@@ -193,7 +202,9 @@ export default function ContextEditorTab({ tokens }: { tokens: number }) {
 
             world.endEdit();
             window.dispatchEvent(
-              new CustomEvent('toast:show', { detail: { text: 'World info updated.' } }),
+              new CustomEvent('toast:show', {
+                detail: { text: 'World info updated.' },
+              }),
             );
           }}
         />

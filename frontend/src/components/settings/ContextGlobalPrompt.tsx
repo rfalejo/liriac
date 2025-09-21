@@ -20,7 +20,9 @@ export default function ContextGlobalPrompt({
         </span>
       </summary>
       <div className="px-3 pb-3">
-        <div className="text-xs text-[var(--muted)] mb-1">System prompt (always included)</div>
+        <div className="text-xs text-[var(--muted)] mb-1">
+          System prompt (always included)
+        </div>
         <div className="rounded border border-[var(--border)] bg-black/10 p-2 text-xs text-[var(--muted)]">
           {prompt}
         </div>

@@ -58,7 +58,9 @@ export default function SettingsDialog({
         </div>
 
         <div className="flex items-center justify-end gap-2 border-t border-[var(--border)] px-4 py-3">
-          <span className="text-xs text-[var(--muted)] hidden sm:inline">Press Esc to close</span>
+          <span className="text-xs text-[var(--muted)] hidden sm:inline">
+            Press Esc to close
+          </span>
           <button
             onClick={() => {
               onClear?.();

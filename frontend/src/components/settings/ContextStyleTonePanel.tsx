@@ -26,7 +26,11 @@ export default function ContextStyleTonePanel({
   }
 
   return (
-    <details data-panel className="rounded border border-[var(--border)]" open={defaultOpen}>
+    <details
+      data-panel
+      className="rounded border border-[var(--border)]"
+      open={defaultOpen}
+    >
       <summary className="flex items-center justify-between cursor-pointer select-none px-3 py-2 text-sm">
         <span className="text-[var(--fg)]">{title}</span>
         <span className="ml-2 rounded bg-black/20 px-1.5 py-0.5 text-[10px] text-[var(--muted)]">

@@ -60,7 +60,9 @@ export function useDialogFocusNav(open: boolean) {
     if (key === 'Enter') {
       const active = document.activeElement as HTMLElement | null;
       if (active) {
-        const details = active.closest('details[data-panel]') as HTMLDetailsElement | null;
+        const details = active.closest(
+          'details[data-panel]',
+        ) as HTMLDetailsElement | null;
         const isOnSummary =
           active.tagName.toLowerCase() === 'summary' || !!active.closest('summary');
         if (details && isOnSummary && !details.open) {

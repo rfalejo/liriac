@@ -6,7 +6,11 @@ export type TransformResult = {
 };
 
 export function useSmartPunctuation() {
-  function transform(value: string, selectionStart: number, selectionEnd: number): TransformResult {
+  function transform(
+    value: string,
+    selectionStart: number,
+    selectionEnd: number,
+  ): TransformResult {
     let v = value;
     let s = selectionStart;
     let e = selectionEnd;

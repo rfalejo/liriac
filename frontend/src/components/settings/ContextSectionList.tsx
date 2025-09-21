@@ -27,11 +27,21 @@ export type ContextSectionListProps = {
  * Renders a <details> panel with a summary and a list of checkbox items.
  * Stateless and API-ready: accepts data + callback, no internal persistence.
  */
-export default function ContextSectionList({ section, onToggle, addButtonLabel, onAdd, onEdit }: ContextSectionListProps) {
+export default function ContextSectionList({
+  section,
+  onToggle,
+  addButtonLabel,
+  onAdd,
+  onEdit,
+}: ContextSectionListProps) {
   const activeCount = section.items.filter((i) => i.checked).length;
 
   return (
-    <details data-panel className="rounded border border-[var(--border)]" open={section.defaultOpen}>
+    <details
+      data-panel
+      className="rounded border border-[var(--border)]"
+      open={section.defaultOpen}
+    >
       <summary className="flex items-center justify-between cursor-pointer select-none px-3 py-2 text-sm">
         <span className="text-[var(--fg)]">{section.title}</span>
         <span className="ml-2 flex items-center gap-2">
@@ -73,7 +83,9 @@ export default function ContextSectionList({ section, onToggle, addButtonLabel, 
                 <span>{it.label}</span>
               </label>
               <div className="flex items-center gap-2">
-                {typeof it.tokens === 'number' && <span className="text-xs">~{it.tokens}t</span>}
+                {typeof it.tokens === 'number' && (
+                  <span className="text-xs">~{it.tokens}t</span>
+                )}
                 {typeof onEdit === 'function' && (
                   <button
                     type="button"

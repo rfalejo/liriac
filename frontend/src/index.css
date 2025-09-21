@@ -1,4 +1,4 @@
-@import "tailwindcss";
+@import 'tailwindcss';
 @plugin "@tailwindcss/typography";
 
 /* Theme variables */
@@ -13,12 +13,12 @@
 
 :root[data-theme='zen'] {
   /* Slightly warmer, softer palette for night reading */
-  --bg: #0c0f12;         /* a touch warmer */
-  --surface: #11161c;    /* slightly lifted surface */
-  --fg: #f0eadb;         /* warm ivory text */
-  --muted: #a9b0b8;      /* gently muted */
-  --border: #24303d;     /* soft border */
-  --read-lh: 1.95;       /* a bit more breathing room */
+  --bg: #0c0f12; /* a touch warmer */
+  --surface: #11161c; /* slightly lifted surface */
+  --fg: #f0eadb; /* warm ivory text */
+  --muted: #a9b0b8; /* gently muted */
+  --border: #24303d; /* soft border */
+  --read-lh: 1.95; /* a bit more breathing room */
 }
 
 /* Base theming and full-height layout */
@@ -34,17 +34,18 @@ body {
   background-image:
     radial-gradient(circle at 1px 1px, rgba(255, 255, 255, 0.018) 1px, transparent 1px),
     radial-gradient(circle at 0.5px 0.5px, rgba(0, 0, 0, 0.018) 1px, transparent 1px);
-  background-size: 4px 4px, 3px 3px;
+  background-size:
+    4px 4px,
+    3px 3px;
   background-blend-mode: soft-light;
   color: var(--fg);
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 }
 
-
 /* Scrollbar minimal styling (overlay-like) */
 * {
-  scrollbar-width: thin;            /* Firefox */
+  scrollbar-width: thin; /* Firefox */
   scrollbar-color: rgba(255, 255, 255, 0.18) transparent;
 }
 
@@ -66,12 +67,12 @@ body {
 .footer-sep {
   border-left: 1px solid color-mix(in oklab, var(--muted) 40%, transparent);
   padding-left: 0.75rem; /* space after divider */
-  margin-left: 0.75rem;  /* space before divider */
+  margin-left: 0.75rem; /* space before divider */
 }
 
 /* Typography: screen-optimized reading */
 :root {
-  --font-serif: ui-serif, "Source Serif 4", Georgia, Cambria, "Times New Roman", serif;
+  --font-serif: ui-serif, 'Source Serif 4', Georgia, Cambria, 'Times New Roman', serif;
 }
 
 /* Global text rendering hints */
@@ -90,7 +91,10 @@ html {
 #editor {
   font-family: var(--font-serif);
   font-variant-ligatures: common-ligatures contextual;
-  font-feature-settings: "liga" 1, "calt" 1, "onum" 1; /* oldstyle nums feel more bookish */
+  font-feature-settings:
+    'liga' 1,
+    'calt' 1,
+    'onum' 1; /* oldstyle nums feel more bookish */
   hyphens: auto;
   text-wrap: pretty;
   hanging-punctuation: first allow-end;
@@ -102,7 +106,7 @@ html {
 }
 
 /* CLI-like checkboxes (render as [ ] and [x]) for Context Editor */
-input[type="checkbox"][class~="accent-[var(--fg)]"] {
+input[type='checkbox'][class~='accent-[var(--fg)]'] {
   appearance: none;
   display: inline-block;
   width: 3ch; /* enough room for `[ ]` without wrapping */
@@ -111,31 +115,33 @@ input[type="checkbox"][class~="accent-[var(--fg)]"] {
   margin-right: 0.5rem; /* pairs nicely with label gap */
   vertical-align: text-bottom;
   cursor: pointer;
-  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+  font-family:
+    ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono',
+    'Courier New', monospace;
   font-size: 0.95em; /* slightly smaller to sit nicely with text */
   line-height: 1;
   text-align: left;
 }
-input[type="checkbox"][class~="accent-[var(--fg)]"]::before {
-  content: "[ ]";
+input[type='checkbox'][class~='accent-[var(--fg)]']::before {
+  content: '[ ]';
   color: var(--muted);
   line-height: 1;
   display: inline-block;
   transform: translateY(1px); /* micro-align baseline */
 }
-input[type="checkbox"][class~="accent-[var(--fg)]"]:checked::before {
-  content: "[x]";
+input[type='checkbox'][class~='accent-[var(--fg)]']:checked::before {
+  content: '[x]';
   color: var(--fg);
 }
-input[type="checkbox"][class~="accent-[var(--fg)]"]:hover::before {
+input[type='checkbox'][class~='accent-[var(--fg)]']:hover::before {
   color: color-mix(in oklab, var(--fg) 70%, var(--muted));
 }
-input[type="checkbox"][class~="accent-[var(--fg)]"]:focus-visible {
+input[type='checkbox'][class~='accent-[var(--fg)]']:focus-visible {
   outline: 2px solid color-mix(in oklab, var(--fg) 35%, transparent);
   outline-offset: 2px;
   border-radius: 3px; /* subtle to match outline */
 }
-input[type="checkbox"][class~="accent-[var(--fg)]"]:disabled {
+input[type='checkbox'][class~='accent-[var(--fg)]']:disabled {
   opacity: 0.6;
   cursor: not-allowed;
 }

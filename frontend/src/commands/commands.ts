@@ -8,14 +8,33 @@ export type Command = {
 export const COMMANDS: Command[] = [
   { id: 'undo', label: 'undo', hint: 'Revert last action', aliases: ['/undo'] },
   { id: 'redo', label: 'redo', hint: 'Re-apply last reverted action' },
-  { id: 'spell', label: 'spell-check', hint: 'Check spelling in selection', aliases: ['spell', '/spell-check'] },
+  {
+    id: 'spell',
+    label: 'spell-check',
+    hint: 'Check spelling in selection',
+    aliases: ['spell', '/spell-check'],
+  },
   { id: 'outline', label: 'outline generate', hint: 'Generate chapter outline' },
-  { id: 'rewrite-tone', label: 'rewrite paragraph tone: moody', hint: 'Rewrite selection with tone' },
+  {
+    id: 'rewrite-tone',
+    label: 'rewrite paragraph tone: moody',
+    hint: 'Rewrite selection with tone',
+  },
   { id: 'insert-break', label: 'insert scene break', hint: 'Add a scene separator' },
   { id: 'count', label: 'count words', hint: 'Show word count' },
   { id: 'timer-start', label: 'timer start 25m', hint: 'Start a 25m session' },
-  { id: 'goto', label: 'goto', hint: 'Jump: /goto top | last-edit | scene N', aliases: ['/goto'] },
-  { id: 'context', label: 'context', hint: 'Open context editor', aliases: ['/context'] },
+  {
+    id: 'goto',
+    label: 'goto',
+    hint: 'Jump: /goto top | last-edit | scene N',
+    aliases: ['/goto'],
+  },
+  {
+    id: 'context',
+    label: 'context',
+    hint: 'Open context editor',
+    aliases: ['/context'],
+  },
 ];
 
 export type CmdContext = {
@@ -29,7 +48,8 @@ export type CmdContext = {
 };
 
 export function executeCommand(cmd: Command, rawInput: string, ctx: CmdContext) {
-  const { textareaEl, gotoTop, gotoLastEdit, gotoScene, closePalette, toast, emit } = ctx;
+  const { textareaEl, gotoTop, gotoLastEdit, gotoScene, closePalette, toast, emit } =
+    ctx;
 
   switch (cmd.id) {
     case 'context': {

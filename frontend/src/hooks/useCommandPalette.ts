@@ -1,5 +1,10 @@
 import { useEffect, useRef, useState } from 'react';
-import { computeSuggestion, findCommand, normalizeCmd, type CommandLike } from '../commands/commandUtils';
+import {
+  computeSuggestion,
+  findCommand,
+  normalizeCmd,
+  type CommandLike,
+} from '../commands/commandUtils';
 
 export type UseCommandPaletteArgs = {
   open: boolean;
@@ -83,7 +88,8 @@ export function useCommandPalette({
     if (e.key === 'ArrowUp') {
       if (isEmpty && history.length > 0) {
         e.preventDefault();
-        const nextIdx = histIdx === null ? 0 : Math.min(histIdx + 1, history.length - 1);
+        const nextIdx =
+          histIdx === null ? 0 : Math.min(histIdx + 1, history.length - 1);
         setHistIdx(nextIdx);
         onChange(history[nextIdx]);
         return;

@@ -67,7 +67,17 @@ export default function ItemEditorModal({
       firstFieldRef.current?.focus();
     }, 0);
     return () => clearTimeout(t);
-  }, [open, mode, type, (initialValue as any)?.name, (initialValue as any)?.role, (initialValue as any)?.summary, (initialValue as any)?.checked, (initialValue as any)?.title, (initialValue as any)?.facts]);
+  }, [
+    open,
+    mode,
+    type,
+    (initialValue as any)?.name,
+    (initialValue as any)?.role,
+    (initialValue as any)?.summary,
+    (initialValue as any)?.checked,
+    (initialValue as any)?.title,
+    (initialValue as any)?.facts,
+  ]);
 
   function computeTokenEstimate(): number {
     if (type === 'character') {
@@ -78,11 +88,9 @@ export default function ItemEditorModal({
       ].join('\n');
       return mockTokenize(parts);
     } else {
-      const parts = [
-        draft?.title ?? '',
-        draft?.summary ?? '',
-        draft?.facts ?? '',
-      ].join('\n');
+      const parts = [draft?.title ?? '', draft?.summary ?? '', draft?.facts ?? ''].join(
+        '\n',
+      );
       return mockTokenize(parts);
     }
   }
@@ -107,9 +115,7 @@ export default function ItemEditorModal({
     const nodes = Array.from(panel.querySelectorAll<HTMLElement>(selectors));
     return nodes.filter(
       (el) =>
-        !el.hasAttribute('disabled') &&
-        el.tabIndex !== -1 &&
-        el.offsetParent !== null,
+        !el.hasAttribute('disabled') && el.tabIndex !== -1 && el.offsetParent !== null,
     );
   }
 
@@ -146,8 +152,12 @@ export default function ItemEditorModal({
   if (!open) return null;
 
   const isValid =
-    (type === 'character' && typeof draft.name === 'string' && draft.name.trim().length > 0) ||
-    (type === 'world' && typeof draft.title === 'string' && draft.title.trim().length > 0);
+    (type === 'character' &&
+      typeof draft.name === 'string' &&
+      draft.name.trim().length > 0) ||
+    (type === 'world' &&
+      typeof draft.title === 'string' &&
+      draft.title.trim().length > 0);
 
   const estTokens = computeTokenEstimate();
 
@@ -162,7 +172,10 @@ export default function ItemEditorModal({
       onKeyDown={handleKeyDown}
     >
       <div className="absolute inset-0 bg-black/50 backdrop-blur-sm" />
-      <div data-modal-panel className="relative w-full max-w-md mx-auto rounded-md border border-[var(--border)] bg-[var(--surface)] shadow-xl">
+      <div
+        data-modal-panel
+        className="relative w-full max-w-md mx-auto rounded-md border border-[var(--border)] bg-[var(--surface)] shadow-xl"
+      >
         <div className="border-b border-[var(--border)] px-4 py-3">
           <div className="flex items-center justify-between">
             <h2 id="item-editor-title" className="text-sm font-medium text-[var(--fg)]">
@@ -201,7 +214,9 @@ export default function ItemEditorModal({
                   id="char-name"
                   ref={firstFieldRef}
                   value={draft.name}
-                  onChange={(e) => setDraft((d: any) => ({ ...d, name: e.target.value }))}
+                  onChange={(e) =>
+                    setDraft((d: any) => ({ ...d, name: e.target.value }))
+                  }
                   className="w-full rounded border border-[var(--border)] bg-black/10 px-2 py-1.5 text-sm text-[var(--fg)] outline-none focus:ring-1 focus:ring-[var(--border)]"
                   placeholder="e.g., Michelle"
                   required
@@ -215,7 +230,9 @@ export default function ItemEditorModal({
                 <input
                   id="char-role"
                   value={draft.role ?? ''}
-                  onChange={(e) => setDraft((d: any) => ({ ...d, role: e.target.value }))}
+                  onChange={(e) =>
+                    setDraft((d: any) => ({ ...d, role: e.target.value }))
+                  }
                   className="w-full rounded border border-[var(--border)] bg-black/10 px-2 py-1.5 text-sm text-[var(--fg)] outline-none focus:ring-1 focus:ring-[var(--border)]"
                   placeholder="e.g., Protagonist"
                 />
@@ -228,7 +245,9 @@ export default function ItemEditorModal({
                 <textarea
                   id="char-summary"
                   value={draft.summary ?? ''}
-                  onChange={(e) => setDraft((d: any) => ({ ...d, summary: e.target.value }))}
+                  onChange={(e) =>
+                    setDraft((d: any) => ({ ...d, summary: e.target.value }))
+                  }
                   className="min-h-[80px] w-full rounded border border-[var(--border)] bg-black/10 px-2 py-1.5 text-sm text-[var(--fg)] outline-none focus:ring-1 focus:ring-[var(--border)]"
                   placeholder="One or two lines that describe the character…"
                 />
@@ -239,7 +258,9 @@ export default function ItemEditorModal({
                   type="checkbox"
                   className="accent-[var(--fg)]"
                   checked={!!draft.checked}
-                  onChange={(e) => setDraft((d: any) => ({ ...d, checked: e.target.checked }))}
+                  onChange={(e) =>
+                    setDraft((d: any) => ({ ...d, checked: e.target.checked }))
+                  }
                 />
                 Include in context
               </label>
@@ -256,7 +277,9 @@ export default function ItemEditorModal({
                   id="wi-title"
                   ref={firstFieldRef}
                   value={draft.title ?? ''}
-                  onChange={(e) => setDraft((d: any) => ({ ...d, title: e.target.value }))}
+                  onChange={(e) =>
+                    setDraft((d: any) => ({ ...d, title: e.target.value }))
+                  }
                   className="w-full rounded border border-[var(--border)] bg-black/10 px-2 py-1.5 text-sm text-[var(--fg)] outline-none focus:ring-1 focus:ring-[var(--border)]"
                   placeholder="e.g., The Port of San Aurelio"
                   required
@@ -270,7 +293,9 @@ export default function ItemEditorModal({
                 <textarea
                   id="wi-summary"
                   value={draft.summary ?? ''}
-                  onChange={(e) => setDraft((d: any) => ({ ...d, summary: e.target.value }))}
+                  onChange={(e) =>
+                    setDraft((d: any) => ({ ...d, summary: e.target.value }))
+                  }
                   className="min-h-[80px] w-full rounded border border-[var(--border)] bg-black/10 px-2 py-1.5 text-sm text-[var(--fg)] outline-none focus:ring-1 focus:ring-[var(--border)]"
                   placeholder="One or two lines that describe this element…"
                 />
@@ -283,7 +308,9 @@ export default function ItemEditorModal({
                 <textarea
                   id="wi-facts"
                   value={draft.facts ?? ''}
-                  onChange={(e) => setDraft((d: any) => ({ ...d, facts: e.target.value }))}
+                  onChange={(e) =>
+                    setDraft((d: any) => ({ ...d, facts: e.target.value }))
+                  }
                   className="min-h-[80px] w-full rounded border border-[var(--border)] bg-black/10 px-2 py-1.5 text-sm text-[var(--fg)] outline-none focus:ring-1 focus:ring-[var(--border)]"
                   placeholder="Bullet points or notes…"
                 />
@@ -294,14 +321,18 @@ export default function ItemEditorModal({
                   type="checkbox"
                   className="accent-[var(--fg)]"
                   checked={!!draft.checked}
-                  onChange={(e) => setDraft((d: any) => ({ ...d, checked: e.target.checked }))}
+                  onChange={(e) =>
+                    setDraft((d: any) => ({ ...d, checked: e.target.checked }))
+                  }
                 />
                 Include in context
               </label>
             </>
           )}
           <div className="flex items-center justify-end gap-2 pt-2">
-            <span className="hidden sm:inline text-xs text-[var(--muted)]">Press Esc to cancel</span>
+            <span className="hidden sm:inline text-xs text-[var(--muted)]">
+              Press Esc to cancel
+            </span>
             <button
               type="button"
               onClick={onCancel}
