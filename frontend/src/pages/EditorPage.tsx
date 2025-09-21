@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import TopAppBar from '../components/TopAppBar';
 import EditorSurface from '../components/EditorSurface';
 import FooterStatusBar from '../components/FooterStatusBar';
-import ContextEditor from '../components/ContextEditor';
+import Settings from '../components/Settings';
 
 export default function EditorPage() {
   const [tokens, setTokens] = useState(0);
@@ -43,7 +43,7 @@ export default function EditorPage() {
     <div className="min-h-screen bg-[var(--bg)] text-[var(--fg)] flex flex-col">
       <TopAppBar />
       <EditorSurface disabled={contextOpen} />
-      <ContextEditor open={contextOpen} tokens={tokens} onClose={() => setContextOpen(false)} />
+      <Settings open={contextOpen} tokens={tokens} onClose={() => setContextOpen(false)} />
       <FooterStatusBar tokens={tokens} onOpenContext={() => setContextOpen(true)} />
     </div>
   );
