@@ -8,6 +8,17 @@
   --fg: #e6edf3;
   --muted: #9aa4b2;
   --border: #1f2a37;
+  --read-lh: 1.85;
+}
+
+:root[data-theme='zen'] {
+  /* Slightly warmer, softer palette for night reading */
+  --bg: #0c0f12;         /* a touch warmer */
+  --surface: #11161c;    /* slightly lifted surface */
+  --fg: #f0eadb;         /* warm ivory text */
+  --muted: #a9b0b8;      /* gently muted */
+  --border: #24303d;     /* soft border */
+  --read-lh: 1.95;       /* a bit more breathing room */
 }
 
 /* Base theming and full-height layout */
@@ -24,14 +35,6 @@ body {
   -moz-osx-font-smoothing: grayscale;
 }
 
-/* Distraction-free hygiene */
-/* Fade non-essential chrome when idle; CommandBar stays visible */
-:root[data-idle='true'] header.sticky,
-:root[data-idle='true'] footer.sticky {
-  opacity: 0;
-  pointer-events: none;
-  transition: opacity 150ms ease-out;
-}
 
 /* Scrollbar minimal styling (overlay-like) */
 * {
