@@ -102,26 +102,40 @@ html {
 }
 
 /* CLI-like checkboxes (render as [ ] and [x]) for Context Editor */
-input[type="checkbox"][class="accent-[var(--fg)]"] {
+input[type="checkbox"][class~="accent-[var(--fg)]"] {
   appearance: none;
   display: inline-block;
-  width: 1.25em;      /* ensures consistent click target */
+  width: 3ch; /* enough room for `[ ]` without wrapping */
   height: 1.1em;
   margin: 0;
   margin-right: 0.5rem; /* pairs nicely with label gap */
-  vertical-align: middle;
+  vertical-align: text-bottom;
   cursor: pointer;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+  font-size: 0.95em; /* slightly smaller to sit nicely with text */
+  line-height: 1;
+  text-align: left;
 }
-input[type="checkbox"][class="accent-[var(--fg)]"]::before {
+input[type="checkbox"][class~="accent-[var(--fg)]"]::before {
   content: "[ ]";
   color: var(--muted);
   line-height: 1;
+  display: inline-block;
+  transform: translateY(1px); /* micro-align baseline */
 }
-input[type="checkbox"][class="accent-[var(--fg)]"]:checked::before {
+input[type="checkbox"][class~="accent-[var(--fg)]"]:checked::before {
   content: "[x]";
   color: var(--fg);
 }
-input[type="checkbox"][class="accent-[var(--fg)]"]:disabled {
+input[type="checkbox"][class~="accent-[var(--fg)]"]:hover::before {
+  color: color-mix(in oklab, var(--fg) 70%, var(--muted));
+}
+input[type="checkbox"][class~="accent-[var(--fg)]"]:focus-visible {
+  outline: 2px solid color-mix(in oklab, var(--fg) 35%, transparent);
+  outline-offset: 2px;
+  border-radius: 3px; /* subtle to match outline */
+}
+input[type="checkbox"][class~="accent-[var(--fg)]"]:disabled {
   opacity: 0.6;
   cursor: not-allowed;
 }

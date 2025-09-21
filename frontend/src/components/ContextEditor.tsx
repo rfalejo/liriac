@@ -122,14 +122,14 @@ export default function ContextEditor({
                     <li className="flex items-center justify-between gap-3">
                       <label className="flex items-center gap-2">
                         <input type="checkbox" defaultChecked className="accent-[var(--fg)]" />
-                        <span>The Port of San Aurelio — geography & customs</span>
+                        <span>The Port of San Aurelio</span>
                       </label>
                       <span className="text-xs">~150t</span>
                     </li>
                     <li className="flex items-center justify-between gap-3 opacity-60">
                       <label className="flex items-center gap-2">
                         <input type="checkbox" className="accent-[var(--fg)]" />
-                        <span>Ferry schedules — logistics</span>
+                        <span>Ferry schedules</span>
                       </label>
                       <span className="text-xs">~60t</span>
                     </li>
