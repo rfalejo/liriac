@@ -1,17 +1,18 @@
-import { useEffect, useRef, useState, useMemo } from 'react';
+import { useRef, useState, useMemo } from 'react';
 import CommandBar, { type Command as CommandBarCommand } from './CommandBar';
-import { mockTokenize } from '../utils/tokens';
 import { typewriterScroll } from '../utils/caret';
-import { gotoScene as utilGotoScene, gotoTop as utilGotoTop, jumpToOffset, getSceneOffsets } from '../utils/scenes';
+import { gotoScene as utilGotoScene, gotoTop as utilGotoTop, jumpToOffset } from '../utils/scenes';
 import { useSmartPunctuation } from '../hooks/useSmartPunctuation';
-import { COMMANDS as REGISTRY, executeCommand, type Command as Cmd } from '../commands/commands';
-import { computeSuggestion, normalizeCmd } from '../commands/commandUtils';
+import { COMMANDS as REGISTRY, type Command as Cmd } from '../commands/commands';
+import { useEditorStats } from '../hooks/useEditorStats';
+import { useEditorShortcuts } from '../hooks/useEditorShortcuts';
 
 export default function EditorSurface({ disabled = false }: { disabled?: boolean }) {
   const textareaRef = useRef<HTMLTextAreaElement | null>(null);
   const [commandOpen, setCommandOpen] = useState(false);
   const [commandInput, setCommandInput] = useState('');
   const { transform } = useSmartPunctuation();
+  const { update: updateStats } = useEditorStats(textareaRef);
 
   // Show a one-time toast when smart punctuation first triggers
   const smartToastShown = useRef(false);
@@ -25,14 +26,6 @@ export default function EditorSurface({ disabled = false }: { disabled?: boolean
       }),
     );
   }
-
-  useEffect(() => {
-    const el = textareaRef.current;
-    if (!el) return;
-    // Initialize tokens from initial value
-    const tokens = mockTokenize(el.value || '');
-    window.dispatchEvent(new CustomEvent('editor:stats', { detail: { tokens } }));
-  }, []);
 
   // Track last edit position for /goto last-edit
   const lastEditRef = useRef<number | null>(null);
@@ -86,94 +79,19 @@ export default function EditorSurface({ disabled = false }: { disabled?: boolean
     lastEditRef.current = el.selectionStart ?? el.value.length;
 
     // Update stats after any transformation
-    const tokens = mockTokenize(el.value);
-    window.dispatchEvent(new CustomEvent('editor:stats', { detail: { tokens } }));
+    updateStats();
   }
 
-  function atLineStart(el: HTMLTextAreaElement) {
-    const pos = el.selectionStart ?? 0;
-    if (pos === 0) return true;
-    const prevChar = el.value[pos - 1];
-    return prevChar === '\n';
-  }
-
-  function handleKeyDown(e: React.KeyboardEvent<HTMLTextAreaElement>) {
-    if ((e.metaKey || e.ctrlKey) && e.key === '.') {
-      e.preventDefault();
+  const { handleKeyDown } = useEditorShortcuts({
+    textareaRef,
+    disabled,
+    openCommand: () => {
       setCommandOpen(true);
       setCommandInput('');
-      return;
-    }
-    if ((e.key === '>' || e.key === '/') && !e.shiftKey) {
-      // '>' might require Shift on many layouts. We use either '/' or '>'.
-      // Only open at the start of a line to keep the flow clean.
-      const el = e.currentTarget as HTMLTextAreaElement;
-      if (atLineStart(el)) {
-        e.preventDefault();
-        setCommandOpen(true);
-        setCommandInput('');
-        return;
-      }
-    }
-
-    // Navigation without UI: jump between scene breaks
-    if ((e.metaKey || e.ctrlKey) && e.altKey && (e.key === 'ArrowLeft' || e.key === 'ArrowRight')) {
-      e.preventDefault();
-      const el = e.currentTarget as HTMLTextAreaElement;
-      const pos = el.selectionStart ?? 0;
-      const offs = getSceneOffsets(el.value);
-      // Find current scene index
-      let idx = 0;
-      for (let i = 0; i < offs.length; i++) {
-        if (offs[i] <= pos) idx = i;
-        else break;
-      }
-      const nextIdx = e.key === 'ArrowLeft' ? Math.max(0, idx - 1) : Math.min(offs.length - 1, idx + 1);
-      jumpToOffset(el, offs[nextIdx]);
-      setTimeout(() => typewriterScroll(el), 0);
-      return;
-    }
-
-    // After navigation keys, re-center the caret (typewriter scroll)
-    const navKeys = new Set(['ArrowUp', 'ArrowDown', 'PageUp', 'PageDown', 'Home', 'End', 'Enter']);
-    if (navKeys.has(e.key)) {
-      setTimeout(() => {
-        const el = e.currentTarget as HTMLTextAreaElement;
-        if (el) typewriterScroll(el);
-      }, 0);
-    }
-  }
-
-  function execute(cmd: Cmd, rawInput: string) {
-    executeCommand(cmd, rawInput, {
-      textareaEl: textareaRef.current,
-      gotoTop,
-      gotoLastEdit,
-      gotoScene,
-      closePalette: () => {
-        setCommandOpen(false);
-        setCommandInput('');
-        if (!disabled) {
-          requestAnimationFrame(() => textareaRef.current?.focus());
-        }
-      },
-      toast(text: string) {
-        if (text) {
-          window.dispatchEvent(new CustomEvent('toast:show', { detail: { text } }));
-        }
-      },
-      emit(id: string, input: string) {
-        window.dispatchEvent(new CustomEvent('editor:command', { detail: { id, input } }));
-      },
-    });
-  }
+    },
+  });
 
   const suggestions = useMemo<CommandBarCommand[]>(() => REGISTRY, []);
-  const suggestion = computeSuggestion(suggestions, commandInput);
-  const completionTail =
-    suggestion && commandInput.trim().startsWith('/')
-      ? suggestion.slice(normalizeCmd(commandInput.trim()).length)
-      : '';
 
   return (
     <main className="flex flex-col flex-1 min-h-0">
