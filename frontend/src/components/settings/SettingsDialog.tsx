@@ -18,7 +18,7 @@ export default function SettingsDialog({
   onSave?: () => void;
   onClear?: () => void;
   children: React.ReactNode;
-  containerRef?: React.RefObject<HTMLDivElement>;
+  containerRef?: React.RefObject<HTMLDivElement | null>;
   onKeyDown?: React.KeyboardEventHandler<HTMLDivElement>;
 }) {
   if (!open) return null;
