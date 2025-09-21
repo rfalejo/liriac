@@ -3,6 +3,7 @@ import ContextSectionList, { type ContextSection } from './ContextSectionList';
 import ContextTokenBar from './ContextTokenBar';
 import ContextGlobalPrompt from './ContextGlobalPrompt';
 import ContextStyleTonePanel from './ContextStyleTonePanel';
+import ItemEditorModal from './ItemEditorModal';
 
 export default function ContextEditorTab({ tokens }: { tokens: number }) {
   // Local state so toggles persist visually; in a real app this could come from API.
@@ -41,6 +42,8 @@ export default function ContextEditorTab({ tokens }: { tokens: number }) {
   const budget = 2000;
   const used = Math.max(0, tokens);
 
+  const [characterModalOpen, setCharacterModalOpen] = useState(false);
+
   const handleToggle = useCallback((sectionId: string, itemId: string, nextChecked: boolean) => {
     // Update local state so the checkbox reflects the new value
     setSections((prev) =>
@@ -61,7 +64,13 @@ export default function ContextEditorTab({ tokens }: { tokens: number }) {
     <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
       <div className="space-y-3">
         {sections.map((section) => (
-          <ContextSectionList key={section.id} section={section} onToggle={handleToggle} />
+          <ContextSectionList
+            key={section.id}
+            section={section}
+            onToggle={handleToggle}
+            addButtonLabel={section.id === 'characters' ? 'Add character' : undefined}
+            onAdd={section.id === 'characters' ? () => setCharacterModalOpen(true) : undefined}
+          />
         ))}
       </div>
 
@@ -85,6 +94,37 @@ export default function ContextEditorTab({ tokens }: { tokens: number }) {
           This is a mock. Interactions and persistence will be added next.
         </p>
       </div>
+
+      <ItemEditorModal
+        open={characterModalOpen}
+        type="character"
+        onCancel={() => setCharacterModalOpen(false)}
+        onSave={(draft) => {
+          const label =
+            draft.role && draft.role.trim()
+              ? `${draft.name.trim()} — ${draft.role.trim()}`
+              : draft.name.trim();
+          const newItem = {
+            id: `char-${Date.now()}`,
+            label,
+            tokens: 80,
+            checked: !!draft.checked,
+          } as const;
+
+          setSections((prev) =>
+            prev.map((s) =>
+              s.id === 'characters'
+                ? { ...s, items: [newItem, ...s.items] }
+                : s,
+            ),
+          );
+
+          setCharacterModalOpen(false);
+          window.dispatchEvent(
+            new CustomEvent('toast:show', { detail: { text: 'Character added.' } }),
+          );
+        }}
+      />
     </div>
   );
 }

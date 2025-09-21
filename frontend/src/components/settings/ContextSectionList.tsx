@@ -18,21 +18,39 @@ export type ContextSection = {
 export type ContextSectionListProps = {
   section: ContextSection;
   onToggle?: (sectionId: string, itemId: string, nextChecked: boolean) => void;
+  addButtonLabel?: string;
+  onAdd?: () => void;
 };
 
 /**
  * Renders a <details> panel with a summary and a list of checkbox items.
  * Stateless and API-ready: accepts data + callback, no internal persistence.
  */
-export default function ContextSectionList({ section, onToggle }: ContextSectionListProps) {
+export default function ContextSectionList({ section, onToggle, addButtonLabel, onAdd }: ContextSectionListProps) {
   const activeCount = section.items.filter((i) => i.checked).length;
 
   return (
     <details data-panel className="rounded border border-[var(--border)]" open={section.defaultOpen}>
       <summary className="flex items-center justify-between cursor-pointer select-none px-3 py-2 text-sm">
         <span className="text-[var(--fg)]">{section.title}</span>
-        <span className="ml-2 rounded bg-black/20 px-1.5 py-0.5 text-[10px] text-[var(--muted)]">
-          {activeCount}
+        <span className="ml-2 flex items-center gap-2">
+          {typeof onAdd === 'function' && !!addButtonLabel && (
+            <button
+              type="button"
+              onClick={(e) => {
+                e.preventDefault();
+                onAdd?.();
+              }}
+              className="rounded border border-[var(--border)] bg-black/10 px-2 py-1 text-[11px] text-[var(--muted)] hover:bg-black/20"
+              aria-label={addButtonLabel}
+              title={addButtonLabel}
+            >
+              + {addButtonLabel}
+            </button>
+          )}
+          <span className="rounded bg-black/20 px-1.5 py-0.5 text-[10px] text-[var(--muted)]">
+            {activeCount}
+          </span>
         </span>
       </summary>
       <div className="px-3 pb-3 text-sm text-[var(--muted)]">
