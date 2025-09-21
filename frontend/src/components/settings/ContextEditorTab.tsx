@@ -4,64 +4,20 @@ import ContextTokenBar from './ContextTokenBar';
 import ContextGlobalPrompt from './ContextGlobalPrompt';
 import ContextStyleTonePanel from './ContextStyleTonePanel';
 import ItemEditorModal from './ItemEditorModal';
+import { INITIAL_SECTIONS } from '../../data/contextMock';
+import { addItem, editItem, toggleItem } from '../../utils/sections';
+import { useContextModals } from '../../hooks/useContextModals';
 
 export default function ContextEditorTab({ tokens }: { tokens: number }) {
-  // Local state so toggles persist visually; in a real app this could come from API.
-  const [sections, setSections] = useState<ContextSection[]>([
-    {
-      id: 'chapters',
-      title: 'Chapters',
-      defaultOpen: false,
-      items: [
-        { id: 'ch-03', label: '03 — El puerto', tokens: 680, checked: true },
-        { id: 'ch-02', label: '02 — Preparativos', tokens: 540, checked: false },
-        { id: 'ch-04', label: '04 — Mareas', tokens: 720, checked: false },
-      ],
-    },
-    {
-      id: 'characters',
-      title: 'Characters',
-      defaultOpen: false,
-      items: [
-        { id: 'char-michelle', label: 'Michelle — Protagonist', tokens: 120, checked: true },
-        { id: 'char-arturo', label: 'Arturo — Supporting', tokens: 80, checked: true },
-        { id: 'char-port', label: 'Port Authority — Minor', tokens: 40, checked: false },
-      ],
-    },
-    {
-      id: 'world',
-      title: 'World info',
-      defaultOpen: false,
-      items: [
-        { id: 'wi-port', label: 'The Port of San Aurelio', tokens: 150, checked: true },
-        { id: 'wi-ferry', label: 'Ferry schedules', tokens: 60, checked: false },
-      ],
-    },
-  ]);
+  const [sections, setSections] = useState<ContextSection[]>(INITIAL_SECTIONS);
 
   const budget = 2000;
   const used = Math.max(0, tokens);
 
-  const [characterModalOpen, setCharacterModalOpen] = useState(false);
-  const [characterEditId, setCharacterEditId] = useState<string | null>(null);
-
-  const [worldModalOpen, setWorldModalOpen] = useState(false);
-  const [worldEditId, setWorldEditId] = useState<string | null>(null);
+  const { character, world } = useContextModals();
 
   const handleToggle = useCallback((sectionId: string, itemId: string, nextChecked: boolean) => {
-    // Update local state so the checkbox reflects the new value
-    setSections((prev) =>
-      prev.map((s) =>
-        s.id !== sectionId
-          ? s
-          : {
-              ...s,
-              items: s.items.map((it) =>
-                it.id === itemId ? { ...it, checked: nextChecked } : it,
-              ),
-            },
-      ),
-    );
+    setSections((prev) => toggleItem(prev, sectionId, itemId, nextChecked));
   }, []);
 
   return (
@@ -81,16 +37,16 @@ export default function ContextEditorTab({ tokens }: { tokens: number }) {
             }
             onAdd={
               section.id === 'characters'
-                ? () => setCharacterModalOpen(true)
+                ? () => character.openCreate()
                 : section.id === 'world'
-                ? () => setWorldModalOpen(true)
+                ? () => world.openCreate()
                 : undefined
             }
             onEdit={
               section.id === 'characters'
-                ? (_sid, itemId) => setCharacterEditId(itemId)
+                ? (_sid, itemId) => character.startEdit(itemId)
                 : section.id === 'world'
-                ? (_sid, itemId) => setWorldEditId(itemId)
+                ? (_sid, itemId) => world.startEdit(itemId)
                 : undefined
             }
           />
@@ -119,15 +75,15 @@ export default function ContextEditorTab({ tokens }: { tokens: number }) {
       </div>
 
       <ItemEditorModal
-        open={characterModalOpen}
+        open={character.open}
         type="character"
         mode="create"
-        onCancel={() => setCharacterModalOpen(false)}
+        onCancel={() => character.closeCreate()}
         onSave={(draft) => {
           const label =
-            draft.role && draft.role.trim()
-              ? `${draft.name.trim()} — ${draft.role.trim()}`
-              : draft.name.trim();
+            draft.role && (draft.role as string).trim()
+              ? `${(draft.name as string).trim()} — ${(draft.role as string).trim()}`
+              : (draft.name as string).trim();
           const newItem = {
             id: `char-${Date.now()}`,
             label,
@@ -135,29 +91,23 @@ export default function ContextEditorTab({ tokens }: { tokens: number }) {
             checked: !!draft.checked,
           } as const;
 
-          setSections((prev) =>
-            prev.map((s) =>
-              s.id === 'characters'
-                ? { ...s, items: [newItem, ...s.items] }
-                : s,
-            ),
-          );
+          setSections((prev) => addItem(prev, 'characters', newItem));
 
-          setCharacterModalOpen(false);
+          character.closeCreate();
           window.dispatchEvent(
             new CustomEvent('toast:show', { detail: { text: 'Character added.' } }),
           );
         }}
       />
 
-      {characterEditId && (
+      {character.editId && (
         <ItemEditorModal
-          open={!!characterEditId}
+          open={!!character.editId}
           type="character"
           mode="edit"
           initialValue={() => {
             const item =
-              sections.find((s) => s.id === 'characters')?.items.find((it) => it.id === characterEditId);
+              sections.find((s) => s.id === 'characters')?.items.find((it) => it.id === character.editId);
             if (!item) return { name: '', role: '', summary: '', checked: true };
             const [name, rolePart] = item.label.split('—').map((s) => s.trim());
             return {
@@ -167,7 +117,7 @@ export default function ContextEditorTab({ tokens }: { tokens: number }) {
               checked: !!item.checked,
             };
           }}
-          onCancel={() => setCharacterEditId(null)}
+          onCancel={() => character.endEdit()}
           onSave={(draft: any) => {
             const label =
               draft.role && draft.role.trim()
@@ -175,19 +125,14 @@ export default function ContextEditorTab({ tokens }: { tokens: number }) {
                 : draft.name.trim();
 
             setSections((prev) =>
-              prev.map((s) =>
-                s.id === 'characters'
-                  ? {
-                      ...s,
-                      items: s.items.map((it) =>
-                        it.id === characterEditId ? { ...it, label, checked: !!draft.checked } : it,
-                      ),
-                    }
-                  : s,
-              ),
+              editItem(prev, 'characters', character.editId as string, (it) => ({
+                ...it,
+                label,
+                checked: !!draft.checked,
+              })),
             );
 
-            setCharacterEditId(null);
+            character.endEdit();
             window.dispatchEvent(
               new CustomEvent('toast:show', { detail: { text: 'Character updated.' } }),
             );
@@ -196,10 +141,10 @@ export default function ContextEditorTab({ tokens }: { tokens: number }) {
       )}
 
       <ItemEditorModal
-        open={worldModalOpen}
+        open={world.open}
         type="world"
         mode="create"
-        onCancel={() => setWorldModalOpen(false)}
+        onCancel={() => world.closeCreate()}
         onSave={(draft: any) => {
           const title = (draft.title ?? '').trim();
           if (!title) return;
@@ -210,29 +155,23 @@ export default function ContextEditorTab({ tokens }: { tokens: number }) {
             checked: !!draft.checked,
           } as const;
 
-          setSections((prev) =>
-            prev.map((s) =>
-              s.id === 'world'
-                ? { ...s, items: [newItem, ...s.items] }
-                : s,
-            ),
-          );
+          setSections((prev) => addItem(prev, 'world', newItem));
 
-          setWorldModalOpen(false);
+          world.closeCreate();
           window.dispatchEvent(
             new CustomEvent('toast:show', { detail: { text: 'World info added.' } }),
           );
         }}
       />
 
-      {worldEditId && (
+      {world.editId && (
         <ItemEditorModal
-          open={!!worldEditId}
+          open={!!world.editId}
           type="world"
           mode="edit"
           initialValue={() => {
             const item =
-              sections.find((s) => s.id === 'world')?.items.find((it) => it.id === worldEditId);
+              sections.find((s) => s.id === 'world')?.items.find((it) => it.id === world.editId);
             if (!item) return { title: '', summary: '', facts: '', checked: true };
             return {
               title: item.label ?? '',
@@ -241,23 +180,18 @@ export default function ContextEditorTab({ tokens }: { tokens: number }) {
               checked: !!item.checked,
             };
           }}
-          onCancel={() => setWorldEditId(null)}
+          onCancel={() => world.endEdit()}
           onSave={(draft: any) => {
             const title = (draft.title ?? '').trim();
             setSections((prev) =>
-              prev.map((s) =>
-                s.id === 'world'
-                  ? {
-                      ...s,
-                      items: s.items.map((it) =>
-                        it.id === worldEditId ? { ...it, label: title || it.label, checked: !!draft.checked } : it,
-                      ),
-                    }
-                  : s,
-              ),
+              editItem(prev, 'world', world.editId as string, (it) => ({
+                ...it,
+                label: title || it.label,
+                checked: !!draft.checked,
+              })),
             );
 
-            setWorldEditId(null);
+            world.endEdit();
             window.dispatchEvent(
               new CustomEvent('toast:show', { detail: { text: 'World info updated.' } }),
             );
