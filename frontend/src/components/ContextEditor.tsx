@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect, useRef } from 'react';
 
 export default function ContextEditor({
   open,
@@ -9,14 +9,139 @@ export default function ContextEditor({
   tokens: number;
   onClose: () => void;
 }) {
-  if (!open) return null;
+  const containerRef = useRef<HTMLDivElement | null>(null);
 
   const budget = 2000;
   const used = Math.max(0, tokens);
   const pct = Math.min(100, Math.round((used / budget) * 100));
 
-  return (
+  function getPanels() {
+    const root = containerRef.current;
+    if (!root) return [] as HTMLDetailsElement[];
+    return Array.from(root.querySelectorAll<HTMLDetailsElement>('details[data-panel]'));
+  }
+
+  function getSummaries() {
+    return getPanels()
+      .map((p) => p.querySelector('summary'))
+      .filter((s): s is HTMLElement => !!s);
+  }
+
+  function getAllItems() {
+    const panels = getPanels();
+    const items: { panel: HTMLDetailsElement; input: HTMLInputElement }[] = [];
+    for (const p of panels) {
+      const inputs = Array.from(
+        p.querySelectorAll<HTMLInputElement>('input[type="checkbox"]'),
+      );
+      for (const input of inputs) {
+        items.push({ panel: p, input });
+      }
+    }
+    return items;
+  }
+
+  function getActivePanelIndexFromFocus(): number {
+    const active = document.activeElement as HTMLElement | null;
+    const panels = getPanels();
+    if (!active) return -1;
+    const idx = panels.findIndex((p) => p.contains(active));
+    if (idx >= 0) return idx;
+    // If focus is outside panels, default to 0
+    return 0;
+  }
+
+  function focusSummaryAt(idx: number) {
+    const summaries = getSummaries();
+    if (summaries.length === 0) return;
+    const next = ((idx % summaries.length) + summaries.length) % summaries.length;
+    summaries[next].focus();
+  }
+
+  function handleKeyDown(e: React.KeyboardEvent<HTMLDivElement>) {
+    const key = e.key;
+
+    // Tab navigates between panels (their summaries)
+    if (key === 'Tab') {
+      e.preventDefault();
+      const currentPanelIdx = getActivePanelIndexFromFocus();
+      const delta = e.shiftKey ? -1 : 1;
+      focusSummaryAt(currentPanelIdx + delta);
+      return;
+    }
+
+    // Enter opens a collapsed panel if focused on its summary (or inside it)
+    if (key === 'Enter') {
+      const active = document.activeElement as HTMLElement | null;
+      if (active) {
+        const details = active.closest('details[data-panel]') as HTMLDetailsElement | null;
+        const isOnSummary = active.tagName.toLowerCase() === 'summary' || !!active.closest('summary');
+        if (details && isOnSummary && !details.open) {
+          e.preventDefault();
+          details.open = true;
+        }
+      }
+      return;
+    }
+
+    // Up/Down navigate between checkbox items (can cross panels)
+    if (key === 'ArrowDown' || key === 'ArrowUp') {
+      const items = getAllItems();
+      if (items.length === 0) return;
+
+      const active = document.activeElement as HTMLElement | null;
+      const onCheckboxIdx = items.findIndex((it) => it.input === active);
+
+      let targetIdx = -1;
+
+      if (onCheckboxIdx >= 0) {
+        targetIdx = key === 'ArrowDown' ? onCheckboxIdx + 1 : onCheckboxIdx - 1;
+      } else {
+        // If not on a checkbox: try to move from the current panel's summary into its first/last item
+        const panels = getPanels();
+        const currentPanelIdx = getActivePanelIndexFromFocus();
+        const panel = panels[currentPanelIdx];
+        if (!panel) return;
+
+        const panelItems = items
+          .map((it, i) => ({ ...it, i }))
+          .filter((x) => x.panel === panel);
+
+        if (panelItems.length === 0) return;
+
+        if (key === 'ArrowDown') {
+          targetIdx = panelItems[0].i;
+        } else {
+          targetIdx = panelItems[panelItems.length - 1].i;
+        }
+      }
+
+      if (targetIdx < 0 || targetIdx >= items.length) {
+        // Allow crossing to previous/next panel if exists; otherwise do nothing
+        return;
+      }
+
+      e.preventDefault();
+      const target = items[targetIdx];
+      // Ensure the target's panel is open before focusing
+      if (!target.panel.open) target.panel.open = true;
+      target.input.focus();
+      return;
+    }
+  }
+
+  useEffect(() => {
+    if (!open) return;
+    const t = setTimeout(() => {
+      const summaries = getSummaries();
+      if (summaries[0]) summaries[0].focus();
+    }, 0);
+    return () => clearTimeout(t);
+  }, [open]);
+
+  return open ? (
     <div
+      ref={containerRef}
       role="dialog"
       aria-modal="true"
       aria-labelledby="context-editor-title"
@@ -24,6 +149,7 @@ export default function ContextEditor({
       onClick={(e) => {
         if (e.target === e.currentTarget) onClose();
       }}
+      onKeyDown={handleKeyDown}
     >
       <div className="absolute inset-0 bg-black/40 backdrop-blur-sm" />
       <div className="relative pointer-events-auto w-full max-w-2xl mx-auto rounded-md border border-[var(--border)] bg-[var(--surface)] shadow-xl">
@@ -48,7 +174,7 @@ export default function ContextEditor({
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
             <div className="space-y-3">
 
-              <details className="rounded border border-[var(--border)]">
+              <details data-panel className="rounded border border-[var(--border)]">
                 <summary className="flex items-center justify-between cursor-pointer select-none px-3 py-2 text-sm">
                   <span className="text-[var(--fg)]">Chapters</span>
                   <span className="ml-2 rounded bg-black/20 px-1.5 py-0.5 text-[10px] text-[var(--muted)]">1</span>
@@ -57,21 +183,21 @@ export default function ContextEditor({
                   <ul className="space-y-1">
                     <li className="flex items-center justify-between gap-3">
                       <label className="flex items-center gap-2">
-                        <input type="checkbox" defaultChecked className="accent-[var(--fg)]" />
+                        <input type="checkbox" tabIndex={-1} defaultChecked className="accent-[var(--fg)]" />
                         <span>03 — El puerto</span>
                       </label>
                       <span className="text-xs">~680t</span>
                     </li>
                     <li className="flex items-center justify-between gap-3 opacity-60">
                       <label className="flex items-center gap-2">
-                        <input type="checkbox" className="accent-[var(--fg)]" />
+                        <input type="checkbox" tabIndex={-1} className="accent-[var(--fg)]" />
                         <span>02 — Preparativos</span>
                       </label>
                       <span className="text-xs">~540t</span>
                     </li>
                     <li className="flex items-center justify-between gap-3 opacity-60">
                       <label className="flex items-center gap-2">
-                        <input type="checkbox" className="accent-[var(--fg)]" />
+                        <input type="checkbox" tabIndex={-1} className="accent-[var(--fg)]" />
                         <span>04 — Mareas</span>
                       </label>
                       <span className="text-xs">~720t</span>
@@ -80,7 +206,7 @@ export default function ContextEditor({
                 </div>
               </details>
 
-              <details className="rounded border border-[var(--border)]">
+              <details data-panel className="rounded border border-[var(--border)]">
                 <summary className="flex items-center justify-between cursor-pointer select-none px-3 py-2 text-sm">
                   <span className="text-[var(--fg)]">Characters</span>
                   <span className="ml-2 rounded bg-black/20 px-1.5 py-0.5 text-[10px] text-[var(--muted)]">2</span>
@@ -89,21 +215,21 @@ export default function ContextEditor({
                   <ul className="space-y-1">
                     <li className="flex items-center justify-between gap-3">
                       <label className="flex items-center gap-2">
-                        <input type="checkbox" defaultChecked className="accent-[var(--fg)]" />
+                        <input type="checkbox" tabIndex={-1} defaultChecked className="accent-[var(--fg)]" />
                         <span>Michelle — Protagonist</span>
                       </label>
                       <span className="text-xs">~120t</span>
                     </li>
                     <li className="flex items-center justify-between gap-3">
                       <label className="flex items-center gap-2">
-                        <input type="checkbox" defaultChecked className="accent-[var(--fg)]" />
+                        <input type="checkbox" tabIndex={-1} defaultChecked className="accent-[var(--fg)]" />
                         <span>Arturo — Supporting</span>
                       </label>
                       <span className="text-xs">~80t</span>
                     </li>
                     <li className="flex items-center justify-between gap-3 opacity-60">
                       <label className="flex items-center gap-2">
-                        <input type="checkbox" className="accent-[var(--fg)]" />
+                        <input type="checkbox" tabIndex={-1} className="accent-[var(--fg)]" />
                         <span>Port Authority — Minor</span>
                       </label>
                       <span className="text-xs">~40t</span>
@@ -112,7 +238,7 @@ export default function ContextEditor({
                 </div>
               </details>
 
-              <details className="rounded border border-[var(--border)]">
+              <details data-panel className="rounded border border-[var(--border)]">
                 <summary className="flex items-center justify-between cursor-pointer select-none px-3 py-2 text-sm">
                   <span className="text-[var(--fg)]">World info</span>
                   <span className="ml-2 rounded bg-black/20 px-1.5 py-0.5 text-[10px] text-[var(--muted)]">1</span>
@@ -121,14 +247,14 @@ export default function ContextEditor({
                   <ul className="space-y-1">
                     <li className="flex items-center justify-between gap-3">
                       <label className="flex items-center gap-2">
-                        <input type="checkbox" defaultChecked className="accent-[var(--fg)]" />
+                        <input type="checkbox" tabIndex={-1} defaultChecked className="accent-[var(--fg)]" />
                         <span>The Port of San Aurelio</span>
                       </label>
                       <span className="text-xs">~150t</span>
                     </li>
                     <li className="flex items-center justify-between gap-3 opacity-60">
                       <label className="flex items-center gap-2">
-                        <input type="checkbox" className="accent-[var(--fg)]" />
+                        <input type="checkbox" tabIndex={-1} className="accent-[var(--fg)]" />
                         <span>Ferry schedules</span>
                       </label>
                       <span className="text-xs">~60t</span>
@@ -228,5 +354,5 @@ export default function ContextEditor({
         </div>
       </div>
     </div>
-  );
+  ) : null;
 }
