@@ -28,8 +28,8 @@ export function useSmartPunctuation() {
       // 2) Smart double quotes
       if (s >= 1 && v[s - 1] === '"') {
         const before = v.slice(0, s - 1);
-        const prevNonSpace = before.match(/[^\s\(\[\{]$/)?.[0];
-        const isOpening = !prevNonSpace || /[\s\(\[\{]/.test(before.slice(-1));
+        const prevNonSpace = before.match(/[^\s([{]$/)?.[0];
+        const isOpening = !prevNonSpace || /[\s([{]/.test(before.slice(-1));
         const curly = isOpening ? '“' : '”';
         v = v.slice(0, s - 1) + curly + v.slice(s);
         // caret remains at same visual position
@@ -45,8 +45,8 @@ export function useSmartPunctuation() {
           v = v.slice(0, s - 1) + '’' + v.slice(s);
           did = true;
         } else {
-          const prevNonSpace = before.match(/[^\s\(\[\{]$/)?.[0];
-          const isOpening = !prevNonSpace || /[\s\(\[\{]/.test(before.slice(-1));
+          const prevNonSpace = before.match(/[^\s([{]$/)?.[0];
+          const isOpening = !prevNonSpace || /[\s([{]/.test(before.slice(-1));
           const curly = isOpening ? '‘' : '’';
           v = v.slice(0, s - 1) + curly + v.slice(s);
           did = true;

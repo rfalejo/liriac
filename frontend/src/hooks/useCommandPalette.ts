@@ -9,9 +9,9 @@ import {
 export type UseCommandPaletteArgs = {
   open: boolean;
   value: string;
-  onChange: (v: string) => void;
+  onChange: (_v: string) => void;
   onClose: () => void;
-  onExecute: (cmd: CommandLike, input: string) => void;
+  onExecute: (_cmd: CommandLike, _input: string) => void;
   commands: CommandLike[];
 };
 
@@ -43,8 +43,9 @@ export function useCommandPalette({
         const arr = JSON.parse(raw);
         if (Array.isArray(arr)) setHistory(arr.filter((s) => typeof s === 'string'));
       }
-    } catch {}
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+    } catch {
+      /* ignore */
+    }
   }, []);
 
   // Reset history cursor whenever the bar opens
@@ -66,7 +67,9 @@ export function useCommandPalette({
       const next = [clean, ...h.filter((x) => x !== clean)].slice(0, 50);
       try {
         localStorage.setItem(HIST_KEY, JSON.stringify(next));
-      } catch {}
+      } catch {
+        /* ignore */
+      }
       return next;
     });
   }

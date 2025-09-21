@@ -1,11 +1,6 @@
 import { useRef, useState, useMemo } from 'react';
 import CommandBar, { type Command as CommandBarCommand } from './CommandBar';
 import { typewriterScroll } from '../utils/caret';
-import {
-  gotoScene as utilGotoScene,
-  gotoTop as utilGotoTop,
-  jumpToOffset,
-} from '../utils/scenes';
 import { useSmartPunctuation } from '../hooks/useSmartPunctuation';
 import { COMMANDS as REGISTRY, type Command as Cmd } from '../commands/commands';
 import { useEditorStats } from '../hooks/useEditorStats';
@@ -34,27 +29,8 @@ export default function EditorSurface({ disabled = false }: { disabled?: boolean
   // Track last edit position for /goto last-edit
   const lastEditRef = useRef<number | null>(null);
 
-  function gotoScene(n: number) {
-    const el = textareaRef.current;
-    if (!el) return;
-    utilGotoScene(el, n);
-    typewriterScroll(el);
-  }
 
-  function gotoTop() {
-    const el = textareaRef.current;
-    if (!el) return;
-    utilGotoTop(el);
-    typewriterScroll(el);
-  }
 
-  function gotoLastEdit() {
-    const el = textareaRef.current;
-    const pos = lastEditRef.current;
-    if (!el || pos == null) return;
-    jumpToOffset(el, pos);
-    typewriterScroll(el);
-  }
 
   // Keep focus on the editor unless the CommandBar is open
   function handleBlur() {

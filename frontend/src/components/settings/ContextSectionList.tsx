@@ -17,10 +17,10 @@ export type ContextSection = {
 
 export type ContextSectionListProps = {
   section: ContextSection;
-  onToggle?: (sectionId: string, itemId: string, nextChecked: boolean) => void;
+  onToggle?: (_sectionId: string, _itemId: string, _nextChecked: boolean) => void;
   addButtonLabel?: string;
   onAdd?: () => void;
-  onEdit?: (sectionId: string, itemId: string) => void;
+  onEdit?: (_sectionId: string, _itemId: string) => void;
 };
 
 /**

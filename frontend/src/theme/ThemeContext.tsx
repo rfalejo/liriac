@@ -3,7 +3,7 @@ import { DEFAULT_THEME, THEME_META, type ThemeName } from './themes';
 
 type ThemeContextValue = {
   theme: ThemeName;
-  setTheme: (t: ThemeName) => void;
+  setTheme: (_t: ThemeName) => void;
 };
 
 const ThemeContext = createContext<ThemeContextValue | undefined>(undefined);
@@ -25,6 +25,7 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
   return <ThemeContext.Provider value={value}>{children}</ThemeContext.Provider>;
 }
 
+/* eslint-disable-next-line react-refresh/only-export-components */
 export function useTheme() {
   const ctx = useContext(ThemeContext);
   if (!ctx) {

@@ -33,7 +33,7 @@ export function editItem(
   sections: ContextSection[],
   sectionId: string,
   itemId: string,
-  updater: (prev: ContextItem) => ContextItem,
+  updater: (_prev: ContextItem) => ContextItem,
 ): ContextSection[] {
   return sections.map((s) =>
     s.id !== sectionId

@@ -8,6 +8,20 @@ import { INITIAL_SECTIONS } from '../../data/contextMock';
 import { addItem, editItem, toggleItem } from '../../utils/sections';
 import { useContextModals } from '../../hooks/useContextModals';
 
+type CharacterDraft = {
+  name: string;
+  role?: string;
+  summary?: string;
+  checked?: boolean;
+};
+
+type WorldDraft = {
+  title: string;
+  summary?: string;
+  facts?: string;
+  checked?: boolean;
+};
+
 export default function ContextEditorTab({ tokens }: { tokens: number }) {
   const [sections, setSections] = useState<ContextSection[]>(INITIAL_SECTIONS);
 
@@ -126,7 +140,7 @@ export default function ContextEditorTab({ tokens }: { tokens: number }) {
             };
           }}
           onCancel={() => character.endEdit()}
-          onSave={(draft: any) => {
+          onSave={(draft: CharacterDraft) => {
             const label =
               draft.role && draft.role.trim()
                 ? `${draft.name.trim()} — ${draft.role.trim()}`
@@ -153,7 +167,7 @@ export default function ContextEditorTab({ tokens }: { tokens: number }) {
         type="world"
         mode="create"
         onCancel={() => world.closeCreate()}
-        onSave={(draft: any) => {
+        onSave={(draft: WorldDraft) => {
           const title = (draft.title ?? '').trim();
           if (!title) return;
           const newItem = {
@@ -190,7 +204,7 @@ export default function ContextEditorTab({ tokens }: { tokens: number }) {
             };
           }}
           onCancel={() => world.endEdit()}
-          onSave={(draft: any) => {
+          onSave={(draft: WorldDraft) => {
             const title = (draft.title ?? '').trim();
             setSections((prev) =>
               editItem(prev, 'world', world.editId as string, (it) => ({

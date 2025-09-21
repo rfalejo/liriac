@@ -1,4 +1,4 @@
-import { useEffect, useRef } from 'react';
+import { useCallback, useEffect, useRef } from 'react';
 
 export function useDialogFocusNav(open: boolean) {
   const containerRef = useRef<HTMLDivElement | null>(null);
@@ -10,11 +10,11 @@ export function useDialogFocusNav(open: boolean) {
     return Array.from(root.querySelectorAll<HTMLDetailsElement>('details[data-panel]'));
   }
 
-  function getSummaries() {
+  const getSummaries = useCallback(() => {
     return getPanels()
       .map((p) => p.querySelector('summary'))
       .filter((s): s is HTMLElement => !!s);
-  }
+  }, []);
 
   function getAllItems() {
     const panels = getPanels();
@@ -123,7 +123,7 @@ export function useDialogFocusNav(open: boolean) {
       if (summaries[0]) summaries[0].focus();
     }, 0);
     return () => clearTimeout(t);
-  }, [open]);
+  }, [open, getSummaries]);
 
   return { containerRef, onKeyDown };
 }

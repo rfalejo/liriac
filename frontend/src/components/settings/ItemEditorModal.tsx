@@ -28,12 +28,17 @@ export default function ItemEditorModal({
   mode?: 'create' | 'edit';
   initialValue?: CharacterDraft | WorldDraft;
   onCancel: () => void;
-  onSave: (draft: CharacterDraft | WorldDraft) => void;
+  onSave: (_draft: CharacterDraft | WorldDraft) => void;
 }) {
   const containerRef = useRef<HTMLDivElement | null>(null);
   const firstFieldRef = useRef<HTMLInputElement | null>(null);
 
-  const [draft, setDraft] = useState<any>({});
+  type Draft = CharacterDraft | WorldDraft;
+  const initialDraft: Draft =
+    type === 'character'
+      ? { name: '', role: '', summary: '', checked: true }
+      : { title: '', summary: '', facts: '', checked: true };
+  const [draft, setDraft] = useState<Draft>(initialDraft);
 
   useEffect(() => {
     if (!open) return;
@@ -67,17 +72,7 @@ export default function ItemEditorModal({
       firstFieldRef.current?.focus();
     }, 0);
     return () => clearTimeout(t);
-  }, [
-    open,
-    mode,
-    type,
-    (initialValue as any)?.name,
-    (initialValue as any)?.role,
-    (initialValue as any)?.summary,
-    (initialValue as any)?.checked,
-    (initialValue as any)?.title,
-    (initialValue as any)?.facts,
-  ]);
+  }, [open, mode, type, initialValue]);
 
   function computeTokenEstimate(): number {
     if (type === 'character') {
@@ -214,9 +209,7 @@ export default function ItemEditorModal({
                   id="char-name"
                   ref={firstFieldRef}
                   value={draft.name}
-                  onChange={(e) =>
-                    setDraft((d: any) => ({ ...d, name: e.target.value }))
-                  }
+                  onChange={(e) => setDraft((d) => ({ ...d, name: e.target.value }))}
                   className="w-full rounded border border-[var(--border)] bg-black/10 px-2 py-1.5 text-sm text-[var(--fg)] outline-none focus:ring-1 focus:ring-[var(--border)]"
                   placeholder="e.g., Michelle"
                   required
@@ -230,9 +223,7 @@ export default function ItemEditorModal({
                 <input
                   id="char-role"
                   value={draft.role ?? ''}
-                  onChange={(e) =>
-                    setDraft((d: any) => ({ ...d, role: e.target.value }))
-                  }
+                  onChange={(e) => setDraft((d) => ({ ...d, role: e.target.value }))}
                   className="w-full rounded border border-[var(--border)] bg-black/10 px-2 py-1.5 text-sm text-[var(--fg)] outline-none focus:ring-1 focus:ring-[var(--border)]"
                   placeholder="e.g., Protagonist"
                 />
@@ -245,9 +236,7 @@ export default function ItemEditorModal({
                 <textarea
                   id="char-summary"
                   value={draft.summary ?? ''}
-                  onChange={(e) =>
-                    setDraft((d: any) => ({ ...d, summary: e.target.value }))
-                  }
+                  onChange={(e) => setDraft((d) => ({ ...d, summary: e.target.value }))}
                   className="min-h-[80px] w-full rounded border border-[var(--border)] bg-black/10 px-2 py-1.5 text-sm text-[var(--fg)] outline-none focus:ring-1 focus:ring-[var(--border)]"
                   placeholder="One or two lines that describe the character…"
                 />
@@ -258,9 +247,7 @@ export default function ItemEditorModal({
                   type="checkbox"
                   className="accent-[var(--fg)]"
                   checked={!!draft.checked}
-                  onChange={(e) =>
-                    setDraft((d: any) => ({ ...d, checked: e.target.checked }))
-                  }
+                  onChange={(e) => setDraft((d) => ({ ...d, checked: e.target.checked }))}
                 />
                 Include in context
               </label>
@@ -277,9 +264,7 @@ export default function ItemEditorModal({
                   id="wi-title"
                   ref={firstFieldRef}
                   value={draft.title ?? ''}
-                  onChange={(e) =>
-                    setDraft((d: any) => ({ ...d, title: e.target.value }))
-                  }
+                  onChange={(e) => setDraft((d) => ({ ...d, title: e.target.value }))}
                   className="w-full rounded border border-[var(--border)] bg-black/10 px-2 py-1.5 text-sm text-[var(--fg)] outline-none focus:ring-1 focus:ring-[var(--border)]"
                   placeholder="e.g., The Port of San Aurelio"
                   required
@@ -293,9 +278,7 @@ export default function ItemEditorModal({
                 <textarea
                   id="wi-summary"
                   value={draft.summary ?? ''}
-                  onChange={(e) =>
-                    setDraft((d: any) => ({ ...d, summary: e.target.value }))
-                  }
+                  onChange={(e) => setDraft((d) => ({ ...d, summary: e.target.value }))}
                   className="min-h-[80px] w-full rounded border border-[var(--border)] bg-black/10 px-2 py-1.5 text-sm text-[var(--fg)] outline-none focus:ring-1 focus:ring-[var(--border)]"
                   placeholder="One or two lines that describe this element…"
                 />
@@ -308,9 +291,7 @@ export default function ItemEditorModal({
                 <textarea
                   id="wi-facts"
                   value={draft.facts ?? ''}
-                  onChange={(e) =>
-                    setDraft((d: any) => ({ ...d, facts: e.target.value }))
-                  }
+                  onChange={(e) => setDraft((d) => ({ ...d, facts: e.target.value }))}
                   className="min-h-[80px] w-full rounded border border-[var(--border)] bg-black/10 px-2 py-1.5 text-sm text-[var(--fg)] outline-none focus:ring-1 focus:ring-[var(--border)]"
                   placeholder="Bullet points or notes…"
                 />
@@ -321,9 +302,7 @@ export default function ItemEditorModal({
                   type="checkbox"
                   className="accent-[var(--fg)]"
                   checked={!!draft.checked}
-                  onChange={(e) =>
-                    setDraft((d: any) => ({ ...d, checked: e.target.checked }))
-                  }
+                  onChange={(e) => setDraft((d) => ({ ...d, checked: e.target.checked }))}
                 />
                 Include in context
               </label>

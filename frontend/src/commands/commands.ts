@@ -41,10 +41,10 @@ export type CmdContext = {
   textareaEl: HTMLTextAreaElement | null;
   gotoTop(): void;
   gotoLastEdit(): void;
-  gotoScene(n: number): void;
+  gotoScene(_n: number): void;
   closePalette(): void;
-  toast(text: string): void;
-  emit(id: string, input: string): void;
+  toast(_text: string): void;
+  emit(_id: string, _input: string): void;
 };
 
 export function executeCommand(cmd: Command, rawInput: string, ctx: CmdContext) {

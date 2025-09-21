@@ -22,7 +22,7 @@ export default function FooterStatusBar({
           aria-label="Open context editor"
           title="Open context editor (Ctrl+,)"
         >
-          <span className="font-medium text-[var(--fg)]">Context:</span> 10%
+          <span className="font-medium text-[var(--fg)]">Tokens:</span> ~{tokens}t
         </span>
         <span className="footer-sep hidden sm:inline">Ln 12, Col 1</span>
         <span className="footer-sep hidden md:inline">
