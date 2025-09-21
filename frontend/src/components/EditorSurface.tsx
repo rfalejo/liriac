@@ -1,8 +1,9 @@
 import { useRef, useState, useMemo } from 'react';
 import CommandBar, { type Command as CommandBarCommand } from './CommandBar';
 import { typewriterScroll } from '../utils/caret';
+import { gotoTop, gotoScene, jumpToOffset } from '../utils/scenes';
 import { useSmartPunctuation } from '../hooks/useSmartPunctuation';
-import { COMMANDS as REGISTRY, type Command as Cmd } from '../commands/commands';
+import { COMMANDS as REGISTRY, type Command as Cmd, executeCommand } from '../commands/commands';
 import { useEditorStats } from '../hooks/useEditorStats';
 import { useEditorShortcuts } from '../hooks/useEditorShortcuts';
 
@@ -11,7 +12,7 @@ export default function EditorSurface({ disabled = false }: { disabled?: boolean
   const [commandOpen, setCommandOpen] = useState(false);
   const [commandInput, setCommandInput] = useState('');
   const { transform } = useSmartPunctuation();
-  const { update: updateStats } = useEditorStats(textareaRef);
+  useEditorStats(textareaRef);
 
   // Show a one-time toast when smart punctuation first triggers
   const smartToastShown = useRef(false);
@@ -58,16 +59,14 @@ export default function EditorSurface({ disabled = false }: { disabled?: boolean
     // Track last edit position
     lastEditRef.current = el.selectionStart ?? el.value.length;
 
-    // Update stats after any transformation
-    updateStats();
   }
 
   const { handleKeyDown } = useEditorShortcuts({
     textareaRef,
     disabled,
-    openCommand: () => {
+    openCommand: (initial = '') => {
       setCommandOpen(true);
-      setCommandInput('');
+      setCommandInput(initial);
     },
   });
 
@@ -109,7 +108,36 @@ export default function EditorSurface({ disabled = false }: { disabled?: boolean
             requestAnimationFrame(() => textareaRef.current?.focus());
           }
         }}
-        onExecute={(cmd, input) => execute(cmd as Cmd, input)}
+        onExecute={(cmd, input) => {
+          const el = textareaRef.current;
+          executeCommand(cmd as Cmd, input, {
+            textareaEl: el,
+            gotoTop: () => {
+              if (el) gotoTop(el);
+            },
+            gotoLastEdit: () => {
+              if (el) jumpToOffset(el, lastEditRef.current ?? 0);
+            },
+            gotoScene: (n: number) => {
+              if (el) gotoScene(el, n);
+            },
+            closePalette: () => {
+              setCommandOpen(false);
+              setCommandInput('');
+              if (!disabled) {
+                requestAnimationFrame(() => textareaRef.current?.focus());
+              }
+            },
+            toast: (text: string) => {
+              window.dispatchEvent(new CustomEvent('toast:show', { detail: { text } }));
+            },
+            emit: (id: string, raw: string) => {
+              window.dispatchEvent(
+                new CustomEvent('editor:command', { detail: { id, input: raw } }),
+              );
+            },
+          });
+        }}
         commands={suggestions}
       />
     </main>

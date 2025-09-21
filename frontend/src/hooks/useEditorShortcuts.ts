@@ -13,7 +13,7 @@ export function useEditorShortcuts({
   disabled,
 }: {
   textareaRef: React.RefObject<HTMLTextAreaElement | null>;
-  openCommand: () => void;
+  openCommand: (_initial?: string) => void;
   disabled?: boolean;
 }) {
   function handleKeyDown(e: React.KeyboardEvent<HTMLTextAreaElement>) {
@@ -29,7 +29,7 @@ export function useEditorShortcuts({
       const el = e.currentTarget as HTMLTextAreaElement;
       if (atLineStart(el)) {
         e.preventDefault();
-        openCommand();
+        openCommand(e.key === '/' ? '/' : '');
         return;
       }
     }
