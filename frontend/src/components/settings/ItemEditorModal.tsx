@@ -10,11 +10,15 @@ type CharacterDraft = {
 export default function ItemEditorModal({
   open,
   type,
+  mode = 'create',
+  initialValue,
   onCancel,
   onSave,
 }: {
   open: boolean;
   type: 'character';
+  mode?: 'create' | 'edit';
+  initialValue?: CharacterDraft;
   onCancel: () => void;
   onSave: (draft: CharacterDraft) => void;
 }) {
@@ -30,13 +34,22 @@ export default function ItemEditorModal({
 
   useEffect(() => {
     if (!open) return;
-    // Reset draft when opening (add-only flow)
-    setDraft({ name: '', role: '', summary: '', checked: true });
+    // Initialize draft when opening
+    if (mode === 'edit' && initialValue) {
+      setDraft({
+        name: initialValue.name ?? '',
+        role: initialValue.role ?? '',
+        summary: initialValue.summary ?? '',
+        checked: initialValue.checked ?? true,
+      });
+    } else {
+      setDraft({ name: '', role: '', summary: '', checked: true });
+    }
     const t = setTimeout(() => {
       firstFieldRef.current?.focus();
     }, 0);
     return () => clearTimeout(t);
-  }, [open]);
+  }, [open, mode, initialValue?.name, initialValue?.role, initialValue?.summary, initialValue?.checked]);
 
   function handleBackdropClick(e: React.MouseEvent<HTMLDivElement>) {
     if (e.target === e.currentTarget) onCancel();
@@ -112,7 +125,7 @@ export default function ItemEditorModal({
       <div data-modal-panel className="relative w-full max-w-md mx-auto rounded-md border border-[var(--border)] bg-[var(--surface)] shadow-xl">
         <div className="border-b border-[var(--border)] px-4 py-3">
           <h2 id="item-editor-title" className="text-sm font-medium text-[var(--fg)]">
-            {type === 'character' ? 'Add character' : 'Add item'}
+            {type === 'character' ? (mode === 'edit' ? 'Edit character' : 'Add character') : mode === 'edit' ? 'Edit item' : 'Add item'}
           </h2>
         </div>
 

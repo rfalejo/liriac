@@ -20,13 +20,14 @@ export type ContextSectionListProps = {
   onToggle?: (sectionId: string, itemId: string, nextChecked: boolean) => void;
   addButtonLabel?: string;
   onAdd?: () => void;
+  onEdit?: (sectionId: string, itemId: string) => void;
 };
 
 /**
  * Renders a <details> panel with a summary and a list of checkbox items.
  * Stateless and API-ready: accepts data + callback, no internal persistence.
  */
-export default function ContextSectionList({ section, onToggle, addButtonLabel, onAdd }: ContextSectionListProps) {
+export default function ContextSectionList({ section, onToggle, addButtonLabel, onAdd, onEdit }: ContextSectionListProps) {
   const activeCount = section.items.filter((i) => i.checked).length;
 
   return (
@@ -71,7 +72,20 @@ export default function ContextSectionList({ section, onToggle, addButtonLabel, 
                 />
                 <span>{it.label}</span>
               </label>
-              {typeof it.tokens === 'number' && <span className="text-xs">~{it.tokens}t</span>}
+              <div className="flex items-center gap-2">
+                {typeof it.tokens === 'number' && <span className="text-xs">~{it.tokens}t</span>}
+                {typeof onEdit === 'function' && (
+                  <button
+                    type="button"
+                    className="rounded border border-[var(--border)] bg-black/10 px-2 py-0.5 text-[11px] text-[var(--muted)] hover:bg-black/20"
+                    onClick={() => onEdit(section.id, it.id)}
+                    aria-label={`Edit ${it.label}`}
+                    title={`Edit ${it.label}`}
+                  >
+                    Edit
+                  </button>
+                )}
+              </div>
             </li>
           ))}
         </ul>

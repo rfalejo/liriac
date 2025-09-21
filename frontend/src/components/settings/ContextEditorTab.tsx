@@ -43,6 +43,7 @@ export default function ContextEditorTab({ tokens }: { tokens: number }) {
   const used = Math.max(0, tokens);
 
   const [characterModalOpen, setCharacterModalOpen] = useState(false);
+  const [characterEditId, setCharacterEditId] = useState<string | null>(null);
 
   const handleToggle = useCallback((sectionId: string, itemId: string, nextChecked: boolean) => {
     // Update local state so the checkbox reflects the new value
@@ -70,6 +71,7 @@ export default function ContextEditorTab({ tokens }: { tokens: number }) {
             onToggle={handleToggle}
             addButtonLabel={section.id === 'characters' ? 'Add character' : undefined}
             onAdd={section.id === 'characters' ? () => setCharacterModalOpen(true) : undefined}
+            onEdit={section.id === 'characters' ? (_sid, itemId) => setCharacterEditId(itemId) : undefined}
           />
         ))}
       </div>
@@ -98,6 +100,7 @@ export default function ContextEditorTab({ tokens }: { tokens: number }) {
       <ItemEditorModal
         open={characterModalOpen}
         type="character"
+        mode="create"
         onCancel={() => setCharacterModalOpen(false)}
         onSave={(draft) => {
           const label =
@@ -125,6 +128,51 @@ export default function ContextEditorTab({ tokens }: { tokens: number }) {
           );
         }}
       />
+
+      {characterEditId && (
+        <ItemEditorModal
+          open={!!characterEditId}
+          type="character"
+          mode="edit"
+          initialValue={() => {
+            const item =
+              sections.find((s) => s.id === 'characters')?.items.find((it) => it.id === characterEditId);
+            if (!item) return { name: '', role: '', summary: '', checked: true };
+            const [name, rolePart] = item.label.split('—').map((s) => s.trim());
+            return {
+              name: name ?? '',
+              role: rolePart ?? '',
+              summary: '',
+              checked: !!item.checked,
+            };
+          }}
+          onCancel={() => setCharacterEditId(null)}
+          onSave={(draft) => {
+            const label =
+              draft.role && draft.role.trim()
+                ? `${draft.name.trim()} — ${draft.role.trim()}`
+                : draft.name.trim();
+
+            setSections((prev) =>
+              prev.map((s) =>
+                s.id === 'characters'
+                  ? {
+                      ...s,
+                      items: s.items.map((it) =>
+                        it.id === characterEditId ? { ...it, label, checked: !!draft.checked } : it,
+                      ),
+                    }
+                  : s,
+              ),
+            );
+
+            setCharacterEditId(null);
+            window.dispatchEvent(
+              new CustomEvent('toast:show', { detail: { text: 'Character updated.' } }),
+            );
+          }}
+        />
+      )}
     </div>
   );
 }
