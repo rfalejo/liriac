@@ -101,6 +101,31 @@ html {
   caret-color: color-mix(in oklab, var(--fg) 92%, transparent);
 }
 
+/* CLI-like checkboxes (render as [ ] and [x]) for Context Editor */
+input[type="checkbox"][class="accent-[var(--fg)]"] {
+  appearance: none;
+  display: inline-block;
+  width: 1.25em;      /* ensures consistent click target */
+  height: 1.1em;
+  margin: 0;
+  margin-right: 0.5rem; /* pairs nicely with label gap */
+  vertical-align: middle;
+  cursor: pointer;
+}
+input[type="checkbox"][class="accent-[var(--fg)]"]::before {
+  content: "[ ]";
+  color: var(--muted);
+  line-height: 1;
+}
+input[type="checkbox"][class="accent-[var(--fg)]"]:checked::before {
+  content: "[x]";
+  color: var(--fg);
+}
+input[type="checkbox"][class="accent-[var(--fg)]"]:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
 /* Respect reduced motion */
 @media (prefers-reduced-motion: reduce) {
   * {
