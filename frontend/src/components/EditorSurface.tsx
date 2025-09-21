@@ -20,7 +20,7 @@ const COMMANDS: Command[] = [
   { id: 'context', label: 'context', hint: 'Open context editor', aliases: ['/context'] },
 ];
 
-export default function EditorSurface() {
+export default function EditorSurface({ disabled = false }: { disabled?: boolean }) {
   const textareaRef = useRef<HTMLTextAreaElement | null>(null);
   const [commandOpen, setCommandOpen] = useState(false);
   const [commandInput, setCommandInput] = useState('');
@@ -138,7 +138,7 @@ export default function EditorSurface() {
   
   // Keep focus on the editor unless the CommandBar is open
   function handleBlur() {
-    if (!commandOpen) {
+    if (!commandOpen && !disabled) {
       requestAnimationFrame(() => textareaRef.current?.focus());
     }
   }
@@ -339,6 +339,9 @@ export default function EditorSurface() {
           <textarea
             ref={textareaRef}
             id="editor"
+            disabled={disabled}
+            tabIndex={disabled ? -1 : undefined}
+            aria-hidden={disabled ? true : undefined}
             spellCheck={false}
             className="block w-full flex-1 min-h-0 resize-none bg-transparent p-6 sm:p-8 font-serif text-[1.05rem] sm:text-[1.125rem] leading-[var(--read-lh)] text-[var(--fg)] outline-none placeholder:text-[var(--muted)] mx-auto max-w-[70ch] caret-[var(--fg)]"
             placeholder="Start writing here…"
@@ -357,8 +360,10 @@ export default function EditorSurface() {
         onClose={() => {
           setCommandOpen(false);
           setCommandInput('');
-          // Restore focus to the chapter textarea so the caret is active again
-          requestAnimationFrame(() => textareaRef.current?.focus());
+          if (!disabled) {
+            // Restore focus to the chapter textarea so the caret is active again
+            requestAnimationFrame(() => textareaRef.current?.focus());
+          }
         }}
         onExecute={executeCommand}
         commands={suggestions}
