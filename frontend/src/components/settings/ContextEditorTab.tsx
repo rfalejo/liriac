@@ -76,12 +76,8 @@ export default function ContextEditorTab({ tokens }: { tokens: number }) {
 
         <ContextStyleTonePanel
           defaultOpen={false}
-          styleGuide={[
-            { id: 'sg-house', text: 'House style: concise, sensory details', tokens: 120 },
-          ]}
-          tones={[
-            { id: 'tone-moody', label: 'Moody', active: true },
-            { id: 'tone-lyrical', label: 'Lyrical', active: false },
+          items={[
+            { id: 'sg-house', description: 'House style: concise, sensory details', checked: true },
           ]}
         />
 
