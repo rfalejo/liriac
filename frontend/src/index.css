@@ -8,7 +8,7 @@
   --fg: #e6edf3;
   --muted: #9aa4b2;
   --border: #1f2a37;
-  --read-lh: 1.85;
+  --read-lh: 1.9;
 }
 
 :root[data-theme='zen'] {
@@ -30,6 +30,12 @@ body,
 
 body {
   background-color: var(--bg);
+  /* Gentle paper texture: ~1–2% noise via layered radial gradients */
+  background-image:
+    radial-gradient(circle at 1px 1px, rgba(255, 255, 255, 0.018) 1px, transparent 1px),
+    radial-gradient(circle at 0.5px 0.5px, rgba(0, 0, 0, 0.018) 1px, transparent 1px);
+  background-size: 4px 4px, 3px 3px;
+  background-blend-mode: soft-light;
   color: var(--fg);
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;

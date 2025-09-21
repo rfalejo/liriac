@@ -44,6 +44,52 @@ export default function EditorSurface() {
     window.dispatchEvent(new CustomEvent('editor:stats', { detail: { tokens } }));
   }, []);
 
+  // Compute caret Y (relative to content) using a hidden mirror element
+  function getCaretTop(el: HTMLTextAreaElement): number {
+    const style = window.getComputedStyle(el);
+    const div = document.createElement('div');
+    const span = document.createElement('span');
+
+    div.style.position = 'absolute';
+    div.style.whiteSpace = 'pre-wrap';
+    div.style.wordWrap = 'break-word';
+    div.style.visibility = 'hidden';
+    div.style.zIndex = '-9999';
+    div.style.font = style.font;
+    div.style.lineHeight = style.lineHeight;
+    div.style.padding = style.padding;
+    div.style.border = style.border;
+    div.style.boxSizing = style.boxSizing;
+    div.style.width = el.clientWidth + 'px';
+
+    const selStart = el.selectionStart ?? 0;
+    const before = el.value.slice(0, selStart);
+    const after = el.value.slice(selStart) || '.';
+
+    div.textContent = before;
+    span.textContent = after;
+    div.appendChild(span);
+    document.body.appendChild(div);
+    const top = span.offsetTop;
+    document.body.removeChild(div);
+    return top;
+  }
+
+  // Keep caret ~40% from top; limit per-tick scroll to avoid jumps
+  function typewriterScroll(el: HTMLTextAreaElement) {
+    try {
+      const caretTop = getCaretTop(el);
+      const desired = Math.max(0, caretTop - el.clientHeight * 0.4);
+      const delta = desired - el.scrollTop;
+      if (Math.abs(delta) > 4) {
+        const step = Math.sign(delta) * Math.min(Math.abs(delta), 120);
+        el.scrollTop += step;
+      }
+    } catch {
+      // no-op on failure; better to do nothing than throw during typing
+    }
+  }
+
   function handleInput(e: React.FormEvent<HTMLTextAreaElement>) {
     const el = e.currentTarget as HTMLTextAreaElement;
     let value = el.value;
@@ -95,6 +141,9 @@ export default function EditorSurface() {
       }
     }
 
+    // Typewriter scroll: keep caret ~40% from top
+    typewriterScroll(el);
+
     // Update stats after any transformation
     const tokens = mockTokenize(el.value);
     window.dispatchEvent(new CustomEvent('editor:stats', { detail: { tokens } }));
@@ -124,6 +173,15 @@ export default function EditorSurface() {
         setCommandInput('');
         return;
       }
+    }
+
+    // After navigation keys, re-center the caret (typewriter scroll)
+    const navKeys = new Set(['ArrowUp', 'ArrowDown', 'PageUp', 'PageDown', 'Home', 'End', 'Enter']);
+    if (navKeys.has(e.key)) {
+      setTimeout(() => {
+        const el = e.currentTarget as HTMLTextAreaElement;
+        if (el) typewriterScroll(el);
+      }, 0);
     }
   }
 
@@ -161,7 +219,7 @@ export default function EditorSurface() {
   return (
     <main className="flex flex-col flex-1 min-h-0">
       <div className="mx-auto flex flex-1 min-h-0 w-full max-w-4xl flex-col px-4 py-8 sm:px-6 sm:py-10 lg:max-w-3xl">
-        <div className="mt-6 flex-1 min-h-0 flex flex-col rounded-md sm:rounded-lg border border-[var(--border)] bg-[var(--surface)] shadow-sm transition-shadow duration-150">
+        <div className="mt-6 flex-1 min-h-0 flex flex-col border-b border-[var(--border)] bg-[var(--surface)]/80 transition-colors duration-150">
           <label
             htmlFor="editor"
             className="sr-only"
