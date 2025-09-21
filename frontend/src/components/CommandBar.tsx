@@ -45,6 +45,25 @@ export default function CommandBar({
   const inputRef = useRef<HTMLInputElement | null>(null);
   const [activeIdx, setActiveIdx] = useState(0);
   const filtered = useFilteredCommands(commands, value);
+  const [history, setHistory] = useState<string[]>([]);
+  const [histIdx, setHistIdx] = useState<number | null>(null);
+  const HIST_KEY = 'liriac:cmdHistory';
+
+  // Load history once on mount
+  useEffect(() => {
+    try {
+      const raw = localStorage.getItem(HIST_KEY);
+      if (raw) {
+        const arr = JSON.parse(raw);
+        if (Array.isArray(arr)) setHistory(arr.filter((s) => typeof s === 'string'));
+      }
+    } catch {}
+  }, []);
+
+  // Reset history cursor whenever the bar opens
+  useEffect(() => {
+    if (open) setHistIdx(null);
+  }, [open]);
 
   useEffect(() => {
     if (open) {
@@ -58,22 +77,61 @@ export default function CommandBar({
     setActiveIdx(0);
   }, [value]);
 
+  function addToHistory(entry: string) {
+    const clean = entry.trim();
+    if (!clean) return;
+    setHistory((h) => {
+      const next = [clean, ...h.filter((x) => x !== clean)].slice(0, 50);
+      try {
+        localStorage.setItem(HIST_KEY, JSON.stringify(next));
+      } catch {}
+      return next;
+    });
+  }
+
   function handleKeyDown(e: React.KeyboardEvent<HTMLInputElement>) {
     if (e.key === 'Escape') {
       e.preventDefault();
       onClose();
       return;
     }
-    if (e.key === 'ArrowDown') {
-      e.preventDefault();
-      setActiveIdx((i) => Math.min(i + 1, Math.max(filtered.length - 1, 0)));
-      return;
-    }
+
+    // If input is empty, use Up/Down to navigate history
+    const isEmpty = value.trim().length === 0;
+
     if (e.key === 'ArrowUp') {
-      e.preventDefault();
-      setActiveIdx((i) => Math.max(i - 1, 0));
-      return;
+      if (isEmpty && history.length > 0) {
+        e.preventDefault();
+        const nextIdx = histIdx === null ? 0 : Math.min(histIdx + 1, history.length - 1);
+        setHistIdx(nextIdx);
+        onChange(history[nextIdx]);
+        return;
+      } else {
+        e.preventDefault();
+        setActiveIdx((i) => Math.max(i - 1, 0));
+        return;
+      }
     }
+
+    if (e.key === 'ArrowDown') {
+      if (histIdx !== null) {
+        e.preventDefault();
+        if (histIdx <= 0) {
+          setHistIdx(null);
+          onChange('');
+        } else {
+          const nextIdx = histIdx - 1;
+          setHistIdx(nextIdx);
+          onChange(history[nextIdx]);
+        }
+        return;
+      } else {
+        e.preventDefault();
+        setActiveIdx((i) => Math.min(i + 1, Math.max(filtered.length - 1, 0)));
+        return;
+      }
+    }
+
     if (e.key === 'Tab') {
       e.preventDefault();
       const pick = filtered[activeIdx];
@@ -82,14 +140,18 @@ export default function CommandBar({
       }
       return;
     }
+
     if (e.key === 'Enter') {
       e.preventDefault();
       const pick = filtered[activeIdx] ?? filtered[0];
       if (pick) {
+        const entry = (value || pick.label).trim();
+        if (entry) addToHistory(entry);
         onExecute(pick, value);
       } else {
         onClose();
       }
+      return;
     }
   }
 
@@ -103,7 +165,10 @@ export default function CommandBar({
           <input
             ref={inputRef}
             value={value}
-            onChange={(e) => onChange(e.target.value)}
+            onChange={(e) => {
+              if (histIdx !== null) setHistIdx(null);
+              onChange(e.target.value);
+            }}
             onKeyDown={handleKeyDown}
             placeholder="Type a command…"
             className="w-full bg-transparent py-1 text-sm text-[var(--fg)] outline-none placeholder:text-[var(--muted)]"

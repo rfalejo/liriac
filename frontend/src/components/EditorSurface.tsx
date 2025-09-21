@@ -22,8 +22,6 @@ export default function EditorSurface() {
   const textareaRef = useRef<HTMLTextAreaElement | null>(null);
   const [commandOpen, setCommandOpen] = useState(false);
   const [commandInput, setCommandInput] = useState('');
-  const [history, setHistory] = useState<string[]>([]);
-  const [historyIdx, setHistoryIdx] = useState<number | null>(null);
 
   useEffect(() => {
     const el = textareaRef.current;
@@ -51,7 +49,6 @@ export default function EditorSurface() {
       e.preventDefault();
       setCommandOpen(true);
       setCommandInput('');
-      setHistoryIdx(null);
       return;
     }
     if ((e.key === '>' || e.key === '/') && !e.shiftKey) {
@@ -62,7 +59,6 @@ export default function EditorSurface() {
         e.preventDefault();
         setCommandOpen(true);
         setCommandInput('');
-        setHistoryIdx(null);
         return;
       }
     }
@@ -70,9 +66,6 @@ export default function EditorSurface() {
 
   function executeCommand(cmd: Command, rawInput: string) {
     // Minimal behavior for demo; real handlers would manipulate text/selection.
-    // Keep a tiny command history
-    setHistory((h) => [rawInput || cmd.label, ...h].slice(0, 20));
-    setHistoryIdx(null);
 
     // Example: insert scene break where the caret is
     if (cmd.id === 'insert-break') {
@@ -132,7 +125,6 @@ export default function EditorSurface() {
         onClose={() => {
           setCommandOpen(false);
           setCommandInput('');
-          setHistoryIdx(null);
         }}
         onExecute={executeCommand}
         commands={suggestions}
