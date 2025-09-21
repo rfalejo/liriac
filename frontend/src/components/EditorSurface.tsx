@@ -246,6 +246,8 @@ export default function EditorSurface() {
         onClose={() => {
           setCommandOpen(false);
           setCommandInput('');
+          // Restore focus to the chapter textarea so the caret is active again
+          requestAnimationFrame(() => textareaRef.current?.focus());
         }}
         onExecute={executeCommand}
         commands={suggestions}
