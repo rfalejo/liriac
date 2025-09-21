@@ -134,7 +134,14 @@ export default function EditorSurface() {
       // no-op on failure; better to do nothing than throw during typing
     }
   }
-
+  
+  // Keep focus on the editor unless the CommandBar is open
+  function handleBlur() {
+    if (!commandOpen) {
+      requestAnimationFrame(() => textareaRef.current?.focus());
+    }
+  }
+  
   function handleInput(e: React.FormEvent<HTMLTextAreaElement>) {
     const el = e.currentTarget as HTMLTextAreaElement;
     let value = el.value;
@@ -329,6 +336,7 @@ export default function EditorSurface() {
             defaultValue={`The pier smelled of salt and damp wood.\n\nGulls carved lazy circles above the flat water while ropes creaked with every swell.\n\nCamila pressed the notebook to her chest and exhaled deeply. She expected no answers, only the murmur of the sea and the thud of her boots.\n\n…`}
             onInput={handleInput}
             onKeyDown={handleKeyDown}
+            onBlur={handleBlur}
           />
         </div>
       </div>
