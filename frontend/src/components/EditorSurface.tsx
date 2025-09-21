@@ -17,6 +17,7 @@ const COMMANDS: Command[] = [
   { id: 'count', label: 'count words', hint: 'Show word count' },
   { id: 'timer-start', label: 'timer start 25m', hint: 'Start a 25m session' },
   { id: 'goto', label: 'goto', hint: 'Jump: /goto top | last-edit | scene N', aliases: ['/goto'] },
+  { id: 'context', label: 'context', hint: 'Open context editor', aliases: ['/context'] },
 ];
 
 export default function EditorSurface() {
@@ -259,6 +260,14 @@ export default function EditorSurface() {
   function executeCommand(cmd: Command, rawInput: string) {
     // Minimal behavior for demo; real handlers would manipulate text/selection.
 
+    // Open context editor
+    if (cmd.id === 'context') {
+      window.dispatchEvent(new CustomEvent('context:open'));
+      setCommandOpen(false);
+      setCommandInput('');
+      return;
+    }
+
     // Goto navigation: /goto top | last-edit | scene N | N
     if (cmd.id === 'goto') {
       const raw = rawInput.trim();
@@ -333,7 +342,7 @@ export default function EditorSurface() {
             spellCheck={false}
             className="block w-full flex-1 min-h-0 resize-none bg-transparent p-6 sm:p-8 font-serif text-[1.05rem] sm:text-[1.125rem] leading-[var(--read-lh)] text-[var(--fg)] outline-none placeholder:text-[var(--muted)] mx-auto max-w-[70ch] caret-[var(--fg)]"
             placeholder="Start writing here…"
-            defaultValue={`The pier smelled of salt and damp wood.\n\nGulls carved lazy circles above the flat water while ropes creaked with every swell.\n\nCamila pressed the notebook to her chest and exhaled deeply. She expected no answers, only the murmur of the sea and the thud of her boots.\n\n…`}
+            defaultValue={`The pier smelled of salt and damp wood.\n\nGulls carved lazy circles above the flat water while ropes creaked with every swell.\n\nMichelle pressed the notebook to her chest and exhaled deeply. She expected no answers, only the murmur of the sea and the thud of her boots.\n\n…`}
             onInput={handleInput}
             onKeyDown={handleKeyDown}
             onBlur={handleBlur}
