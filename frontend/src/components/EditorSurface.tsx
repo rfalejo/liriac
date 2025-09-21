@@ -10,6 +10,7 @@ import {
 } from '../commands/commands';
 import { useEditorStats } from '../hooks/useEditorStats';
 import { useEditorShortcuts } from '../hooks/useEditorShortcuts';
+import { useAppStore } from '../store/appStore';
 
 export default function EditorSurface({ disabled = false }: { disabled?: boolean }) {
   const textareaRef = useRef<HTMLTextAreaElement | null>(null);
@@ -17,6 +18,7 @@ export default function EditorSurface({ disabled = false }: { disabled?: boolean
   const [commandInput, setCommandInput] = useState('');
   const { transform } = useSmartPunctuation();
   useEditorStats(textareaRef);
+  const { showToast, openSettings } = useAppStore();
 
   // Show a one-time toast when smart punctuation first triggers
   const smartToastShown = useRef(false);
@@ -24,11 +26,7 @@ export default function EditorSurface({ disabled = false }: { disabled?: boolean
   function showSmartToastOnce() {
     if (smartToastShown.current) return;
     smartToastShown.current = true;
-    window.dispatchEvent(
-      new CustomEvent('toast:show', {
-        detail: { text: 'Smart punctuation enabled (quotes and em-dashes).' },
-      }),
-    );
+    showToast('Smart punctuation enabled (quotes and em-dashes).');
   }
 
   // Track last edit position for /goto last-edit
@@ -121,6 +119,9 @@ export default function EditorSurface({ disabled = false }: { disabled?: boolean
             gotoScene: (n: number) => {
               if (el) gotoScene(el, n);
             },
+            openSettings: () => {
+              openSettings();
+            },
             closePalette: () => {
               setCommandOpen(false);
               setCommandInput('');
@@ -129,12 +130,7 @@ export default function EditorSurface({ disabled = false }: { disabled?: boolean
               }
             },
             toast: (text: string) => {
-              window.dispatchEvent(new CustomEvent('toast:show', { detail: { text } }));
-            },
-            emit: (id: string, raw: string) => {
-              window.dispatchEvent(
-                new CustomEvent('editor:command', { detail: { id, input: raw } }),
-              );
+              showToast(text);
             },
           });
         }}

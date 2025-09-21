@@ -2,6 +2,7 @@ import React from 'react';
 import SettingsDialog from './settings/SettingsDialog';
 import ContextEditorTab from './settings/ContextEditorTab';
 import { useDialogFocusNav } from '../hooks/useDialogFocusNav';
+import { useAppStore } from '../store/appStore';
 
 export default function Settings({
   open,
@@ -13,6 +14,7 @@ export default function Settings({
   onClose: () => void;
 }) {
   const { containerRef, onKeyDown } = useDialogFocusNav(open);
+  const { showToast } = useAppStore();
 
   return (
     <SettingsDialog
@@ -21,16 +23,10 @@ export default function Settings({
       activeTab="context"
       onClose={onClose}
       onSave={() => {
-        window.dispatchEvent(
-          new CustomEvent('toast:show', { detail: { text: 'Settings saved (mock).' } }),
-        );
+        showToast('Settings saved (mock).');
       }}
       onClear={() => {
-        window.dispatchEvent(
-          new CustomEvent('toast:show', {
-            detail: { text: 'Context cleared (mock).' },
-          }),
-        );
+        showToast('Context cleared (mock).');
       }}
       containerRef={containerRef}
       onKeyDown={onKeyDown}

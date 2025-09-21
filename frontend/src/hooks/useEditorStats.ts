@@ -1,31 +1,34 @@
 import { useEffect } from 'react';
 import { mockTokenize } from '../utils/tokens';
+import { useAppStore } from '../store/appStore';
 
 export function useEditorStats(ref: React.RefObject<HTMLTextAreaElement | null>) {
+  const { setTokens } = useAppStore();
+
   useEffect(() => {
     const el = ref.current;
     if (!el) return;
 
-    const emit = () => {
+    const updateTokens = () => {
       const tokens = mockTokenize(el.value || '');
-      window.dispatchEvent(new CustomEvent('editor:stats', { detail: { tokens } }));
+      setTokens(tokens);
     };
 
     // Emit once on mount/open
-    emit();
+    updateTokens();
 
     // Keep stats updated on every input change
-    el.addEventListener('input', emit);
+    el.addEventListener('input', updateTokens);
     return () => {
-      el.removeEventListener('input', emit);
+      el.removeEventListener('input', updateTokens);
     };
-  }, [ref]);
+  }, [ref, setTokens]);
 
   function update() {
     const el = ref.current;
     if (!el) return;
     const tokens = mockTokenize(el.value || '');
-    window.dispatchEvent(new CustomEvent('editor:stats', { detail: { tokens } }));
+    setTokens(tokens);
   }
 
   return { update };

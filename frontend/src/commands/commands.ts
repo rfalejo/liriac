@@ -42,19 +42,52 @@ export type CmdContext = {
   gotoTop(): void;
   gotoLastEdit(): void;
   gotoScene(_n: number): void;
+  openSettings(): void;
   closePalette(): void;
   toast(_text: string): void;
-  emit(_id: string, _input: string): void;
 };
 
+function messageForCommand(id: string): string {
+  switch (id) {
+    case 'undo':
+      return 'Undo complete.';
+    case 'redo':
+      return 'Redo complete.';
+    case 'spell':
+      return 'Spell-check complete.';
+    case 'outline':
+      return 'Outline generated.';
+    case 'rewrite-tone':
+      return 'Paragraph rewritten.';
+    case 'insert-break':
+      return 'Scene break inserted.';
+    case 'count':
+      return 'Word count calculated.';
+    case 'timer-start':
+      return 'Timer started (25m).';
+    case 'context':
+      return 'Context editor opened.';
+    default:
+      return 'Command executed.';
+  }
+}
+
 export function executeCommand(cmd: Command, rawInput: string, ctx: CmdContext) {
-  const { textareaEl, gotoTop, gotoLastEdit, gotoScene, closePalette, toast, emit } =
-    ctx;
+  const {
+    textareaEl,
+    gotoTop,
+    gotoLastEdit,
+    gotoScene,
+    openSettings,
+    closePalette,
+    toast,
+  } = ctx;
 
   switch (cmd.id) {
     case 'context': {
-      window.dispatchEvent(new CustomEvent('context:open'));
+      openSettings();
       closePalette();
+      toast(messageForCommand(cmd.id));
       return;
     }
     case 'goto': {
@@ -80,6 +113,7 @@ export function executeCommand(cmd: Command, rawInput: string, ctx: CmdContext) 
         }
       }
       closePalette();
+      toast(messageForCommand(cmd.id));
       return;
     }
     case 'insert-break': {
@@ -96,15 +130,15 @@ export function executeCommand(cmd: Command, rawInput: string, ctx: CmdContext) 
         el.selectionStart = el.selectionEnd = caret;
         el.dispatchEvent(new Event('input', { bubbles: true }));
       }
-      break;
+      closePalette();
+      toast(messageForCommand(cmd.id));
+      return;
     }
-    // For now, other commands just emit the event for toast feedback
+    // For now, other commands just toast a message
     default: {
-      // no-op
+      closePalette();
+      toast(messageForCommand(cmd.id));
+      return;
     }
   }
-
-  emit(cmd.id, rawInput);
-  closePalette();
-  toast(''); // no explicit toast here; Toasts will handle editor:command
 }

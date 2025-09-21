@@ -1,54 +1,40 @@
-import { useEffect, useState } from 'react';
+import { useEffect } from 'react';
 import TopAppBar from '../components/TopAppBar';
 import EditorSurface from '../components/EditorSurface';
 import FooterStatusBar from '../components/FooterStatusBar';
 import Settings from '../components/Settings';
+import { useAppStore } from '../store/appStore';
 
 export default function EditorPage() {
-  const [tokens, setTokens] = useState(0);
-  const [contextOpen, setContextOpen] = useState(false);
+  const { tokens, settingsOpen, openSettings, closeSettings } = useAppStore();
 
   useEffect(() => {
-    function onStats(e: Event) {
-      const ev = e as CustomEvent<{ tokens: number }>;
-      if (typeof ev.detail?.tokens === 'number') {
-        setTokens(ev.detail.tokens);
-      }
-    }
-    function onOpenContext() {
-      setContextOpen(true);
-    }
     function onKeyDown(e: KeyboardEvent) {
       // Ctrl/Cmd + , to open
       if ((e.ctrlKey || e.metaKey) && e.key === ',') {
         e.preventDefault();
-        setContextOpen(true);
+        openSettings();
+        return;
       }
       // Esc to close when open
-      if (e.key === 'Escape' && contextOpen) {
-        setContextOpen(false);
+      if (e.key === 'Escape' && settingsOpen) {
+        e.preventDefault();
+        closeSettings();
+        return;
       }
     }
-    window.addEventListener('editor:stats', onStats as EventListener);
-    window.addEventListener('context:open', onOpenContext as EventListener);
     window.addEventListener('keydown', onKeyDown as EventListener);
     return () => {
-      window.removeEventListener('editor:stats', onStats as EventListener);
-      window.removeEventListener('context:open', onOpenContext as EventListener);
       window.removeEventListener('keydown', onKeyDown as EventListener);
     };
-  }, [contextOpen]);
+  }, [settingsOpen, openSettings, closeSettings]);
 
   return (
     <div className="min-h-screen bg-[var(--bg)] text-[var(--fg)] flex flex-col">
       <TopAppBar />
-      <EditorSurface disabled={contextOpen} />
-      <Settings
-        open={contextOpen}
-        tokens={tokens}
-        onClose={() => setContextOpen(false)}
-      />
-      <FooterStatusBar tokens={tokens} onOpenContext={() => setContextOpen(true)} />
+      <EditorSurface disabled={settingsOpen} />
+      <Settings open={settingsOpen} tokens={tokens} onClose={closeSettings} />
+      <FooterStatusBar tokens={tokens} onOpenContext={openSettings} />
     </div>
   );
 }
