@@ -1,4 +1,5 @@
 import React, { useEffect, useRef, useState } from 'react';
+import { mockTokenize } from '../../utils/tokens';
 
 type CharacterDraft = {
   name: string;
@@ -67,11 +68,6 @@ export default function ItemEditorModal({
     }, 0);
     return () => clearTimeout(t);
   }, [open, mode, type, (initialValue as any)?.name, (initialValue as any)?.role, (initialValue as any)?.summary, (initialValue as any)?.checked, (initialValue as any)?.title, (initialValue as any)?.facts]);
-
-  function mockTokenize(text: string): number {
-    const len = (text || '').trim().length;
-    return len === 0 ? 0 : Math.ceil(len / 4);
-  }
 
   function computeTokenEstimate(): number {
     if (type === 'character') {

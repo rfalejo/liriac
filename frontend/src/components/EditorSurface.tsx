@@ -1,29 +1,44 @@
 import { useEffect, useRef, useState, useMemo } from 'react';
-import CommandBar, { type Command } from './CommandBar';
+import CommandBar, { type Command as CommandBarCommand } from './CommandBar';
+import { mockTokenize } from '../utils/tokens';
+import { typewriterScroll } from '../utils/caret';
+import { gotoScene as utilGotoScene, gotoTop as utilGotoTop, jumpToOffset, getSceneOffsets } from '../utils/scenes';
+import { useSmartPunctuation } from '../hooks/useSmartPunctuation';
+import { COMMANDS as REGISTRY, executeCommand, type Command as Cmd } from '../commands/commands';
 
-function mockTokenize(text: string): number {
-  // Very rough mock: ~4 chars per token average
-  const len = text.trim().length;
-  return len === 0 ? 0 : Math.ceil(len / 4);
+function normalizeCmd(s: string) {
+  return s.replace(/^\//, '');
 }
 
-const COMMANDS: Command[] = [
-  { id: 'undo', label: 'undo', hint: 'Revert last action', aliases: ['/undo'] },
-  { id: 'redo', label: 'redo', hint: 'Re-apply last reverted action' },
-  { id: 'spell', label: 'spell-check', hint: 'Check spelling in selection', aliases: ['spell', '/spell-check'] },
-  { id: 'outline', label: 'outline generate', hint: 'Generate chapter outline' },
-  { id: 'rewrite-tone', label: 'rewrite paragraph tone: moody', hint: 'Rewrite selection with tone' },
-  { id: 'insert-break', label: 'insert scene break', hint: 'Add a scene separator' },
-  { id: 'count', label: 'count words', hint: 'Show word count' },
-  { id: 'timer-start', label: 'timer start 25m', hint: 'Start a 25m session' },
-  { id: 'goto', label: 'goto', hint: 'Jump: /goto top | last-edit | scene N', aliases: ['/goto'] },
-  { id: 'context', label: 'context', hint: 'Open context editor', aliases: ['/context'] },
-];
+function computeSuggestion(commands: CommandBarCommand[], value: string): string | null {
+  if (!value.trim().startsWith('/')) return null;
+  const q = normalizeCmd(value.trim()).toLowerCase();
+  if (!q) return null;
+  for (const c of commands) {
+    const label = c.label.toLowerCase();
+    if (label.startsWith(q)) return c.label;
+    for (const a of c.aliases ?? []) {
+      const an = normalizeCmd(a).toLowerCase();
+      if (an.startsWith(q)) return c.label;
+    }
+  }
+  return null;
+}
+
+function findCommand(commands: CommandBarCommand[], input: string): CommandBarCommand | undefined {
+  const q = normalizeCmd(input.trim()).toLowerCase();
+  return commands.find(
+    (c) =>
+      c.label.toLowerCase() === q ||
+      (c.aliases ?? []).some((a) => normalizeCmd(a).toLowerCase() === q),
+  );
+}
 
 export default function EditorSurface({ disabled = false }: { disabled?: boolean }) {
   const textareaRef = useRef<HTMLTextAreaElement | null>(null);
   const [commandOpen, setCommandOpen] = useState(false);
   const [commandInput, setCommandInput] = useState('');
+  const { transform } = useSmartPunctuation();
 
   // Show a one-time toast when smart punctuation first triggers
   const smartToastShown = useRef(false);
@@ -49,38 +64,18 @@ export default function EditorSurface({ disabled = false }: { disabled?: boolean
   // Track last edit position for /goto last-edit
   const lastEditRef = useRef<number | null>(null);
 
-  // Scene helpers
-  function getSceneOffsets(text: string): number[] {
-    // Scenes are separated by blank-line + *** + blank-line
-    const breaks: number[] = [0];
-    const re = /\n\*\*\*\n/g;
-    let m: RegExpExecArray | null;
-    while ((m = re.exec(text)) !== null) {
-      breaks.push(m.index + m[0].length);
-    }
-    return breaks;
-  }
-
-  function jumpToOffset(el: HTMLTextAreaElement, offset: number) {
-    const pos = Math.max(0, Math.min(offset, el.value.length));
-    el.selectionStart = el.selectionEnd = pos;
-    typewriterScroll(el);
-    // Ensure focus is on the editor
-    el.focus();
-  }
-
   function gotoScene(n: number) {
     const el = textareaRef.current;
     if (!el) return;
-    const offs = getSceneOffsets(el.value);
-    const idx = Math.max(0, Math.min(n - 1, offs.length - 1));
-    jumpToOffset(el, offs[idx]);
+    utilGotoScene(el, n);
+    typewriterScroll(el);
   }
 
   function gotoTop() {
     const el = textareaRef.current;
     if (!el) return;
-    jumpToOffset(el, 0);
+    utilGotoTop(el);
+    typewriterScroll(el);
   }
 
   function gotoLastEdit() {
@@ -88,110 +83,28 @@ export default function EditorSurface({ disabled = false }: { disabled?: boolean
     const pos = lastEditRef.current;
     if (!el || pos == null) return;
     jumpToOffset(el, pos);
+    typewriterScroll(el);
   }
 
-  // Compute caret Y (relative to content) using a hidden mirror element
-  function getCaretTop(el: HTMLTextAreaElement): number {
-    const style = window.getComputedStyle(el);
-    const div = document.createElement('div');
-    const span = document.createElement('span');
-
-    div.style.position = 'absolute';
-    div.style.whiteSpace = 'pre-wrap';
-    div.style.wordWrap = 'break-word';
-    div.style.visibility = 'hidden';
-    div.style.zIndex = '-9999';
-    div.style.font = style.font;
-    div.style.lineHeight = style.lineHeight;
-    div.style.padding = style.padding;
-    div.style.border = style.border;
-    div.style.boxSizing = style.boxSizing;
-    div.style.width = el.clientWidth + 'px';
-
-    const selStart = el.selectionStart ?? 0;
-    const before = el.value.slice(0, selStart);
-    const after = el.value.slice(selStart) || '.';
-
-    div.textContent = before;
-    span.textContent = after;
-    div.appendChild(span);
-    document.body.appendChild(div);
-    const top = span.offsetTop;
-    document.body.removeChild(div);
-    return top;
-  }
-
-  // Keep caret ~40% from top; limit per-tick scroll to avoid jumps
-  function typewriterScroll(el: HTMLTextAreaElement) {
-    try {
-      const caretTop = getCaretTop(el);
-      const desired = Math.max(0, caretTop - el.clientHeight * 0.4);
-      const delta = desired - el.scrollTop;
-      if (Math.abs(delta) > 4) {
-        const step = Math.sign(delta) * Math.min(Math.abs(delta), 120);
-        el.scrollTop += step;
-      }
-    } catch {
-      // no-op on failure; better to do nothing than throw during typing
-    }
-  }
-  
   // Keep focus on the editor unless the CommandBar is open
   function handleBlur() {
     if (!commandOpen && !disabled) {
       requestAnimationFrame(() => textareaRef.current?.focus());
     }
   }
-  
+
   function handleInput(e: React.FormEvent<HTMLTextAreaElement>) {
     const el = e.currentTarget as HTMLTextAreaElement;
-    let value = el.value;
-    const start = el.selectionStart ?? value.length;
+    const start = el.selectionStart ?? el.value.length;
     const end = el.selectionEnd ?? start;
 
-    // Inline smart punctuation heuristics focused around the caret
-    // 1) Em-dash: turn "--" immediately before caret into "—"
-    if (start === end && start >= 2 && value.slice(start - 2, start) === '--') {
-      value = value.slice(0, start - 2) + '—' + value.slice(start);
-      const nextPos = start - 1; // caret moves back by one due to replacement
-      el.value = value;
-      el.selectionStart = el.selectionEnd = nextPos;
+    // Apply smart punctuation transform around caret
+    const res = transform(el.value, start, end);
+    if (res.didSmart) {
+      el.value = res.value;
+      el.selectionStart = res.selectionStart;
+      el.selectionEnd = res.selectionEnd;
       showSmartToastOnce();
-    }
-
-    // 2) Smart quotes for the just-typed straight quotes near caret
-    // Handle double quotes
-    if (start === end && start >= 1 && value[start - 1] === '"') {
-      const before = value.slice(0, start - 1);
-      const prevNonSpace = before.match(/[^\s\(\[\{]$/)?.[0];
-      const isOpening = !prevNonSpace || /[\s\(\[\{]/.test(before.slice(-1));
-      const curly = isOpening ? '“' : '”';
-      value = value.slice(0, start - 1) + curly + value.slice(start);
-      el.value = value;
-      el.selectionStart = el.selectionEnd = start;
-      showSmartToastOnce();
-    }
-
-    // Handle single quotes vs apostrophes
-    if (start === end && start >= 1 && value[start - 1] === "'") {
-      const before = value.slice(0, start - 1);
-      const after = value.slice(start);
-      // Apostrophe in contractions: letter'letter
-      if (/[A-Za-z]$/.test(before) && /^[A-Za-z]/.test(after)) {
-        const curly = '’';
-        value = value.slice(0, start - 1) + curly + value.slice(start);
-        el.value = value;
-        el.selectionStart = el.selectionEnd = start;
-        showSmartToastOnce();
-      } else {
-        const prevNonSpace = before.match(/[^\s\(\[\{]$/)?.[0];
-        const isOpening = !prevNonSpace || /[\s\(\[\{]/.test(before.slice(-1));
-        const curly = isOpening ? '‘' : '’';
-        value = value.slice(0, start - 1) + curly + value.slice(start);
-        el.value = value;
-        el.selectionStart = el.selectionEnd = start;
-        showSmartToastOnce();
-      }
     }
 
     // Typewriter scroll: keep caret ~40% from top
@@ -244,6 +157,7 @@ export default function EditorSurface({ disabled = false }: { disabled?: boolean
       }
       const nextIdx = e.key === 'ArrowLeft' ? Math.max(0, idx - 1) : Math.min(offs.length - 1, idx + 1);
       jumpToOffset(el, offs[nextIdx]);
+      setTimeout(() => typewriterScroll(el), 0);
       return;
     }
 
@@ -257,74 +171,36 @@ export default function EditorSurface({ disabled = false }: { disabled?: boolean
     }
   }
 
-  function executeCommand(cmd: Command, rawInput: string) {
-    // Minimal behavior for demo; real handlers would manipulate text/selection.
-
-    // Open context editor
-    if (cmd.id === 'context') {
-      window.dispatchEvent(new CustomEvent('context:open'));
-      setCommandOpen(false);
-      setCommandInput('');
-      return;
-    }
-
-    // Goto navigation: /goto top | last-edit | scene N | N
-    if (cmd.id === 'goto') {
-      const raw = rawInput.trim();
-      const norm = raw.startsWith('/') ? raw.slice(1) : raw;
-      const parts = norm.split(/\s+/).filter(Boolean); // e.g., ['goto','scene','3']
-      const args = parts.slice(1);
-
-      if (args.length === 0) {
-        // No args: do nothing
-      } else {
-        const head = args[0].toLowerCase();
-        if (head === 'top') {
-          gotoTop();
-        } else if (head === 'last-edit' || head === 'last' || head === 'lastedit') {
-          gotoLastEdit();
-        } else if (head === 'scene' && args[1]) {
-          const n = parseInt(args[1], 10);
-          if (!Number.isNaN(n) && n > 0) gotoScene(n);
-        } else {
-          // Maybe a plain number: /goto 3
-          const n = parseInt(head, 10);
-          if (!Number.isNaN(n) && n > 0) gotoScene(n);
+  function execute(cmd: Cmd, rawInput: string) {
+    executeCommand(cmd, rawInput, {
+      textareaEl: textareaRef.current,
+      gotoTop,
+      gotoLastEdit,
+      gotoScene,
+      closePalette: () => {
+        setCommandOpen(false);
+        setCommandInput('');
+        if (!disabled) {
+          requestAnimationFrame(() => textareaRef.current?.focus());
         }
-      }
-
-      setCommandOpen(false);
-      setCommandInput('');
-      return;
-    }
-
-    // Example: insert scene break where the caret is
-    if (cmd.id === 'insert-break') {
-      const el = textareaRef.current;
-      if (el) {
-        const v = el.value;
-        const start = el.selectionStart ?? v.length;
-        const end = el.selectionEnd ?? start;
-        const insert = '\n\n***\n\n';
-        const next = v.slice(0, start) + insert + v.slice(end);
-        el.value = next;
-        // Move caret after insertion
-        const caret = start + insert.length;
-        el.selectionStart = el.selectionEnd = caret;
-        el.dispatchEvent(new Event('input', { bubbles: true }));
-      }
-    }
-
-    // Dispatch a light result event (can be hooked later for toasts)
-    window.dispatchEvent(
-      new CustomEvent('editor:command', { detail: { id: cmd.id, input: rawInput } }),
-    );
-
-    setCommandOpen(false);
-    setCommandInput('');
+      },
+      toast(text: string) {
+        if (text) {
+          window.dispatchEvent(new CustomEvent('toast:show', { detail: { text } }));
+        }
+      },
+      emit(id: string, input: string) {
+        window.dispatchEvent(new CustomEvent('editor:command', { detail: { id, input } }));
+      },
+    });
   }
 
-  const suggestions = useMemo(() => COMMANDS, []);
+  const suggestions = useMemo<CommandBarCommand[]>(() => REGISTRY, []);
+  const suggestion = computeSuggestion(suggestions, commandInput);
+  const completionTail =
+    suggestion && commandInput.trim().startsWith('/')
+      ? suggestion.slice(commandInput.trim().replace(/^\//, '').length)
+      : '';
 
   return (
     <main className="flex flex-col flex-1 min-h-0">
@@ -365,7 +241,7 @@ export default function EditorSurface({ disabled = false }: { disabled?: boolean
             requestAnimationFrame(() => textareaRef.current?.focus());
           }
         }}
-        onExecute={executeCommand}
+        onExecute={(cmd, input) => execute(cmd as Cmd, input)}
         commands={suggestions}
       />
     </main>
