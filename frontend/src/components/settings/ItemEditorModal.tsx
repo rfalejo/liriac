@@ -247,7 +247,9 @@ export default function ItemEditorModal({
                   type="checkbox"
                   className="accent-[var(--fg)]"
                   checked={!!draft.checked}
-                  onChange={(e) => setDraft((d) => ({ ...d, checked: e.target.checked }))}
+                  onChange={(e) =>
+                    setDraft((d) => ({ ...d, checked: e.target.checked }))
+                  }
                 />
                 Include in context
               </label>
@@ -302,7 +304,9 @@ export default function ItemEditorModal({
                   type="checkbox"
                   className="accent-[var(--fg)]"
                   checked={!!draft.checked}
-                  onChange={(e) => setDraft((d) => ({ ...d, checked: e.target.checked }))}
+                  onChange={(e) =>
+                    setDraft((d) => ({ ...d, checked: e.target.checked }))
+                  }
                 />
                 Include in context
               </label>

@@ -3,7 +3,11 @@ import CommandBar, { type Command as CommandBarCommand } from './CommandBar';
 import { typewriterScroll } from '../utils/caret';
 import { gotoTop, gotoScene, jumpToOffset } from '../utils/scenes';
 import { useSmartPunctuation } from '../hooks/useSmartPunctuation';
-import { COMMANDS as REGISTRY, type Command as Cmd, executeCommand } from '../commands/commands';
+import {
+  COMMANDS as REGISTRY,
+  type Command as Cmd,
+  executeCommand,
+} from '../commands/commands';
 import { useEditorStats } from '../hooks/useEditorStats';
 import { useEditorShortcuts } from '../hooks/useEditorShortcuts';
 
@@ -30,9 +34,6 @@ export default function EditorSurface({ disabled = false }: { disabled?: boolean
   // Track last edit position for /goto last-edit
   const lastEditRef = useRef<number | null>(null);
 
-
-
-
   // Keep focus on the editor unless the CommandBar is open
   function handleBlur() {
     if (!commandOpen && !disabled) {
@@ -58,7 +59,6 @@ export default function EditorSurface({ disabled = false }: { disabled?: boolean
     typewriterScroll(el);
     // Track last edit position
     lastEditRef.current = el.selectionStart ?? el.value.length;
-
   }
 
   const { handleKeyDown } = useEditorShortcuts({
