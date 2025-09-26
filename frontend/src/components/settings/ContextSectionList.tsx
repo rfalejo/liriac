@@ -1,12 +1,45 @@
-import React from 'react';
 
-export type ContextItem = {
+export type CharacterItem = {
   id: string;
-  label: string;
+  type: 'character';
+  name: string;
+  role?: string;
+  summary?: string;
   tokens?: number;
   checked?: boolean;
   disabled?: boolean;
 };
+
+export type WorldItem = {
+  id: string;
+  type: 'world';
+  title: string;
+  summary?: string;
+  facts?: string;
+  tokens?: number;
+  checked?: boolean;
+  disabled?: boolean;
+};
+
+export type StyleItem = {
+  id: string;
+  type: 'styleTone';
+  description: string;
+  tokens?: number;
+  checked?: boolean;
+  disabled?: boolean;
+};
+
+export type ChapterItem = {
+  id: string;
+  type: 'chapter';
+  title: string;
+  tokens?: number;
+  checked?: boolean;
+  disabled?: boolean;
+};
+
+export type ContextItem = CharacterItem | WorldItem | StyleItem | ChapterItem;
 
 export type ContextSection = {
   id: string;
@@ -27,6 +60,21 @@ export type ContextSectionListProps = {
  * Renders a <details> panel with a summary and a list of checkbox items.
  * Stateless and API-ready: accepts data + callback, no internal persistence.
  */
+function getItemLabel(it: ContextItem): string {
+  switch (it.type) {
+    case 'character':
+      return it.role && it.role.trim() ? `${it.name} — ${it.role}` : it.name;
+    case 'world':
+      return it.title;
+    case 'styleTone':
+      return it.description;
+    case 'chapter':
+      return it.title;
+    default:
+      return '';
+  }
+}
+
 export default function ContextSectionList({
   section,
   onToggle,
@@ -80,7 +128,7 @@ export default function ContextSectionList({
                   checked={!!it.checked}
                   onChange={(e) => onToggle?.(section.id, it.id, e.target.checked)}
                 />
-                <span>{it.label}</span>
+                <span>{getItemLabel(it)}</span>
               </label>
               <div className="flex items-center gap-2">
                 {typeof it.tokens === 'number' && (
@@ -91,8 +139,8 @@ export default function ContextSectionList({
                     type="button"
                     className="rounded border border-[var(--border)] bg-black/10 px-2 py-0.5 text-[11px] text-[var(--muted)] hover:bg-black/20"
                     onClick={() => onEdit(section.id, it.id)}
-                    aria-label={`Edit ${it.label}`}
-                    title={`Edit ${it.label}`}
+                    aria-label={`Edit ${getItemLabel(it)}`}
+                    title={`Edit ${getItemLabel(it)}`}
                   >
                     Edit
                   </button>

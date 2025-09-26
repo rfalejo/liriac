@@ -6,9 +6,27 @@ export const INITIAL_SECTIONS: ContextSection[] = [
     title: 'Chapters',
     defaultOpen: false,
     items: [
-      { id: 'ch-03', label: '03 — El puerto', tokens: 680, checked: true },
-      { id: 'ch-02', label: '02 — Preparativos', tokens: 540, checked: false },
-      { id: 'ch-04', label: '04 — Mareas', tokens: 720, checked: false },
+      {
+        id: 'ch-03',
+        type: 'chapter',
+        title: '03 — El puerto',
+        tokens: 680,
+        checked: true,
+      },
+      {
+        id: 'ch-02',
+        type: 'chapter',
+        title: '02 — Preparativos',
+        tokens: 540,
+        checked: false,
+      },
+      {
+        id: 'ch-04',
+        type: 'chapter',
+        title: '04 — Mareas',
+        tokens: 720,
+        checked: false,
+      },
     ],
   },
   {
@@ -18,12 +36,28 @@ export const INITIAL_SECTIONS: ContextSection[] = [
     items: [
       {
         id: 'char-michelle',
-        label: 'Michelle — Protagonist',
+        type: 'character',
+        name: 'Michelle',
+        role: 'Protagonist',
         tokens: 120,
         checked: true,
       },
-      { id: 'char-arturo', label: 'Arturo — Supporting', tokens: 80, checked: true },
-      { id: 'char-port', label: 'Port Authority — Minor', tokens: 40, checked: false },
+      {
+        id: 'char-arturo',
+        type: 'character',
+        name: 'Arturo',
+        role: 'Supporting',
+        tokens: 80,
+        checked: true,
+      },
+      {
+        id: 'char-port',
+        type: 'character',
+        name: 'Port Authority',
+        role: 'Minor',
+        tokens: 40,
+        checked: false,
+      },
     ],
   },
   {
@@ -31,8 +65,20 @@ export const INITIAL_SECTIONS: ContextSection[] = [
     title: 'World info',
     defaultOpen: false,
     items: [
-      { id: 'wi-port', label: 'The Port of San Aurelio', tokens: 150, checked: true },
-      { id: 'wi-ferry', label: 'Ferry schedules', tokens: 60, checked: false },
+      {
+        id: 'wi-port',
+        type: 'world',
+        title: 'The Port of San Aurelio',
+        tokens: 150,
+        checked: true,
+      },
+      {
+        id: 'wi-ferry',
+        type: 'world',
+        title: 'Ferry schedules',
+        tokens: 60,
+        checked: false,
+      },
     ],
   },
   {
@@ -42,13 +88,15 @@ export const INITIAL_SECTIONS: ContextSection[] = [
     items: [
       {
         id: 'st-house',
-        label: 'House style: concise, sensory details',
+        type: 'styleTone',
+        description: 'House style: concise, sensory details',
         tokens: 40,
         checked: true,
       },
       {
         id: 'st-tone-moody',
-        label: 'Tone: moody, atmospheric',
+        type: 'styleTone',
+        description: 'Tone: moody, atmospheric',
         tokens: 30,
         checked: false,
       },

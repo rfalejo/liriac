@@ -1,5 +1,5 @@
 import { useMemo } from 'react';
-import ContextSectionList from './ContextSectionList';
+import ContextSectionList, { type ContextItem } from './ContextSectionList';
 import ContextTokenBar from './ContextTokenBar';
 import ContextGlobalPrompt from './ContextGlobalPrompt';
 import ItemEditorModal from './ItemEditorModal';
@@ -119,13 +119,12 @@ export default function ContextEditorTab({ tokens }: { tokens: number }) {
         mode="create"
         onCancel={() => character.closeCreate()}
         onSave={(draft) => {
-          const label =
-            draft.role && (draft.role as string).trim()
-              ? `${(draft.name as string).trim()} — ${(draft.role as string).trim()}`
-              : (draft.name as string).trim();
           const newItem = {
             id: `char-${Date.now()}`,
-            label,
+            type: 'character',
+            name: (draft.name as string).trim(),
+            role: (draft.role as string | undefined)?.trim() || undefined,
+            summary: (draft.summary as string | undefined)?.trim() || undefined,
             tokens: 80,
             checked: !!draft.checked,
           } as const;
@@ -142,31 +141,38 @@ export default function ContextEditorTab({ tokens }: { tokens: number }) {
           open={!!character.editId}
           type="character"
           mode="edit"
-          initialValue={() => {
+          initialValue={(function () {
             const item = charactersSection?.items.find(
               (it) => it.id === character.editId,
             );
-            if (!item) return { name: '', role: '', summary: '', checked: true };
-            const [name, rolePart] = item.label.split('—').map((s) => s.trim());
-            return {
-              name: name ?? '',
-              role: rolePart ?? '',
-              summary: '',
-              checked: !!item.checked,
-            };
-          }}
+            if (item && item.type === 'character') {
+              return {
+                name: item.name ?? '',
+                role: item.role ?? '',
+                summary: item.summary ?? '',
+                checked: !!item.checked,
+              };
+            }
+            return { name: '', role: '', summary: '', checked: true };
+          })()}
           onCancel={() => character.endEdit()}
           onSave={(draft: CharacterDraft) => {
-            const label =
-              draft.role && draft.role.trim()
-                ? `${draft.name.trim()} — ${draft.role.trim()}`
-                : draft.name.trim();
-
-            editSectionItem('characters', character.editId as string, (it) => ({
-              ...it,
-              label,
-              checked: !!draft.checked,
-            }));
+            editSectionItem(
+              'characters',
+              character.editId as string,
+              (it: ContextItem) => {
+                if (it.type === 'character') {
+                  return {
+                    ...it,
+                    name: draft.name.trim(),
+                    role: draft.role?.trim() || undefined,
+                    summary: draft.summary?.trim() || undefined,
+                    checked: !!draft.checked,
+                  };
+                }
+                return it;
+              },
+            );
 
             character.endEdit();
             showToast('Character updated.');
@@ -184,7 +190,10 @@ export default function ContextEditorTab({ tokens }: { tokens: number }) {
           if (!title) return;
           const newItem = {
             id: `wi-${Date.now()}`,
-            label: title,
+            type: 'world',
+            title,
+            summary: (draft.summary ?? '').trim() || undefined,
+            facts: (draft.facts ?? '').trim() || undefined,
             tokens: 100,
             checked: !!draft.checked,
           } as const;
@@ -201,24 +210,35 @@ export default function ContextEditorTab({ tokens }: { tokens: number }) {
           open={!!world.editId}
           type="world"
           mode="edit"
-          initialValue={() => {
+          initialValue={(function () {
             const item = worldSection?.items.find((it) => it.id === world.editId);
-            if (!item) return { title: '', summary: '', facts: '', checked: true };
-            return {
-              title: item.label ?? '',
-              summary: '',
-              facts: '',
-              checked: !!item.checked,
-            };
-          }}
+            if (item && item.type === 'world') {
+              return {
+                title: item.title ?? '',
+                summary: item.summary ?? '',
+                facts: item.facts ?? '',
+                checked: !!item.checked,
+              };
+            }
+            return { title: '', summary: '', facts: '', checked: true };
+          })()}
           onCancel={() => world.endEdit()}
           onSave={(draft: WorldDraft) => {
             const title = (draft.title ?? '').trim();
-            editSectionItem('world', world.editId as string, (it) => ({
-              ...it,
-              label: title || it.label,
-              checked: !!draft.checked,
-            }));
+            const summary = (draft.summary ?? '').trim();
+            const facts = (draft.facts ?? '').trim();
+            editSectionItem('world', world.editId as string, (it: ContextItem) => {
+              if (it.type === 'world') {
+                return {
+                  ...it,
+                  title: title || it.title,
+                  summary: summary || undefined,
+                  facts: facts || undefined,
+                  checked: !!draft.checked,
+                };
+              }
+              return it;
+            });
 
             world.endEdit();
             showToast('World info updated.');
@@ -236,7 +256,8 @@ export default function ContextEditorTab({ tokens }: { tokens: number }) {
           if (!desc) return;
           const newItem = {
             id: `st-${Date.now()}`,
-            label: desc,
+            type: 'styleTone',
+            description: desc,
             tokens: 40,
             checked: !!draft.checked,
           } as const;
@@ -253,22 +274,29 @@ export default function ContextEditorTab({ tokens }: { tokens: number }) {
           open={!!style.editId}
           type="style"
           mode="edit"
-          initialValue={() => {
+          initialValue={(function () {
             const item = styleSection?.items.find((it) => it.id === style.editId);
-            if (!item) return { description: '', checked: true };
-            return {
-              description: item.label ?? '',
-              checked: !!item.checked,
-            };
-          }}
+            if (item && item.type === 'styleTone') {
+              return {
+                description: item.description ?? '',
+                checked: !!item.checked,
+              };
+            }
+            return { description: '', checked: true };
+          })()}
           onCancel={() => style.endEdit()}
           onSave={(draft: StyleDraft) => {
             const desc = (draft.description ?? '').trim();
-            editSectionItem('styleTone', style.editId as string, (it) => ({
-              ...it,
-              label: desc || it.label,
-              checked: !!draft.checked,
-            }));
+            editSectionItem('styleTone', style.editId as string, (it: ContextItem) => {
+              if (it.type === 'styleTone') {
+                return {
+                  ...it,
+                  description: desc || it.description,
+                  checked: !!draft.checked,
+                };
+              }
+              return it;
+            });
 
             style.endEdit();
             showToast('Style/tone item updated.');

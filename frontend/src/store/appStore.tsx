@@ -129,6 +129,81 @@ export const useAppStore = create<AppState>()(
       }),
       {
         name: 'liriac-store',
+        version: 2,
+        migrate: (state: unknown, version: number): unknown => {
+          const s = state as {
+            context?: {
+              sections?: Array<{
+                id?: string;
+                items?: Array<Record<string, unknown>>;
+              }>;
+            };
+          } | null;
+
+          if (version >= 2 || !s || !s.context) return state;
+
+          try {
+            const sections = s.context.sections ?? [];
+            const mapped = sections.map((sec) => {
+              const secId = sec.id ?? '';
+              const items = (sec.items ?? []).map((raw) => {
+                const it = raw as Record<string, unknown>;
+                if (it && typeof it === 'object' && 'type' in it) return it;
+
+                const label = String((it as { label?: unknown }).label ?? '');
+                const base = {
+                  id: (it as { id?: unknown }).id as string | undefined,
+                  tokens: (it as { tokens?: unknown }).tokens as number | undefined,
+                  checked: (it as { checked?: unknown }).checked as boolean | undefined,
+                  disabled: (it as { disabled?: unknown }).disabled as
+                    | boolean
+                    | undefined,
+                };
+
+                if (secId === 'characters') {
+                  const parts = label.split('—').map((ss) => ss.trim());
+                  const namePart = parts[0] || label;
+                  const rolePart = parts[1] || undefined;
+                  return {
+                    ...base,
+                    type: 'character',
+                    name: namePart,
+                    role: rolePart,
+                    summary: undefined,
+                  };
+                }
+                if (secId === 'world') {
+                  return {
+                    ...base,
+                    type: 'world',
+                    title: label,
+                    summary: undefined,
+                    facts: undefined,
+                  };
+                }
+                if (secId === 'styleTone') {
+                  return {
+                    ...base,
+                    type: 'styleTone',
+                    description: label,
+                  };
+                }
+                if (secId === 'chapters') {
+                  return {
+                    ...base,
+                    type: 'chapter',
+                    title: label,
+                  };
+                }
+                return it;
+              });
+              return { ...sec, items };
+            });
+            return { ...s, context: { ...s.context, sections: mapped } };
+          } catch {
+            return state;
+          }
+        },
         // Persist only the context slice for now
         partialize: (s) => ({ context: s.context }),
       },
