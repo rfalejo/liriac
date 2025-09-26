@@ -1,12 +1,5 @@
 import { useCommandPalette } from '../hooks/useCommandPalette';
-import { type CommandLike } from '../commands/commandUtils';
-
-export type Command = {
-  id: string;
-  label: string;
-  hint?: string;
-  aliases?: string[];
-};
+import type { Command } from '../commands/commands';
 
 export type CommandBarProps = {
   open: boolean;
@@ -30,8 +23,7 @@ export default function CommandBar({
     value,
     onChange,
     onClose,
-    // Cast is safe: Command satisfies CommandLike
-    onExecute: onExecute as (_cmd: CommandLike, _input: string) => void,
+    onExecute,
     commands,
   });
 

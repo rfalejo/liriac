@@ -15,6 +15,11 @@ type WorldDraft = {
   checked?: boolean;
 };
 
+type StyleDraft = {
+  description: string;
+  checked?: boolean;
+};
+
 export default function ItemEditorModal({
   open,
   type,
@@ -24,20 +29,22 @@ export default function ItemEditorModal({
   onSave,
 }: {
   open: boolean;
-  type: 'character' | 'world';
+  type: 'character' | 'world' | 'style';
   mode?: 'create' | 'edit';
-  initialValue?: CharacterDraft | WorldDraft;
+  initialValue?: CharacterDraft | WorldDraft | StyleDraft;
   onCancel: () => void;
-  onSave: (_draft: CharacterDraft | WorldDraft) => void;
+  onSave: (_draft: CharacterDraft | WorldDraft | StyleDraft) => void;
 }) {
   const containerRef = useRef<HTMLDivElement | null>(null);
   const firstFieldRef = useRef<HTMLInputElement | null>(null);
 
-  type Draft = CharacterDraft | WorldDraft;
+  type Draft = CharacterDraft | WorldDraft | StyleDraft;
   const initialDraft: Draft =
     type === 'character'
       ? { name: '', role: '', summary: '', checked: true }
-      : { title: '', summary: '', facts: '', checked: true };
+      : type === 'world'
+        ? { title: '', summary: '', facts: '', checked: true }
+        : { description: '', checked: true };
   const [draft, setDraft] = useState<Draft>(initialDraft);
 
   useEffect(() => {
@@ -67,6 +74,16 @@ export default function ItemEditorModal({
       } else {
         setDraft({ title: '', summary: '', facts: '', checked: true });
       }
+    } else if (type === 'style') {
+      if (mode === 'edit' && initialValue && (initialValue as StyleDraft)) {
+        const iv = initialValue as StyleDraft;
+        setDraft({
+          description: iv.description ?? '',
+          checked: iv.checked ?? true,
+        });
+      } else {
+        setDraft({ description: '', checked: true });
+      }
     }
     const t = setTimeout(() => {
       firstFieldRef.current?.focus();
@@ -77,15 +94,20 @@ export default function ItemEditorModal({
   function computeTokenEstimate(): number {
     if (type === 'character') {
       const parts = [
-        draft?.name ?? '',
-        draft?.role ? ` — ${draft.role}` : '',
-        draft?.summary ?? '',
+        (draft as CharacterDraft)?.name ?? '',
+        (draft as CharacterDraft)?.role ? ` — ${(draft as CharacterDraft).role}` : '',
+        (draft as CharacterDraft)?.summary ?? '',
+      ].join('\n');
+      return mockTokenize(parts);
+    } else if (type === 'world') {
+      const parts = [
+        (draft as WorldDraft)?.title ?? '',
+        (draft as WorldDraft)?.summary ?? '',
+        (draft as WorldDraft)?.facts ?? '',
       ].join('\n');
       return mockTokenize(parts);
     } else {
-      const parts = [draft?.title ?? '', draft?.summary ?? '', draft?.facts ?? ''].join(
-        '\n',
-      );
+      const parts = [(draft as StyleDraft)?.description ?? ''].join('\n');
       return mockTokenize(parts);
     }
   }
@@ -148,11 +170,14 @@ export default function ItemEditorModal({
 
   const isValid =
     (type === 'character' &&
-      typeof draft.name === 'string' &&
-      draft.name.trim().length > 0) ||
+      typeof (draft as CharacterDraft).name === 'string' &&
+      (draft as CharacterDraft).name.trim().length > 0) ||
     (type === 'world' &&
-      typeof draft.title === 'string' &&
-      draft.title.trim().length > 0);
+      typeof (draft as WorldDraft).title === 'string' &&
+      (draft as WorldDraft).title.trim().length > 0) ||
+    (type === 'style' &&
+      typeof (draft as StyleDraft).description === 'string' &&
+      (draft as StyleDraft).description.trim().length > 0);
 
   const estTokens = computeTokenEstimate();
 
@@ -178,9 +203,13 @@ export default function ItemEditorModal({
                 ? mode === 'edit'
                   ? 'Edit character'
                   : 'Add character'
-                : mode === 'edit'
-                  ? 'Edit world info'
-                  : 'Add world info'}
+                : type === 'world'
+                  ? mode === 'edit'
+                    ? 'Edit world info'
+                    : 'Add world info'
+                  : mode === 'edit'
+                    ? 'Edit style/tone'
+                    : 'Add style/tone'}
             </h2>
             <span
               className="ml-3 rounded bg-black/20 px-1.5 py-0.5 text-[11px] text-[var(--muted)]"
@@ -208,8 +237,13 @@ export default function ItemEditorModal({
                 <input
                   id="char-name"
                   ref={firstFieldRef}
-                  value={draft.name}
-                  onChange={(e) => setDraft((d) => ({ ...d, name: e.target.value }))}
+                  value={(draft as CharacterDraft).name}
+                  onChange={(e) =>
+                    setDraft((d) => ({
+                      ...(d as CharacterDraft),
+                      name: e.target.value,
+                    }))
+                  }
                   className="w-full rounded border border-[var(--border)] bg-black/10 px-2 py-1.5 text-sm text-[var(--fg)] outline-none focus:ring-1 focus:ring-[var(--border)]"
                   placeholder="e.g., Michelle"
                   required
@@ -222,8 +256,13 @@ export default function ItemEditorModal({
                 </label>
                 <input
                   id="char-role"
-                  value={draft.role ?? ''}
-                  onChange={(e) => setDraft((d) => ({ ...d, role: e.target.value }))}
+                  value={(draft as CharacterDraft).role ?? ''}
+                  onChange={(e) =>
+                    setDraft((d) => ({
+                      ...(d as CharacterDraft),
+                      role: e.target.value,
+                    }))
+                  }
                   className="w-full rounded border border-[var(--border)] bg-black/10 px-2 py-1.5 text-sm text-[var(--fg)] outline-none focus:ring-1 focus:ring-[var(--border)]"
                   placeholder="e.g., Protagonist"
                 />
@@ -235,8 +274,13 @@ export default function ItemEditorModal({
                 </label>
                 <textarea
                   id="char-summary"
-                  value={draft.summary ?? ''}
-                  onChange={(e) => setDraft((d) => ({ ...d, summary: e.target.value }))}
+                  value={(draft as CharacterDraft).summary ?? ''}
+                  onChange={(e) =>
+                    setDraft((d) => ({
+                      ...(d as CharacterDraft),
+                      summary: e.target.value,
+                    }))
+                  }
                   className="min-h-[80px] w-full rounded border border-[var(--border)] bg-black/10 px-2 py-1.5 text-sm text-[var(--fg)] outline-none focus:ring-1 focus:ring-[var(--border)]"
                   placeholder="One or two lines that describe the character…"
                 />
@@ -246,9 +290,12 @@ export default function ItemEditorModal({
                 <input
                   type="checkbox"
                   className="accent-[var(--fg)]"
-                  checked={!!draft.checked}
+                  checked={!!(draft as CharacterDraft).checked}
                   onChange={(e) =>
-                    setDraft((d) => ({ ...d, checked: e.target.checked }))
+                    setDraft((d) => ({
+                      ...(d as CharacterDraft),
+                      checked: e.target.checked,
+                    }))
                   }
                 />
                 Include in context
@@ -265,8 +312,10 @@ export default function ItemEditorModal({
                 <input
                   id="wi-title"
                   ref={firstFieldRef}
-                  value={draft.title ?? ''}
-                  onChange={(e) => setDraft((d) => ({ ...d, title: e.target.value }))}
+                  value={(draft as WorldDraft).title ?? ''}
+                  onChange={(e) =>
+                    setDraft((d) => ({ ...(d as WorldDraft), title: e.target.value }))
+                  }
                   className="w-full rounded border border-[var(--border)] bg-black/10 px-2 py-1.5 text-sm text-[var(--fg)] outline-none focus:ring-1 focus:ring-[var(--border)]"
                   placeholder="e.g., The Port of San Aurelio"
                   required
@@ -279,8 +328,10 @@ export default function ItemEditorModal({
                 </label>
                 <textarea
                   id="wi-summary"
-                  value={draft.summary ?? ''}
-                  onChange={(e) => setDraft((d) => ({ ...d, summary: e.target.value }))}
+                  value={(draft as WorldDraft).summary ?? ''}
+                  onChange={(e) =>
+                    setDraft((d) => ({ ...(d as WorldDraft), summary: e.target.value }))
+                  }
                   className="min-h-[80px] w-full rounded border border-[var(--border)] bg-black/10 px-2 py-1.5 text-sm text-[var(--fg)] outline-none focus:ring-1 focus:ring-[var(--border)]"
                   placeholder="One or two lines that describe this element…"
                 />
@@ -292,8 +343,10 @@ export default function ItemEditorModal({
                 </label>
                 <textarea
                   id="wi-facts"
-                  value={draft.facts ?? ''}
-                  onChange={(e) => setDraft((d) => ({ ...d, facts: e.target.value }))}
+                  value={(draft as WorldDraft).facts ?? ''}
+                  onChange={(e) =>
+                    setDraft((d) => ({ ...(d as WorldDraft), facts: e.target.value }))
+                  }
                   className="min-h-[80px] w-full rounded border border-[var(--border)] bg-black/10 px-2 py-1.5 text-sm text-[var(--fg)] outline-none focus:ring-1 focus:ring-[var(--border)]"
                   placeholder="Bullet points or notes…"
                 />
@@ -303,15 +356,58 @@ export default function ItemEditorModal({
                 <input
                   type="checkbox"
                   className="accent-[var(--fg)]"
-                  checked={!!draft.checked}
+                  checked={!!(draft as WorldDraft).checked}
                   onChange={(e) =>
-                    setDraft((d) => ({ ...d, checked: e.target.checked }))
+                    setDraft((d) => ({
+                      ...(d as WorldDraft),
+                      checked: e.target.checked,
+                    }))
                   }
                 />
                 Include in context
               </label>
             </>
           )}
+
+          {type === 'style' && (
+            <>
+              <div className="space-y-1">
+                <label className="text-xs text-[var(--muted)]" htmlFor="st-desc">
+                  Description
+                </label>
+                <input
+                  id="st-desc"
+                  ref={firstFieldRef}
+                  value={(draft as StyleDraft).description ?? ''}
+                  onChange={(e) =>
+                    setDraft((d) => ({
+                      ...(d as StyleDraft),
+                      description: e.target.value,
+                    }))
+                  }
+                  className="w-full rounded border border-[var(--border)] bg-black/10 px-2 py-1.5 text-sm text-[var(--fg)] outline-none focus:ring-1 focus:ring-[var(--border)]"
+                  placeholder="e.g., House style: concise, sensory details"
+                  required
+                />
+              </div>
+
+              <label className="flex items-center gap-2 text-sm text-[var(--muted)]">
+                <input
+                  type="checkbox"
+                  className="accent-[var(--fg)]"
+                  checked={!!(draft as StyleDraft).checked}
+                  onChange={(e) =>
+                    setDraft((d) => ({
+                      ...(d as StyleDraft),
+                      checked: e.target.checked,
+                    }))
+                  }
+                />
+                Include in context
+              </label>
+            </>
+          )}
+
           <div className="flex items-center justify-end gap-2 pt-2">
             <span className="hidden sm:inline text-xs text-[var(--muted)]">
               Press Esc to cancel

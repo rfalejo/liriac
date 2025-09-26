@@ -1,5 +1,5 @@
 import { useRef, useState, useMemo } from 'react';
-import CommandBar, { type Command as CommandBarCommand } from './CommandBar';
+import CommandBar from './CommandBar';
 import { typewriterScroll } from '../utils/caret';
 import { gotoTop, gotoScene, jumpToOffset } from '../utils/scenes';
 import { useSmartPunctuation } from '../hooks/useSmartPunctuation';
@@ -68,7 +68,7 @@ export default function EditorSurface({ disabled = false }: { disabled?: boolean
     },
   });
 
-  const suggestions = useMemo<CommandBarCommand[]>(() => REGISTRY, []);
+  const suggestions = useMemo<Cmd[]>(() => REGISTRY, []);
 
   return (
     <main className="flex flex-col flex-1 min-h-0">

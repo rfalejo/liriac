@@ -1,18 +1,14 @@
 import { useEffect, useRef, useState } from 'react';
-import {
-  computeSuggestion,
-  findCommand,
-  normalizeCmd,
-  type CommandLike,
-} from '../commands/commandUtils';
+import { computeSuggestion, findCommand, normalizeCmd } from '../commands/commandUtils';
+import type { Command } from '../commands/commands';
 
 export type UseCommandPaletteArgs = {
   open: boolean;
   value: string;
   onChange: (_v: string) => void;
   onClose: () => void;
-  onExecute: (_cmd: CommandLike, _input: string) => void;
-  commands: CommandLike[];
+  onExecute: (_cmd: Command, _input: string) => void;
+  commands: Command[];
 };
 
 export function useCommandPalette({

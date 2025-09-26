@@ -35,4 +35,23 @@ export const INITIAL_SECTIONS: ContextSection[] = [
       { id: 'wi-ferry', label: 'Ferry schedules', tokens: 60, checked: false },
     ],
   },
+  {
+    id: 'styleTone',
+    title: 'Writing style & tone',
+    defaultOpen: false,
+    items: [
+      {
+        id: 'st-house',
+        label: 'House style: concise, sensory details',
+        tokens: 40,
+        checked: true,
+      },
+      {
+        id: 'st-tone-moody',
+        label: 'Tone: moody, atmospheric',
+        tokens: 30,
+        checked: false,
+      },
+    ],
+  },
 ];
