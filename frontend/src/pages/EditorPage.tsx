@@ -6,7 +6,10 @@ import Settings from '../components/Settings';
 import { useAppStore } from '../store/appStore';
 
 export default function EditorPage() {
-  const { tokens, settingsOpen, openSettings, closeSettings } = useAppStore();
+  const tokens = useAppStore((s) => s.editor.tokens);
+  const settingsOpen = useAppStore((s) => s.ui.settingsOpen);
+  const openSettings = useAppStore((s) => s.ui.openSettings);
+  const closeSettings = useAppStore((s) => s.ui.closeSettings);
 
   useEffect(() => {
     function onKeyDown(e: KeyboardEvent) {

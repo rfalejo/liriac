@@ -18,7 +18,8 @@ export default function EditorSurface({ disabled = false }: { disabled?: boolean
   const [commandInput, setCommandInput] = useState('');
   const { transform } = useSmartPunctuation();
   useEditorStats(textareaRef);
-  const { showToast, openSettings } = useAppStore();
+  const showToast = useAppStore((s) => s.ui.showToast);
+  const openSettings = useAppStore((s) => s.ui.openSettings);
 
   // Show a one-time toast when smart punctuation first triggers
   const smartToastShown = useRef(false);

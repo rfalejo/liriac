@@ -14,7 +14,7 @@ export default function Settings({
   onClose: () => void;
 }) {
   const { containerRef, onKeyDown } = useDialogFocusNav(open);
-  const { showToast } = useAppStore();
+  const showToast = useAppStore((s) => s.ui.showToast);
 
   return (
     <SettingsDialog

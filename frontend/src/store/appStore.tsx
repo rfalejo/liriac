@@ -1,5 +1,5 @@
-/* eslint-disable react-refresh/only-export-components */
-import React, { createContext, useContext, useMemo, useState } from 'react';
+import { create } from 'zustand';
+import { devtools, persist } from 'zustand/middleware';
 import type {
   ContextSection,
   ContextItem,
@@ -13,21 +13,24 @@ import {
 
 export type Toast = { id: number; text: string };
 
-export type AppStoreState = {
+type EditorSlice = {
   tokens: number;
-  settingsOpen: boolean;
-  toasts: Toast[];
-  sections: ContextSection[];
+  lastEditPos: number | null;
+  setTokens: (_n: number) => void;
+  setLastEditPos: (_n: number | null) => void;
 };
 
-export type AppStoreActions = {
-  setTokens: (_n: number) => void;
+type UiSlice = {
+  settingsOpen: boolean;
+  toasts: Toast[];
   openSettings: () => void;
   closeSettings: () => void;
   showToast: (_text: string) => void;
   dismissToast: (_id: number) => void;
+};
 
-  // Context editor actions
+type ContextSlice = {
+  sections: ContextSection[];
   toggleSectionItem: (_sectionId: string, _itemId: string, _checked: boolean) => void;
   addSectionItem: (_sectionId: string, _item: ContextItem) => void;
   editSectionItem: (
@@ -38,67 +41,97 @@ export type AppStoreActions = {
   clearContext: () => void;
 };
 
-type AppStore = AppStoreState & AppStoreActions;
+type AppState = {
+  editor: EditorSlice;
+  ui: UiSlice;
+  context: ContextSlice;
+};
 
-const AppStoreContext = createContext<AppStore | undefined>(undefined);
-
-export function AppStoreProvider({ children }: { children: React.ReactNode }) {
-  const [tokens, setTokensState] = useState(0);
-  const [settingsOpen, setSettingsOpen] = useState(false);
-  const [toasts, setToasts] = useState<Toast[]>([]);
-  const [nextToastId, setNextToastId] = useState(1);
-
-  const [sections, setSections] = useState<ContextSection[]>(INITIAL_SECTIONS);
-
-  const actions: AppStoreActions = {
-    setTokens: (n) => setTokensState(Math.max(0, n | 0)),
-    openSettings: () => setSettingsOpen(true),
-    closeSettings: () => setSettingsOpen(false),
-    showToast: (text: string) => {
-      const clean = (text ?? '').trim();
-      if (!clean) return;
-      const id = nextToastId;
-      setNextToastId((x) => x + 1);
-      setToasts((ts) => [...ts, { id, text: clean }].slice(-2));
-      window.setTimeout(() => {
-        setToasts((ts) => ts.filter((t) => t.id !== id));
-      }, 2500);
-    },
-    dismissToast: (id: number) => {
-      setToasts((ts) => ts.filter((t) => t.id !== id));
-    },
-
-    toggleSectionItem: (sectionId, itemId, checked) => {
-      setSections((prev) => toggleItemUtil(prev, sectionId, itemId, checked));
-    },
-    addSectionItem: (sectionId, item) => {
-      setSections((prev) => addItemUtil(prev, sectionId, item));
-    },
-    editSectionItem: (sectionId, itemId, updater) => {
-      setSections((prev) => editItemUtil(prev, sectionId, itemId, updater));
-    },
-    clearContext: () => {
-      setSections((prev) =>
-        prev.map((s) => ({
-          ...s,
-          items: s.items.map((it) => ({ ...it, checked: false })),
-        })),
-      );
-      // Optionally also clear tokens related to context here later
-    },
-  };
-
-  const value = useMemo<AppStore>(
-    () => ({ tokens, settingsOpen, toasts, sections, ...actions }),
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-    [tokens, settingsOpen, toasts, sections],
-  );
-
-  return <AppStoreContext.Provider value={value}>{children}</AppStoreContext.Provider>;
-}
-
-export function useAppStore() {
-  const ctx = useContext(AppStoreContext);
-  if (!ctx) throw new Error('useAppStore must be used within AppStoreProvider');
-  return ctx;
-}
+export const useAppStore = create<AppState>()(
+  devtools(
+    persist(
+      (set, get) => ({
+        editor: {
+          tokens: 0,
+          lastEditPos: null,
+          setTokens: (n: number) =>
+            set((s) => ({ editor: { ...s.editor, tokens: Math.max(0, n | 0) } })),
+          setLastEditPos: (n: number | null) =>
+            set((s) => ({ editor: { ...s.editor, lastEditPos: n } })),
+        },
+        ui: {
+          settingsOpen: false,
+          toasts: [],
+          openSettings: () => set((s) => ({ ui: { ...s.ui, settingsOpen: true } })),
+          closeSettings: () => set((s) => ({ ui: { ...s.ui, settingsOpen: false } })),
+          showToast: (text: string) => {
+            const clean = (text ?? '').trim();
+            if (!clean) return;
+            const id = Date.now() + Math.floor(Math.random() * 1000);
+            set((s) => {
+              const next = [...s.ui.toasts, { id, text: clean }].slice(-2);
+              return { ui: { ...s.ui, toasts: next } };
+            });
+            // Auto-dismiss
+            setTimeout(() => {
+              const current = get().ui.toasts;
+              if (current.some((t) => t.id === id)) {
+                set((s) => ({
+                  ui: { ...s.ui, toasts: s.ui.toasts.filter((t) => t.id !== id) },
+                }));
+              }
+            }, 2500);
+          },
+          dismissToast: (id: number) =>
+            set((s) => ({
+              ui: { ...s.ui, toasts: s.ui.toasts.filter((t) => t.id !== id) },
+            })),
+        },
+        context: {
+          sections: INITIAL_SECTIONS,
+          toggleSectionItem: (sectionId, itemId, checked) =>
+            set((s) => ({
+              context: {
+                ...s.context,
+                sections: toggleItemUtil(
+                  s.context.sections,
+                  sectionId,
+                  itemId,
+                  checked,
+                ),
+              },
+            })),
+          addSectionItem: (sectionId, item) =>
+            set((s) => ({
+              context: {
+                ...s.context,
+                sections: addItemUtil(s.context.sections, sectionId, item),
+              },
+            })),
+          editSectionItem: (sectionId, itemId, updater) =>
+            set((s) => ({
+              context: {
+                ...s.context,
+                sections: editItemUtil(s.context.sections, sectionId, itemId, updater),
+              },
+            })),
+          clearContext: () =>
+            set((s) => ({
+              context: {
+                ...s.context,
+                sections: s.context.sections.map((sec) => ({
+                  ...sec,
+                  items: sec.items.map((it) => ({ ...it, checked: false })),
+                })),
+              },
+            })),
+        },
+      }),
+      {
+        name: 'liriac-store',
+        // Persist only the context slice for now
+        partialize: (s) => ({ context: s.context }),
+      },
+    ),
+  ),
+);

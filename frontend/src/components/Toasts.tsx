@@ -1,7 +1,7 @@
 import { useAppStore } from '../store/appStore';
 
 export default function Toasts() {
-  const { toasts } = useAppStore();
+  const toasts = useAppStore((s) => s.ui.toasts);
 
   if (toasts.length === 0) return null;
 

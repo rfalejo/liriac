@@ -1,9 +1,10 @@
-import { useEffect } from 'react';
+import { useEffect, useRef } from 'react';
 import { mockTokenize } from '../utils/tokens';
 import { useAppStore } from '../store/appStore';
 
 export function useEditorStats(ref: React.RefObject<HTMLTextAreaElement | null>) {
-  const { setTokens } = useAppStore();
+  const setTokens = useAppStore((s) => s.editor.setTokens);
+  const rafRef = useRef<number | null>(null);
 
   useEffect(() => {
     const el = ref.current;
@@ -11,7 +12,8 @@ export function useEditorStats(ref: React.RefObject<HTMLTextAreaElement | null>)
 
     const updateTokens = () => {
       const tokens = mockTokenize(el.value || '');
-      setTokens(tokens);
+      if (rafRef.current) cancelAnimationFrame(rafRef.current);
+      rafRef.current = requestAnimationFrame(() => setTokens(tokens));
     };
 
     // Emit once on mount/open
@@ -21,6 +23,7 @@ export function useEditorStats(ref: React.RefObject<HTMLTextAreaElement | null>)
     el.addEventListener('input', updateTokens);
     return () => {
       el.removeEventListener('input', updateTokens);
+      if (rafRef.current) cancelAnimationFrame(rafRef.current);
     };
   }, [ref, setTokens]);
 
@@ -28,7 +31,8 @@ export function useEditorStats(ref: React.RefObject<HTMLTextAreaElement | null>)
     const el = ref.current;
     if (!el) return;
     const tokens = mockTokenize(el.value || '');
-    setTokens(tokens);
+    if (rafRef.current) cancelAnimationFrame(rafRef.current);
+    rafRef.current = requestAnimationFrame(() => setTokens(tokens));
   }
 
   return { update };

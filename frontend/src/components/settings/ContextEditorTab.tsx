@@ -26,8 +26,11 @@ type StyleDraft = {
 };
 
 export default function ContextEditorTab({ tokens }: { tokens: number }) {
-  const { sections, toggleSectionItem, addSectionItem, editSectionItem, showToast } =
-    useAppStore();
+  const sections = useAppStore((s) => s.context.sections);
+  const toggleSectionItem = useAppStore((s) => s.context.toggleSectionItem);
+  const addSectionItem = useAppStore((s) => s.context.addSectionItem);
+  const editSectionItem = useAppStore((s) => s.context.editSectionItem);
+  const showToast = useAppStore((s) => s.ui.showToast);
 
   const budget = 2000;
 
