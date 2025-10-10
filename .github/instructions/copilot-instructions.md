@@ -6,7 +6,7 @@ description: Comprehensive guide to Liriac's architecture, state management, and
 # Liriac – AI agent quickstart
 
 ## Architecture snapshot
-- The repo currently ships only the Vite/React SPA in `frontend/`; backend targets mentioned in docs are placeholders. Treat data as local mocks until the Django service lands.
+- The repo currently ships only the Vite/React SPA in `frontend/`.
 - Entry flow: `src/main.tsx` → `App.tsx` → `EditorPage.tsx`, which stitches together `TopAppBar`, `EditorSurface`, `Settings`, `FooterStatusBar`, and global `Toasts` inside `ThemeProvider`.
 - Global styles live in `src/index.css` and depend on the `data-theme` attribute set by `theme/ThemeContext.tsx`; stick to these CSS variables instead of hard-coding colors.
 
@@ -21,7 +21,6 @@ description: Comprehensive guide to Liriac's architecture, state management, and
 
 ## State management & persistence
 - Zustand store (`store/appStore.tsx`) holds three slices: `editor`, `ui`, and `context`. It persists **only** the context slice (`partialize`) to localStorage key `liriac-store`; bump `version` and update the `migrate` function whenever the stored shape changes.
-- Context data is seeded from `data/contextMock.ts` and mutated via pure helpers in `utils/sections.ts`. Keep these helpers side-effect free to preserve time-travel/devtools support.
 - Toasts are limited to two concurrent messages and auto-dismiss after 2.5s. Use `ui.showToast` rather than managing local snackbars.
 
 ## Context editor workflow
@@ -39,7 +38,6 @@ description: Comprehensive guide to Liriac's architecture, state management, and
 	- `pnpm run --silent test`
 	- `pnpm run --silent build`
 - Tailwind 4 is configured via the `@tailwindcss/postcss` plugin chain. Author styles with the provided utility classes or shared CSS variables; avoid legacy `tailwind.config.js` patterns.
-- Architectural background, backlog, and conventions live in `docs/` (`01-technical-spec-en.md`, `03-conventions.md`). Align new work with those docs even if some backend pieces are still theoretical.
 
 ## Backend quick facts
 - A local-only Django 5.2 service lives in `backend/` (project `config`, app `studio`). Use `uv sync --python 3.11` to install dependencies; the virtualenv is created at `backend/.venv`.
@@ -54,3 +52,13 @@ description: Comprehensive guide to Liriac's architecture, state management, and
 	- `GET /api/schema/` → OpenAPI 3.0 document, also served via `GET /api/docs/`
 - Frontend types are generated from `backend/schema.yaml` with `pnpm run --silent generate:api` and stored in `frontend/src/api/schema.ts`. Regenerate after backend schema changes.
 - The frontend API client reads `VITE_API_URL`; default is `http://localhost:8000`. Keep new endpoints consistent with that base URL.
+
+## Frontend ↔ Backend bridge
+- Start the Django server (`uv run python manage.py runserver`) before launching the Vite dev server so the SPA can hydrate with live data. The frontend defaults to `http://localhost:8000`, but you can override it with a `frontend/.env.local` entry like `VITE_API_URL=http://127.0.0.1:8000` when tunneling or running against a different host.
+- `frontend/src/api/client.ts` centralizes all fetch logic. New API calls should be added there so they inherit the shared base URL, JSON headers, and error handling.
+- On mount, `EditorPage.tsx` calls `fetchLibrary()` and `fetchEditor()` in parallel, then normalizes the payload into the Zustand store (`setSections`, `setInitialContent`, `setTokens`). This keeps the textarea and context panes in sync with the backend snapshot.
+- If the API can’t be reached, the page logs the failure and shows a toast via `ui.showToast`. Make sure runtime errors surface this path to avoid silent failures.
+- When adding endpoints that feed the editor, return shapes should align with the generated `components['schemas'][...]` types so the existing normalization helpers continue to work without manual casts.
+
+## Assumptions
+- Both the frontend and backend projects are running locally, they're reachable at their default ports, and CORS is properly configured. So you can run cURL commands at any time to inspect or mutate data.
