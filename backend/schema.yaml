@@ -1,0 +1,114 @@
+openapi: 3.0.3
+info:
+  title: Liriac Local API
+  version: 0.1.0
+  description: Local Django API serving library context and editor data for the Liriac
+    editor.
+paths:
+  /api/editor/:
+    get:
+      operationId: editor_retrieve
+      description: Return the current editor snapshot.
+      tags:
+      - editor
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EditorState'
+          description: ''
+  /api/library/:
+    get:
+      operationId: library_retrieve
+      description: Return the available context sections for the local library.
+      tags:
+      - library
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LibraryResponse'
+          description: ''
+components:
+  schemas:
+    ContextItem:
+      type: object
+      properties:
+        id:
+          type: string
+        type:
+          $ref: '#/components/schemas/TypeEnum'
+        name:
+          type: string
+        role:
+          type: string
+        summary:
+          type: string
+        title:
+          type: string
+        description:
+          type: string
+        facts:
+          type: string
+        tokens:
+          type: integer
+        checked:
+          type: boolean
+        disabled:
+          type: boolean
+      required:
+      - id
+      - type
+    ContextSection:
+      type: object
+      properties:
+        id:
+          type: string
+        title:
+          type: string
+        defaultOpen:
+          type: boolean
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/ContextItem'
+      required:
+      - id
+      - items
+      - title
+    EditorState:
+      type: object
+      properties:
+        content:
+          type: string
+        tokens:
+          type: integer
+        cursor:
+          type: integer
+          nullable: true
+      required:
+      - content
+      - tokens
+    LibraryResponse:
+      type: object
+      properties:
+        sections:
+          type: array
+          items:
+            $ref: '#/components/schemas/ContextSection'
+      required:
+      - sections
+    TypeEnum:
+      enum:
+      - character
+      - world
+      - styleTone
+      - chapter
+      type: string
+      description: |-
+        * `character` - character
+        * `world` - world
+        * `styleTone` - styleTone
+        * `chapter` - chapter
