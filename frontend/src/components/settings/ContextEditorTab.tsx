@@ -25,6 +25,20 @@ type StyleDraft = {
   checked?: boolean;
 };
 
+type Draft = CharacterDraft | WorldDraft | StyleDraft;
+
+function isCharacterDraft(draft: Draft): draft is CharacterDraft {
+  return typeof (draft as CharacterDraft).name === 'string';
+}
+
+function isWorldDraft(draft: Draft): draft is WorldDraft {
+  return typeof (draft as WorldDraft).title === 'string';
+}
+
+function isStyleDraft(draft: Draft): draft is StyleDraft {
+  return typeof (draft as StyleDraft).description === 'string';
+}
+
 export default function ContextEditorTab({ tokens }: { tokens: number }) {
   const sections = useAppStore((s) => s.context.sections);
   const toggleSectionItem = useAppStore((s) => s.context.toggleSectionItem);
@@ -119,12 +133,13 @@ export default function ContextEditorTab({ tokens }: { tokens: number }) {
         mode="create"
         onCancel={() => character.closeCreate()}
         onSave={(draft) => {
+          if (!isCharacterDraft(draft)) return;
           const newItem = {
             id: `char-${Date.now()}`,
             type: 'character',
-            name: (draft.name as string).trim(),
-            role: (draft.role as string | undefined)?.trim() || undefined,
-            summary: (draft.summary as string | undefined)?.trim() || undefined,
+            name: draft.name.trim(),
+            role: draft.role?.trim() || undefined,
+            summary: draft.summary?.trim() || undefined,
             tokens: 80,
             checked: !!draft.checked,
           } as const;
@@ -156,7 +171,8 @@ export default function ContextEditorTab({ tokens }: { tokens: number }) {
             return { name: '', role: '', summary: '', checked: true };
           })()}
           onCancel={() => character.endEdit()}
-          onSave={(draft: CharacterDraft) => {
+          onSave={(draft) => {
+            if (!isCharacterDraft(draft)) return;
             editSectionItem(
               'characters',
               character.editId as string,
@@ -185,15 +201,16 @@ export default function ContextEditorTab({ tokens }: { tokens: number }) {
         type="world"
         mode="create"
         onCancel={() => world.closeCreate()}
-        onSave={(draft: WorldDraft) => {
-          const title = (draft.title ?? '').trim();
+        onSave={(draft) => {
+          if (!isWorldDraft(draft)) return;
+          const title = draft.title.trim();
           if (!title) return;
           const newItem = {
             id: `wi-${Date.now()}`,
             type: 'world',
             title,
-            summary: (draft.summary ?? '').trim() || undefined,
-            facts: (draft.facts ?? '').trim() || undefined,
+            summary: draft.summary?.trim() || undefined,
+            facts: draft.facts?.trim() || undefined,
             tokens: 100,
             checked: !!draft.checked,
           } as const;
@@ -223,10 +240,11 @@ export default function ContextEditorTab({ tokens }: { tokens: number }) {
             return { title: '', summary: '', facts: '', checked: true };
           })()}
           onCancel={() => world.endEdit()}
-          onSave={(draft: WorldDraft) => {
-            const title = (draft.title ?? '').trim();
-            const summary = (draft.summary ?? '').trim();
-            const facts = (draft.facts ?? '').trim();
+          onSave={(draft) => {
+            if (!isWorldDraft(draft)) return;
+            const title = draft.title.trim();
+            const summary = draft.summary?.trim() ?? '';
+            const facts = draft.facts?.trim() ?? '';
             editSectionItem('world', world.editId as string, (it: ContextItem) => {
               if (it.type === 'world') {
                 return {
@@ -251,8 +269,9 @@ export default function ContextEditorTab({ tokens }: { tokens: number }) {
         type="style"
         mode="create"
         onCancel={() => style.closeCreate()}
-        onSave={(draft: StyleDraft) => {
-          const desc = (draft.description ?? '').trim();
+        onSave={(draft) => {
+          if (!isStyleDraft(draft)) return;
+          const desc = draft.description.trim();
           if (!desc) return;
           const newItem = {
             id: `st-${Date.now()}`,
@@ -285,8 +304,9 @@ export default function ContextEditorTab({ tokens }: { tokens: number }) {
             return { description: '', checked: true };
           })()}
           onCancel={() => style.endEdit()}
-          onSave={(draft: StyleDraft) => {
-            const desc = (draft.description ?? '').trim();
+          onSave={(draft) => {
+            if (!isStyleDraft(draft)) return;
+            const desc = draft.description.trim();
             editSectionItem('styleTone', style.editId as string, (it: ContextItem) => {
               if (it.type === 'styleTone') {
                 return {

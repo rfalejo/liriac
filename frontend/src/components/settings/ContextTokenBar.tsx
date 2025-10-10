@@ -1,5 +1,3 @@
-import React from 'react';
-
 export type TokenBarProps = {
   used: number;
   budget: number;

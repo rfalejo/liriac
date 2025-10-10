@@ -8,12 +8,14 @@ Linux TUI application for writing books with streaming AI assistance.
 uv sync --all-extras
 ```
 
-## Development
+## Development (frontend SPA available today)
 
 ```bash
-make fmt          # Format code
-make lint         # Lint code
-make typecheck    # Type check
-make test         # Run tests
-make check        # Full CI pipeline
+cd frontend
+pnpm install --frozen-lockfile --silent
+pnpm run --silent dev           # Vite dev server
+pnpm run --silent lint          # ESLint
+pnpm run --silent typecheck     # tsc --noEmit
+pnpm run --silent test          # Vitest
+pnpm run --silent build         # Production bundle
 ```

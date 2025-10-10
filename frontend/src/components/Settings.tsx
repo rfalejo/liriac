@@ -1,4 +1,3 @@
-import React from 'react';
 import SettingsDialog from './settings/SettingsDialog';
 import ContextEditorTab from './settings/ContextEditorTab';
 import { useDialogFocusNav } from '../hooks/useDialogFocusNav';
