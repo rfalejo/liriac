@@ -41,4 +41,16 @@ description: Comprehensive guide to Liriac's architecture, state management, and
 - Tailwind 4 is configured via the `@tailwindcss/postcss` plugin chain. Author styles with the provided utility classes or shared CSS variables; avoid legacy `tailwind.config.js` patterns.
 - Architectural background, backlog, and conventions live in `docs/` (`01-technical-spec-en.md`, `03-conventions.md`). Align new work with those docs even if some backend pieces are still theoretical.
 
-Let me know if any part of this guide feels thin or unclear so I can refine it.
+## Backend quick facts
+- A local-only Django 5.2 service lives in `backend/` (project `config`, app `studio`). Use `uv sync --python 3.11` to install dependencies; the virtualenv is created at `backend/.venv`.
+- Primary commands (always prefixed with `uv run`):
+	- `python manage.py migrate`
+	- `python manage.py runserver`
+	- `python manage.py test`
+	- `python manage.py spectacular --file schema.yaml` (exports OpenAPI)
+- REST endpoints available:
+	- `GET /api/library/` → context sections (mirrors `INITIAL_SECTIONS` structure)
+	- `GET /api/editor/` → textarea snapshot (`content`, `tokens`, `cursor`)
+	- `GET /api/schema/` → OpenAPI 3.0 document, also served via `GET /api/docs/`
+- Frontend types are generated from `backend/schema.yaml` with `pnpm run --silent generate:api` and stored in `frontend/src/api/schema.ts`. Regenerate after backend schema changes.
+- The frontend API client reads `VITE_API_URL`; default is `http://localhost:8000`. Keep new endpoints consistent with that base URL.
