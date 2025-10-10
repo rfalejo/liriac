@@ -4,7 +4,6 @@ import type {
   ContextSection,
   ContextItem,
 } from '../components/settings/ContextSectionList';
-import { INITIAL_SECTIONS } from '../data/contextMock';
 import {
   addItem as addItemUtil,
   editItem as editItemUtil,
@@ -16,8 +15,10 @@ export type Toast = { id: number; text: string };
 type EditorSlice = {
   tokens: number;
   lastEditPos: number | null;
+  initialContent: string;
   setTokens: (_n: number) => void;
   setLastEditPos: (_n: number | null) => void;
+  setInitialContent: (_value: string) => void;
 };
 
 type UiSlice = {
@@ -39,6 +40,7 @@ type ContextSlice = {
     _updater: (_prev: ContextItem) => ContextItem,
   ) => void;
   clearContext: () => void;
+  setSections: (_sections: ContextSection[]) => void;
 };
 
 type AppState = {
@@ -54,10 +56,13 @@ export const useAppStore = create<AppState>()(
         editor: {
           tokens: 0,
           lastEditPos: null,
+          initialContent: '',
           setTokens: (n: number) =>
             set((s) => ({ editor: { ...s.editor, tokens: Math.max(0, n | 0) } })),
           setLastEditPos: (n: number | null) =>
             set((s) => ({ editor: { ...s.editor, lastEditPos: n } })),
+          setInitialContent: (value: string) =>
+            set((s) => ({ editor: { ...s.editor, initialContent: value } })),
         },
         ui: {
           settingsOpen: false,
@@ -88,7 +93,7 @@ export const useAppStore = create<AppState>()(
             })),
         },
         context: {
-          sections: INITIAL_SECTIONS,
+          sections: [],
           toggleSectionItem: (sectionId, itemId, checked) =>
             set((s) => ({
               context: {
@@ -125,11 +130,37 @@ export const useAppStore = create<AppState>()(
                 })),
               },
             })),
+          setSections: (sections) =>
+            set((s) => ({
+              context: {
+                ...s.context,
+                sections,
+              },
+            })),
         },
       }),
       {
         name: 'liriac-store',
-        version: 2,
+        version: 3,
+        merge: (persistedState, currentState) => {
+          const persisted = persistedState as {
+            context?: {
+              sections?: ContextSection[];
+            };
+          } | null;
+
+          if (!persisted || !persisted.context) {
+            return currentState;
+          }
+
+          return {
+            ...currentState,
+            context: {
+              ...currentState.context,
+              sections: persisted.context.sections ?? currentState.context.sections,
+            },
+          };
+        },
         migrate: (state: unknown, version: number): unknown => {
           const s = state as {
             context?: {
@@ -140,10 +171,17 @@ export const useAppStore = create<AppState>()(
             };
           } | null;
 
-          if (version >= 2 || !s || !s.context) return state;
+          if (!s || !s.context) {
+            return { context: { sections: [] } };
+          }
+
+          const sections = s.context.sections ?? [];
+
+          if (version >= 2) {
+            return { context: { sections } };
+          }
 
           try {
-            const sections = s.context.sections ?? [];
             const mapped = sections.map((sec) => {
               const secId = sec.id ?? '';
               const items = (sec.items ?? []).map((raw) => {
@@ -199,13 +237,13 @@ export const useAppStore = create<AppState>()(
               });
               return { ...sec, items };
             });
-            return { ...s, context: { ...s.context, sections: mapped } };
+            return { context: { sections: mapped } };
           } catch {
-            return state;
+            return { context: { sections } };
           }
         },
         // Persist only the context slice for now
-        partialize: (s) => ({ context: s.context }),
+        partialize: (s) => ({ context: { sections: s.context.sections } }),
       },
     ),
   ),

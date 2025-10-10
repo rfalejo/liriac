@@ -1,4 +1,4 @@
-import { useRef, useState, useMemo } from 'react';
+import { useRef, useState, useMemo, useEffect } from 'react';
 import CommandBar from './CommandBar';
 import { typewriterScroll } from '../utils/caret';
 import { gotoTop, gotoScene, jumpToOffset } from '../utils/scenes';
@@ -20,6 +20,7 @@ export default function EditorSurface({ disabled = false }: { disabled?: boolean
   useEditorStats(textareaRef);
   const showToast = useAppStore((s) => s.ui.showToast);
   const openSettings = useAppStore((s) => s.ui.openSettings);
+  const initialContent = useAppStore((s) => s.editor.initialContent);
 
   // Show a one-time toast when smart punctuation first triggers
   const smartToastShown = useRef(false);
@@ -32,6 +33,24 @@ export default function EditorSurface({ disabled = false }: { disabled?: boolean
 
   // Track last edit position for /goto last-edit
   const lastEditRef = useRef<number | null>(null);
+
+  useEffect(() => {
+    const el = textareaRef.current;
+    if (!el) return;
+    if (typeof initialContent !== 'string') return;
+    if (el.value === initialContent) return;
+
+    const wasFocused = document.activeElement === el;
+    el.value = initialContent;
+    const caret = initialContent.length;
+    el.selectionStart = caret;
+    el.selectionEnd = caret;
+    lastEditRef.current = caret;
+    if (wasFocused) {
+      requestAnimationFrame(() => el.focus());
+    }
+    typewriterScroll(el);
+  }, [initialContent]);
 
   // Keep focus on the editor unless the CommandBar is open
   function handleBlur() {
@@ -87,7 +106,7 @@ export default function EditorSurface({ disabled = false }: { disabled?: boolean
             spellCheck={false}
             className="block w-full flex-1 min-h-0 resize-none bg-transparent p-6 sm:p-8 font-serif text-[1.05rem] sm:text-[1.125rem] leading-[var(--read-lh)] text-[var(--fg)] outline-none placeholder:text-[var(--muted)] mx-auto max-w-[70ch] caret-[var(--fg)]"
             placeholder="Start writing here…"
-            defaultValue={`The pier smelled of salt and damp wood.\n\nGulls carved lazy circles above the flat water while ropes creaked with every swell.\n\nMichelle pressed the notebook to her chest and exhaled deeply. She expected no answers, only the murmur of the sea and the thud of her boots.\n\n…`}
+            defaultValue={initialContent}
             onInput={handleInput}
             onKeyDown={handleKeyDown}
             onBlur={handleBlur}

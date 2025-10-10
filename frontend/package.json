@@ -11,8 +11,9 @@
     "preview": "vite preview",
     "test": "vitest --run",
     "typecheck": "tsc --noEmit",
-    "format": "prettier --write .",
-    "format:check": "prettier --check ."
+  "format": "prettier --write .",
+  "format:check": "prettier --check .",
+  "generate:api": "openapi-typescript ../backend/schema.yaml -o src/api/schema.ts"
   },
   "dependencies": {
     "@tanstack/react-query": "^5.89.0",
@@ -32,6 +33,7 @@
     "@types/react-dom": "^19.1.7",
     "@vitejs/plugin-react": "^5.0.0",
     "autoprefixer": "^10.4.21",
+  "openapi-typescript": "^7.5.3",
     "eslint": "^9.33.0",
     "eslint-config-prettier": "^9.1.0",
     "eslint-plugin-react-hooks": "^5.2.0",
