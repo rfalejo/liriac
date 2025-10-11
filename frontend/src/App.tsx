@@ -1,4 +1,11 @@
-import { Box, Button, CssBaseline, ThemeProvider, Typography, createTheme } from '@mui/material';
+import {
+  Box,
+  Button,
+  CssBaseline,
+  ThemeProvider,
+  Typography,
+  createTheme,
+} from "@mui/material";
 
 const theme = createTheme();
 
@@ -6,7 +13,9 @@ function App() {
   return (
     <ThemeProvider theme={theme}>
       <CssBaseline />
-      <Box sx={{ minHeight: '100vh', display: 'grid', placeItems: 'center', p: 4 }}>
+      <Box
+        sx={{ minHeight: "100vh", display: "grid", placeItems: "center", p: 4 }}
+      >
         <Box textAlign="center">
           <Typography variant="h3" component="h1" gutterBottom>
             Welcome to Liriac
