@@ -1,4 +1,4 @@
-import { Fragment, useMemo } from "react";
+import { Fragment, useCallback, useMemo } from "react";
 import {
   Box,
   Button,
@@ -8,11 +8,9 @@ import {
   Stack,
   Typography,
 } from "@mui/material";
-import type { components } from "../../api/schema";
 import { useChapterDetail } from "../library/useChapterDetail";
+import { DialogueBlock, MetadataBlock, ParagraphBlock, SceneBoundaryBlock } from "./blocks";
 import { readingTheme, readingThemeConstants } from "./readingTheme";
-
-type ChapterBlock = components["schemas"]["ChapterBlock"];
 
 type PreviewContainerProps = {
   chapterId: string;
@@ -20,26 +18,60 @@ type PreviewContainerProps = {
   onClose: () => void;
 };
 
-function renderPlaceholderBlock(block: ChapterBlock) {
-  return (
-    <Box
-      key={block.id}
-      sx={{
-        border: "1px dashed rgba(27, 27, 27, 0.25)",
-        borderRadius: 1,
-        p: { xs: 2, sm: 3 },
-        fontStyle: "italic",
-        color: readingThemeConstants.mutedColor,
-      }}
-    >
-      Bloque "{block.type}" pendiente de diseño.
-    </Box>
-  );
-}
-
 export function PreviewContainer({ chapterId, open, onClose }: PreviewContainerProps) {
   const targetChapterId = useMemo(() => (open ? chapterId : null), [chapterId, open]);
   const { chapter, loading, error, reload } = useChapterDetail(targetChapterId);
+  const handleEditBlock = useCallback((blockId: string) => {
+    void blockId;
+  }, []);
+
+  const renderedBlocks = useMemo(() => {
+    if (!chapter) {
+      return [];
+    }
+
+    return chapter.blocks.flatMap((block) => {
+      if (block.type === "paragraph") {
+        return [
+          <ParagraphBlock key={block.id} block={block} onEdit={handleEditBlock} />,
+        ];
+      }
+
+      if (block.type === "dialogue") {
+        return [
+          <DialogueBlock key={block.id} block={block} onEdit={handleEditBlock} />,
+        ];
+      }
+
+      if (block.type === "scene_boundary") {
+        return [
+          <SceneBoundaryBlock key={block.id} block={block} onEdit={handleEditBlock} />,
+        ];
+      }
+
+      if (block.type === "metadata") {
+        const node = (
+          <MetadataBlock key={block.id} block={block} onEdit={handleEditBlock} />
+        );
+        return node ? [node] : [];
+      }
+
+      return [
+        <Box
+          key={block.id}
+          sx={{
+            border: "1px dashed rgba(27, 27, 27, 0.25)",
+            borderRadius: 1,
+            p: { xs: 2, sm: 3 },
+            fontStyle: "italic",
+            color: readingThemeConstants.mutedColor,
+          }}
+        >
+          Bloque "{block.type}" pendiente de diseño.
+        </Box>,
+      ];
+    });
+  }, [chapter, handleEditBlock]);
 
   return (
     <Modal
@@ -98,18 +130,36 @@ export function PreviewContainer({ chapterId, open, onClose }: PreviewContainerP
 
               {!loading && !error && chapter && (
                 <Fragment>
-                  <Typography
-                    variant="h4"
-                    sx={{
-                      fontFamily: readingTheme.typography.fontFamily,
-                      color: readingThemeConstants.headingColor,
-                    }}
-                  >
-                    {chapter.title}
-                  </Typography>
-                  <Stack spacing={{ xs: 3, sm: 4 }}>
-                    {chapter.blocks.map((block) => renderPlaceholderBlock(block))}
+                  <Stack spacing={1.5} sx={{ mb: 2 }}>
+                    <Typography
+                      variant="h4"
+                      sx={{
+                        fontFamily: readingTheme.typography.fontFamily,
+                        color: readingThemeConstants.headingColor,
+                      }}
+                    >
+                      {chapter.title}
+                    </Typography>
+                    {chapter.summary && (
+                      <Typography
+                        variant="subtitle1"
+                        sx={{ color: readingThemeConstants.mutedColor }}
+                      >
+                        {chapter.summary}
+                      </Typography>
+                    )}
                   </Stack>
+
+                  {renderedBlocks.length === 0 ? (
+                    <Typography
+                      variant="body2"
+                      sx={{ color: readingThemeConstants.mutedColor }}
+                    >
+                      Sin contenido.
+                    </Typography>
+                  ) : (
+                    <Stack spacing={{ xs: 3, sm: 4 }}>{renderedBlocks}</Stack>
+                  )}
                 </Fragment>
               )}
             </Box>

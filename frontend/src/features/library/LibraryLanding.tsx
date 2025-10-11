@@ -16,6 +16,7 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import type { ContextItem } from "../../api/library";
 import { useLibraryBooks } from "./useLibraryBooks";
 import { useLibrarySections } from "./useLibrarySections";
+import { PreviewContainer } from "../preview/PreviewContainer";
 
 function getItemPrimaryText(item: ContextItem) {
   return item.title ?? item.name ?? "Untitled";
@@ -39,6 +40,10 @@ export function LibraryLanding() {
     reload: reloadBooks,
   } = useLibraryBooks();
   const [selectedBookId, setSelectedBookId] = useState<string | null>(null);
+  const [previewState, setPreviewState] = useState<{
+    open: boolean;
+    chapterId: string | null;
+  }>({ open: false, chapterId: null });
 
   useEffect(() => {
     if (books.length === 0) {
@@ -63,6 +68,14 @@ export function LibraryLanding() {
     reloadBooks();
     reloadSections();
   }, [reloadBooks, reloadSections]);
+
+  const handleOpenPreview = useCallback((chapterId: string) => {
+    setPreviewState({ open: true, chapterId });
+  }, []);
+
+  const handleClosePreview = useCallback(() => {
+    setPreviewState((current) => ({ ...current, open: false }));
+  }, []);
 
   return (
     <Box
@@ -243,19 +256,26 @@ export function LibraryLanding() {
                   )}
                   {selectedBook.chapters.length > 0 && (
                     <List disablePadding>
-                      {selectedBook.chapters.map((chapter, index) => (
-                        <ListItem
+                      {selectedBook.chapters.map((chapter) => (
+                        <ListItemButton
                           key={chapter.id}
-                          disableGutters
+                          onClick={() => handleOpenPreview(chapter.id)}
                           sx={{
                             flexDirection: "column",
                             alignItems: "flex-start",
-                            py: 1,
-                            borderBottom:
-                              index === selectedBook.chapters.length - 1
-                                ? "none"
-                                : "1px solid",
-                            borderColor: "divider",
+                            gap: 0.5,
+                            px: 2,
+                            py: 1.5,
+                            borderRadius: 2,
+                            mb: 1,
+                            textAlign: "left",
+                            backgroundColor: "transparent",
+                            "&:last-of-type": {
+                              mb: 0,
+                            },
+                            "&:hover": {
+                              backgroundColor: "action.hover",
+                            },
                           }}
                         >
                           <ListItemText
@@ -269,7 +289,7 @@ export function LibraryLanding() {
                               },
                             }}
                           />
-                        </ListItem>
+                        </ListItemButton>
                       ))}
                     </List>
                   )}
@@ -361,6 +381,13 @@ export function LibraryLanding() {
           </Paper>
         </Stack>
       </Container>
+      {previewState.chapterId && (
+        <PreviewContainer
+          open={previewState.open}
+          chapterId={previewState.chapterId}
+          onClose={handleClosePreview}
+        />
+      )}
     </Box>
   );
 }
