@@ -31,6 +31,38 @@ export const readingTheme: ReadingTheme = {
     overflowY: "auto",
     px: { xs: 2, sm: 4, md: 6 },
     py: { xs: 4, sm: 6, md: 8 },
+    scrollbarWidth: "thin",
+    scrollbarColor: "rgba(20, 24, 32, 1) transparent",
+    transition: "scrollbar-color 320ms ease",
+    "&.preview-scroll-area.scrollbar-hidden": {
+      scrollbarColor: "transparent transparent",
+    },
+    "&.preview-scroll-area.scrollbar-disabled": {
+      scrollbarColor: "transparent transparent",
+    },
+    "&.preview-scroll-area::-webkit-scrollbar": {
+      width: 12,
+      height: 12,
+    },
+    "&.preview-scroll-area::-webkit-scrollbar-track": {
+      backgroundColor: "transparent",
+      margin: 12,
+    },
+    "&.preview-scroll-area::-webkit-scrollbar-thumb": {
+      backgroundColor: "rgba(20, 24, 32, 0.6)",
+      borderRadius: 999,
+      border: "3px solid transparent",
+      backgroundClip: "content-box",
+      transition: "opacity 320ms ease, background-color 320ms ease",
+      opacity: 1,
+    },
+    "&.preview-scroll-area.scrollbar-hidden::-webkit-scrollbar-thumb": {
+      opacity: 0,
+      backgroundColor: "rgba(20, 24, 32, 0.4)",
+    },
+    "&.preview-scroll-area.scrollbar-disabled::-webkit-scrollbar": {
+      display: "none",
+    },
   },
   blockStack: {
     width: "100%",

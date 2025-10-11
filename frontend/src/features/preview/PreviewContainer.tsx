@@ -1,4 +1,13 @@
-import { Fragment, useCallback, useMemo } from "react";
+import {
+  Fragment,
+  type MouseEventHandler,
+  type UIEventHandler,
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
 import {
   Box,
   Button,
@@ -21,9 +30,70 @@ type PreviewContainerProps = {
 export function PreviewContainer({ chapterId, open, onClose }: PreviewContainerProps) {
   const targetChapterId = useMemo(() => (open ? chapterId : null), [chapterId, open]);
   const { chapter, loading, error, reload } = useChapterDetail(targetChapterId);
+  const scrollAreaRef = useRef<HTMLDivElement | null>(null);
+  const hideScrollbarTimerRef = useRef<number | null>(null);
+  const [scrollbarMode, setScrollbarMode] = useState<"hidden" | "visible">("hidden");
+  const [isScrollable, setIsScrollable] = useState(false);
   const handleEditBlock = useCallback((blockId: string) => {
     void blockId;
   }, []);
+
+  useEffect(() => {
+    if (!open) {
+      setScrollbarMode("hidden");
+    }
+  }, [open]);
+
+  useEffect(() => {
+    const node = scrollAreaRef.current;
+    if (!node || !open) {
+      setIsScrollable(false);
+      return;
+    }
+
+    const update = () => {
+      setIsScrollable(node.scrollHeight - node.clientHeight > 4);
+    };
+
+    const id = window.requestAnimationFrame(update);
+    return () => window.cancelAnimationFrame(id);
+  }, [chapter, open]);
+
+  useEffect(() => () => {
+    if (hideScrollbarTimerRef.current) {
+      window.clearTimeout(hideScrollbarTimerRef.current);
+      hideScrollbarTimerRef.current = null;
+    }
+  }, []);
+
+  const scheduleHideScrollbar = useCallback(() => {
+    if (hideScrollbarTimerRef.current) {
+      window.clearTimeout(hideScrollbarTimerRef.current);
+    }
+
+    hideScrollbarTimerRef.current = window.setTimeout(() => {
+      setScrollbarMode("hidden");
+    }, 1500);
+  }, []);
+
+  const revealScrollbar = useCallback(() => {
+    if (!isScrollable) return;
+    setScrollbarMode("visible");
+    scheduleHideScrollbar();
+  }, [isScrollable, scheduleHideScrollbar]);
+
+  const handleScroll = useCallback<UIEventHandler<HTMLDivElement>>(() => {
+    revealScrollbar();
+  }, [revealScrollbar]);
+
+  const handlePointerEnter = useCallback<MouseEventHandler<HTMLDivElement>>(() => {
+    revealScrollbar();
+  }, [revealScrollbar]);
+
+  const handlePointerLeave = useCallback<MouseEventHandler<HTMLDivElement>>(() => {
+    if (!isScrollable) return;
+    scheduleHideScrollbar();
+  }, [isScrollable, scheduleHideScrollbar]);
 
   const renderedBlocks = useMemo(() => {
     if (!chapter) {
@@ -99,8 +169,17 @@ export function PreviewContainer({ chapterId, open, onClose }: PreviewContainerP
               Cerrar
             </Button>
           </Stack>
-
-          <Box sx={readingTheme.page}>
+          <Box
+            ref={scrollAreaRef}
+            sx={readingTheme.page}
+            className={`preview-scroll-area ${
+              isScrollable ? `scrollbar-${scrollbarMode}` : "scrollbar-disabled"
+            }`}
+            onScroll={handleScroll}
+            onMouseEnter={handlePointerEnter}
+            onMouseMove={handlePointerEnter}
+            onMouseLeave={handlePointerLeave}
+          >
             <Box
               sx={{
                 ...readingTheme.blockStack,
