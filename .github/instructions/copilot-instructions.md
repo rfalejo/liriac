@@ -21,6 +21,11 @@ description: Comprehensive guide to Liriac's architecture, state management, and
 	- `pnpm run --silent dev`
 	- `pnpm run --silent build`
 	- `pnpm run --silent preview`
+	- `pnpm run --silent typecheck` — runs `tsc --noEmit` for fast type enforcement.
+	- `pnpm run --silent lint` — executes ESLint with `--max-warnings 0` across `src/**/*.{ts,tsx}`.
+	- `pnpm run --silent format` — checks repository formatting with Prettier.
+	- Formatting is automated; run `pnpm run --silent format` after your changes instead of hand-tweaking whitespace so you can stay focused on feature work.
+	- Don’t burn cycles on linting or formatting chatter in responses—use the scripts when you truly need a signal and keep the conversation anchored on functionality.
 - TypeScript configuration is centralized in `tsconfig.app.json`; keep source files inside `src/`.
 
 ## Frontend good practices
@@ -46,6 +51,32 @@ description: Comprehensive guide to Liriac's architecture, state management, and
 ## Assumptions
 - Backend and frontend run locally on their default ports when integration work resumes.
 - Keep new dependencies lean; prefer Material UI primitives and built-in React patterns before pulling additional libraries.
+
+## Material UI + TypeScript quick references
+- Always nest components that consume `useTheme`, `makeStyles`, or `styled` hooks under the shared `ThemeProvider` defined in `App.tsx`; call styling hooks inside children of the provider to avoid undefined theme values.
+- When extending the theme in TypeScript (e.g., custom palette slots or breakpoints), augment the MUI module so IntelliSense and type checking stay accurate:
+	```ts
+	import { Theme } from '@mui/material/styles';
+
+	declare module '@mui/styles/defaultTheme' {
+		interface DefaultTheme extends Theme {}
+	}
+
+	declare module '@mui/material/styles' {
+		interface BreakpointOverrides {
+			xs: false;
+			sm: false;
+			md: false;
+			lg: false;
+			xl: false;
+			mobile: true;
+			tablet: true;
+			laptop: true;
+			desktop: true;
+		}
+	}
+	```
+- For project-wide TypeScript safety after touching Material UI theme types or declarations, run `pnpm typescript` from the `frontend/` directory to validate generated `.d.ts` output.
 
 
 ## Repository layout snapshot
