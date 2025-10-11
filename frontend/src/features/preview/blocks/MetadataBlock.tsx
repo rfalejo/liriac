@@ -18,6 +18,8 @@ export function MetadataBlock({ block, onEdit }: MetadataBlockProps) {
   }
 
   if (kind === "chapter_header") {
+    const primaryHeading = block.title ?? block.subtitle;
+
     return (
       <PreviewBlockFrame
         blockId={block.id}
@@ -29,15 +31,16 @@ export function MetadataBlock({ block, onEdit }: MetadataBlockProps) {
             <Typography
               variant="caption"
               sx={{
-                letterSpacing: "0.2em",
+                letterSpacing: "0.14em",
                 textTransform: "uppercase",
                 color: readingThemeConstants.mutedColor,
+                opacity: 0.75,
               }}
             >
               Capítulo {block.ordinal + 1}
             </Typography>
           )}
-          {block.title && (
+          {primaryHeading && (
             <Typography
               variant="h4"
               sx={{
@@ -45,15 +48,7 @@ export function MetadataBlock({ block, onEdit }: MetadataBlockProps) {
                 color: readingThemeConstants.headingColor,
               }}
             >
-              {block.title}
-            </Typography>
-          )}
-          {block.subtitle && (
-            <Typography
-              variant="subtitle1"
-              sx={{ color: readingThemeConstants.mutedColor }}
-            >
-              {block.subtitle}
+              {primaryHeading}
             </Typography>
           )}
           {block.epigraph && (

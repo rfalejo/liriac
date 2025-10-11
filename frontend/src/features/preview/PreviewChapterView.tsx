@@ -125,27 +125,36 @@ export function PreviewChapterView({
     return null;
   }
 
+  const hasChapterHeader = chapter.blocks.some(
+    (block) =>
+      block.type === "metadata" &&
+      (block.kind ?? "metadata") === "chapter_header",
+  );
+
   return (
     <Fragment>
-      <Stack spacing={1.25} sx={{ mb: 1.75 }}>
-        <Typography
-          variant="h4"
-          sx={{
-            fontFamily: readingTheme.typography.fontFamily,
-            color: readingThemeConstants.headingColor,
-          }}
-        >
-          {chapter.title}
-        </Typography>
-        {chapter.summary && (
+      {!hasChapterHeader && (
+        <Stack spacing={1.25} sx={{ mb: 1.75 }}>
           <Typography
-            variant="subtitle1"
-            sx={{ color: readingThemeConstants.mutedColor }}
+            variant="h4"
+            sx={{
+              fontFamily: readingTheme.typography.fontFamily,
+              color: readingThemeConstants.headingColor,
+            }}
           >
-            {chapter.summary}
+            {chapter.title}
           </Typography>
-        )}
-      </Stack>
+          {chapter.summary && (
+            <Typography
+              variant="subtitle1"
+              sx={{ color: readingThemeConstants.mutedColor }}
+            >
+              {chapter.summary}
+            </Typography>
+          )}
+        </Stack>
+      )}
+
       {renderedBlocks.length === 0 ? (
         <Typography
           variant="body2"
