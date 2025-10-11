@@ -4,6 +4,7 @@ import type {
   ContextSection,
   ContextItem,
 } from '../components/settings/ContextSectionList';
+import type { components } from '../api/schema';
 import {
   addItem as addItemUtil,
   editItem as editItemUtil,
@@ -12,26 +13,44 @@ import {
 
 export type Toast = { id: number; text: string };
 
+type LibraryBook = components['schemas']['LibraryBook'];
+
 type EditorSlice = {
   tokens: number;
   lastEditPos: number | null;
   initialContent: string;
+  currentChapter: {
+    bookId: string | null;
+    bookTitle: string | null;
+    chapterId: string | null;
+    chapterTitle: string | null;
+  };
   setTokens: (_n: number) => void;
   setLastEditPos: (_n: number | null) => void;
   setInitialContent: (_value: string) => void;
+  setCurrentChapter: (_meta: {
+    bookId?: string | null;
+    bookTitle?: string | null;
+    chapterId?: string | null;
+    chapterTitle?: string | null;
+  }) => void;
 };
 
 type UiSlice = {
   settingsOpen: boolean;
+  libraryOpen: boolean;
   toasts: Toast[];
   openSettings: () => void;
   closeSettings: () => void;
+  openLibrary: () => void;
+  closeLibrary: () => void;
   showToast: (_text: string) => void;
   dismissToast: (_id: number) => void;
 };
 
 type ContextSlice = {
   sections: ContextSection[];
+  books: LibraryBook[];
   toggleSectionItem: (_sectionId: string, _itemId: string, _checked: boolean) => void;
   addSectionItem: (_sectionId: string, _item: ContextItem) => void;
   editSectionItem: (
@@ -41,6 +60,7 @@ type ContextSlice = {
   ) => void;
   clearContext: () => void;
   setSections: (_sections: ContextSection[]) => void;
+  setLibraryBooks: (_books: LibraryBook[]) => void;
 };
 
 type AppState = {
@@ -57,18 +77,51 @@ export const useAppStore = create<AppState>()(
           tokens: 0,
           lastEditPos: null,
           initialContent: '',
+          currentChapter: {
+            bookId: null,
+            bookTitle: null,
+            chapterId: null,
+            chapterTitle: null,
+          },
           setTokens: (n: number) =>
             set((s) => ({ editor: { ...s.editor, tokens: Math.max(0, n | 0) } })),
           setLastEditPos: (n: number | null) =>
             set((s) => ({ editor: { ...s.editor, lastEditPos: n } })),
           setInitialContent: (value: string) =>
             set((s) => ({ editor: { ...s.editor, initialContent: value } })),
+          setCurrentChapter: (meta) =>
+            set((s) => ({
+              editor: {
+                ...s.editor,
+                currentChapter: {
+                  bookId:
+                    meta.bookId !== undefined
+                      ? meta.bookId
+                      : s.editor.currentChapter.bookId,
+                  bookTitle:
+                    meta.bookTitle !== undefined
+                      ? meta.bookTitle
+                      : s.editor.currentChapter.bookTitle,
+                  chapterId:
+                    meta.chapterId !== undefined
+                      ? meta.chapterId
+                      : s.editor.currentChapter.chapterId,
+                  chapterTitle:
+                    meta.chapterTitle !== undefined
+                      ? meta.chapterTitle
+                      : s.editor.currentChapter.chapterTitle,
+                },
+              },
+            })),
         },
         ui: {
           settingsOpen: false,
+          libraryOpen: false,
           toasts: [],
           openSettings: () => set((s) => ({ ui: { ...s.ui, settingsOpen: true } })),
           closeSettings: () => set((s) => ({ ui: { ...s.ui, settingsOpen: false } })),
+          openLibrary: () => set((s) => ({ ui: { ...s.ui, libraryOpen: true } })),
+          closeLibrary: () => set((s) => ({ ui: { ...s.ui, libraryOpen: false } })),
           showToast: (text: string) => {
             const clean = (text ?? '').trim();
             if (!clean) return;
@@ -94,6 +147,7 @@ export const useAppStore = create<AppState>()(
         },
         context: {
           sections: [],
+          books: [],
           toggleSectionItem: (sectionId, itemId, checked) =>
             set((s) => ({
               context: {
@@ -135,6 +189,13 @@ export const useAppStore = create<AppState>()(
               context: {
                 ...s.context,
                 sections,
+              },
+            })),
+          setLibraryBooks: (books) =>
+            set((s) => ({
+              context: {
+                ...s.context,
+                books,
               },
             })),
         },

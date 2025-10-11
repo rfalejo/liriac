@@ -20,6 +20,7 @@ export default function EditorSurface({ disabled = false }: { disabled?: boolean
   useEditorStats(textareaRef);
   const showToast = useAppStore((s) => s.ui.showToast);
   const openSettings = useAppStore((s) => s.ui.openSettings);
+  const openLibrary = useAppStore((s) => s.ui.openLibrary);
   const initialContent = useAppStore((s) => s.editor.initialContent);
 
   // Show a one-time toast when smart punctuation first triggers
@@ -86,6 +87,7 @@ export default function EditorSurface({ disabled = false }: { disabled?: boolean
       setCommandOpen(true);
       setCommandInput(initial);
     },
+    openLibrary,
   });
 
   const suggestions = useMemo<Cmd[]>(() => REGISTRY, []);

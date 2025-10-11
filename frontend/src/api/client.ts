@@ -38,6 +38,8 @@ async function request<T>(path: string): Promise<T> {
 
 export type LibraryResponse = components['schemas']['LibraryResponse'];
 export type EditorState = components['schemas']['EditorState'];
+export type LibraryBooksResponse = components['schemas']['LibraryBooksResponse'];
+export type ChapterDetail = components['schemas']['ChapterDetail'];
 
 export function fetchLibrary(): Promise<LibraryResponse> {
   return request<LibraryResponse>('/api/library/');
@@ -45,4 +47,12 @@ export function fetchLibrary(): Promise<LibraryResponse> {
 
 export function fetchEditor(): Promise<EditorState> {
   return request<EditorState>('/api/editor/');
+}
+
+export function fetchLibraryBooks(): Promise<LibraryBooksResponse> {
+  return request<LibraryBooksResponse>('/api/library/books/');
+}
+
+export function fetchChapterDetail(chapterId: string): Promise<ChapterDetail> {
+  return request<ChapterDetail>(`/api/library/chapters/${encodeURIComponent(chapterId)}/`);
 }

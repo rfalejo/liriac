@@ -38,6 +38,40 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/library/books/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** @description Return the list of books and their chapter summaries. */
+        get: operations["library_books_retrieve"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/library/chapters/{chapterId}/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** @description Return the full content for a single chapter. */
+        get: operations["library_chapter_retrieve"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
 }
 export type webhooks = Record<string, never>;
 export interface components {
@@ -65,6 +99,33 @@ export interface components {
             content: string;
             tokens: number;
             cursor?: number | null;
+            bookId?: string | null;
+            bookTitle?: string | null;
+            chapterId?: string | null;
+            chapterTitle?: string | null;
+        };
+        ChapterSummary: {
+            id: string;
+            title: string;
+            summary?: string | null;
+            ordinal: number;
+            tokens?: number | null;
+            wordCount?: number | null;
+        };
+        ChapterDetail: components["schemas"]["ChapterSummary"] & {
+            content: string;
+            bookId?: string | null;
+            bookTitle?: string | null;
+        };
+        LibraryBook: {
+            id: string;
+            title: string;
+            author?: string | null;
+            synopsis?: string | null;
+            chapters: components["schemas"]["ChapterSummary"][];
+        };
+        LibraryBooksResponse: {
+            books: components["schemas"]["LibraryBook"][];
         };
         LibraryResponse: {
             sections: components["schemas"]["ContextSection"][];
@@ -121,6 +182,54 @@ export interface operations {
                 content: {
                     "application/json": components["schemas"]["LibraryResponse"];
                 };
+            };
+        };
+    };
+    library_books_retrieve: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["LibraryBooksResponse"];
+                };
+            };
+        };
+    };
+    library_chapter_retrieve: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description Identifier of the chapter to fetch. */
+                chapterId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ChapterDetail"];
+                };
+            };
+            /** @description Chapter not found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
             };
         };
     };
