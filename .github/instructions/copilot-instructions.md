@@ -24,6 +24,7 @@ description: Comprehensive guide to Liriac's architecture, state management, and
 	- `pnpm run --silent typecheck` — runs `tsc --noEmit` for fast type enforcement.
 	- `pnpm run --silent lint` — executes ESLint with `--max-warnings 0` across `src/**/*.{ts,tsx}`.
 	- `pnpm run --silent format` — checks repository formatting with Prettier.
+	- Typical verification flow during implementation: `pnpm run --silent lint` → `pnpm run --silent typecheck` → `pnpm run --silent format`.
 	- Formatting is automated; run `pnpm run --silent format` after your changes instead of hand-tweaking whitespace so you can stay focused on feature work.
 	- Don’t burn cycles on linting or formatting chatter in responses—use the scripts when you truly need a signal and keep the conversation anchored on functionality.
 - TypeScript configuration is centralized in `tsconfig.app.json`; keep source files inside `src/`.
@@ -131,14 +132,28 @@ backend/
 frontend/
 |-- src/
 |   |-- api/
+|   |   |-- chapters.ts
 |   |   |-- client.ts
 |   |   |-- library.ts
 |   |   \-- schema.ts
 |   |-- features/
-|   |   \-- library/
-|   |       |-- LibraryLanding.tsx
-|   |       |-- useLibraryBooks.ts
-|   |       \-- useLibrarySections.ts
+|   |   |-- library/
+|   |   |   |-- LibraryLanding.tsx
+|   |   |   |-- useChapterDetail.ts
+|   |   |   |-- useLibraryBooks.ts
+|   |   |   \-- useLibrarySections.ts
+|   |   \-- preview/
+|   |       |-- blocks/
+|   |       |   |-- DialogueBlock.tsx
+|   |       |   |-- MetadataBlock.tsx
+|   |       |   |-- ParagraphBlock.tsx
+|   |       |   |-- PreviewBlockFrame.tsx
+|   |       |   |-- SceneBoundaryBlock.tsx
+|   |       |   \-- index.ts
+|   |       |-- PreviewChapterView.tsx
+|   |       |-- PreviewContainer.tsx
+|   |       |-- readingTheme.ts
+|   |       \-- usePreviewScrollbar.ts
 |   |-- App.tsx
 |   |-- index.css
 |   |-- main.tsx
