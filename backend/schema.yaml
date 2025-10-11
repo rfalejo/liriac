@@ -34,7 +34,7 @@ paths:
   /api/library/books/:
     get:
       operationId: library_books_retrieve
-      description: Return the list of books and their chapter summaries.
+      description: Return the list of books and chapter summaries.
       tags:
       - library
       responses:
@@ -44,19 +44,18 @@ paths:
               schema:
                 $ref: '#/components/schemas/LibraryBooksResponse'
           description: ''
-  /api/library/chapters/{chapterId}/:
+  /api/library/chapters/{chapter_id}/:
     get:
-      operationId: library_chapter_retrieve
+      operationId: library_chapters_retrieve
       description: Return the full content for a single chapter.
-      tags:
-      - library
       parameters:
       - in: path
-        name: chapterId
+        name: chapter_id
         schema:
           type: string
         required: true
-        description: Identifier of the chapter to fetch.
+      tags:
+      - library
       responses:
         '200':
           content:
@@ -64,80 +63,148 @@ paths:
               schema:
                 $ref: '#/components/schemas/ChapterDetail'
           description: ''
-        '404':
-          description: Chapter not found
 components:
   schemas:
-    ContextItem:
+    ChapterBlock:
       type: object
       properties:
         id:
           type: string
         type:
-          $ref: '#/components/schemas/TypeEnum'
-        name:
+          $ref: '#/components/schemas/ChapterBlockTypeEnum'
+        position:
+          type: integer
+        text:
           type: string
-        role:
+        style:
           type: string
+          nullable: true
+        tags:
+          type: array
+          items:
+            type: string
+        turns:
+          type: array
+          items:
+            $ref: '#/components/schemas/DialogueTurn'
+        context:
+          type: string
+          nullable: true
+        label:
+          type: string
+          nullable: true
         summary:
           type: string
+          nullable: true
+        locationId:
+          type: string
+          nullable: true
+        locationName:
+          type: string
+          nullable: true
+        timestamp:
+          type: string
+          nullable: true
+        mood:
+          type: string
+          nullable: true
+        kind:
+          type: string
+          nullable: true
         title:
           type: string
-        description:
+          nullable: true
+        subtitle:
           type: string
-        facts:
-          type: string
-        tokens:
+          nullable: true
+        ordinal:
           type: integer
-        checked:
-          type: boolean
-        disabled:
-          type: boolean
+          nullable: true
+        epigraph:
+          type: string
+          nullable: true
+        epigraphAttribution:
+          type: string
+          nullable: true
+        povCharacterId:
+          type: string
+          nullable: true
+        povCharacterName:
+          type: string
+          nullable: true
+        timelineMarker:
+          type: string
+          nullable: true
+        themeTags:
+          type: array
+          items:
+            type: string
+        status:
+          type: string
+          nullable: true
+        owner:
+          type: string
+          nullable: true
+        lastUpdated:
+          type: string
+          nullable: true
       required:
       - id
+      - position
       - type
-    ContextSection:
+    ChapterBlockTypeEnum:
+      enum:
+      - paragraph
+      - dialogue
+      - scene_boundary
+      - metadata
+      type: string
+      description: |-
+        * `paragraph` - paragraph
+        * `dialogue` - dialogue
+        * `scene_boundary` - scene_boundary
+        * `metadata` - metadata
+    ChapterDetail:
       type: object
       properties:
         id:
           type: string
         title:
           type: string
-        defaultOpen:
-          type: boolean
-        items:
-          type: array
-          items:
-            $ref: '#/components/schemas/ContextItem'
-      required:
-      - id
-      - items
-      - title
-    EditorState:
-      type: object
-      properties:
-        content:
+        summary:
           type: string
+          nullable: true
+        ordinal:
+          type: integer
         tokens:
           type: integer
-        cursor:
+          nullable: true
+        wordCount:
           type: integer
           nullable: true
+        content:
+          type: string
+        paragraphs:
+          type: array
+          items:
+            type: string
+        blocks:
+          type: array
+          items:
+            $ref: '#/components/schemas/ChapterBlock'
         bookId:
           type: string
           nullable: true
         bookTitle:
           type: string
           nullable: true
-        chapterId:
-          type: string
-          nullable: true
-        chapterTitle:
-          type: string
-          nullable: true
       required:
+      - blocks
       - content
-      - tokens
+      - id
+      - ordinal
+      - paragraphs
+      - title
     ChapterSummary:
       type: object
       properties:
@@ -160,21 +227,117 @@ components:
       - id
       - ordinal
       - title
-    ChapterDetail:
-      allOf:
-      - $ref: '#/components/schemas/ChapterSummary'
-      - type: object
-        properties:
-          content:
+    ContextItem:
+      type: object
+      properties:
+        id:
+          type: string
+        type:
+          $ref: '#/components/schemas/ContextItemTypeEnum'
+        name:
+          type: string
+        role:
+          type: string
+        summary:
+          type: string
+        title:
+          type: string
+        description:
+          type: string
+        facts:
+          type: string
+        tokens:
+          type: integer
+        checked:
+          type: boolean
+        disabled:
+          type: boolean
+      required:
+      - id
+      - type
+    ContextItemTypeEnum:
+      enum:
+      - character
+      - world
+      - styleTone
+      - chapter
+      type: string
+      description: |-
+        * `character` - character
+        * `world` - world
+        * `styleTone` - styleTone
+        * `chapter` - chapter
+    ContextSection:
+      type: object
+      properties:
+        id:
+          type: string
+        title:
+          type: string
+        defaultOpen:
+          type: boolean
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/ContextItem'
+      required:
+      - id
+      - items
+      - title
+    DialogueTurn:
+      type: object
+      properties:
+        speakerId:
+          type: string
+          nullable: true
+        speakerName:
+          type: string
+          nullable: true
+        utterance:
+          type: string
+        stageDirection:
+          type: string
+          nullable: true
+        tone:
+          type: string
+          nullable: true
+      required:
+      - utterance
+    EditorState:
+      type: object
+      properties:
+        content:
+          type: string
+        paragraphs:
+          type: array
+          items:
             type: string
-          bookId:
-            type: string
-            nullable: true
-          bookTitle:
-            type: string
-            nullable: true
-        required:
-        - content
+        blocks:
+          type: array
+          items:
+            $ref: '#/components/schemas/ChapterBlock'
+        tokens:
+          type: integer
+        cursor:
+          type: integer
+          nullable: true
+        bookId:
+          type: string
+          nullable: true
+        bookTitle:
+          type: string
+          nullable: true
+        chapterId:
+          type: string
+          nullable: true
+        chapterTitle:
+          type: string
+          nullable: true
+      required:
+      - blocks
+      - content
+      - paragraphs
+      - tokens
     LibraryBook:
       type: object
       properties:
@@ -214,15 +377,3 @@ components:
             $ref: '#/components/schemas/ContextSection'
       required:
       - sections
-    TypeEnum:
-      enum:
-      - character
-      - world
-      - styleTone
-      - chapter
-      type: string
-      description: |-
-        * `character` - character
-        * `world` - world
-        * `styleTone` - styleTone
-        * `chapter` - chapter
