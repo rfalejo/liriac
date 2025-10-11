@@ -19,6 +19,9 @@ export function MetadataBlock({ block, onEdit }: MetadataBlockProps) {
 
   if (kind === "chapter_header") {
     const primaryHeading = block.title ?? block.subtitle;
+    const shouldShowSupportingTitle = Boolean(
+      block.subtitle && block.title && block.subtitle !== block.title,
+    );
 
     return (
       <PreviewBlockFrame
@@ -49,6 +52,18 @@ export function MetadataBlock({ block, onEdit }: MetadataBlockProps) {
               }}
             >
               {primaryHeading}
+            </Typography>
+          )}
+          {shouldShowSupportingTitle && (
+            <Typography
+              variant="subtitle2"
+              sx={{
+                color: readingThemeConstants.mutedColor,
+                fontWeight: 500,
+                letterSpacing: "0.04em",
+              }}
+            >
+              {block.subtitle}
             </Typography>
           )}
           {block.epigraph && (
