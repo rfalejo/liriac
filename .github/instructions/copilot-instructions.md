@@ -104,6 +104,7 @@ feat(library): add book listing endpoint
 ```
 .github/
 \-- instructions/
+    |-- architect.instructions.md
     \-- copilot-instructions.md
 backend/
 |-- config/
@@ -152,8 +153,11 @@ frontend/
 |   |       |   \-- index.ts
 |   |       |-- PreviewChapterView.tsx
 |   |       |-- PreviewContainer.tsx
+|   |       |-- PreviewSidebar.tsx
 |   |       |-- readingTheme.ts
-|   |       \-- usePreviewScrollbar.ts
+|   |       |-- usePreviewChapterNavigation.ts
+|   |       |-- usePreviewScrollbar.ts
+|   |       \-- useSidebarHover.ts
 |   |-- App.tsx
 |   |-- index.css
 |   |-- main.tsx
