@@ -1,12 +1,26 @@
-import EditorPage from './pages/EditorPage';
-import { ThemeProvider } from './theme';
-import Toasts from './components/Toasts';
+import { Box, Button, CssBaseline, ThemeProvider, Typography, createTheme } from '@mui/material';
 
-export default function App() {
+const theme = createTheme();
+
+function App() {
   return (
-    <ThemeProvider>
-      <EditorPage />
-      <Toasts />
+    <ThemeProvider theme={theme}>
+      <CssBaseline />
+      <Box sx={{ minHeight: '100vh', display: 'grid', placeItems: 'center', p: 4 }}>
+        <Box textAlign="center">
+          <Typography variant="h3" component="h1" gutterBottom>
+            Welcome to Liriac
+          </Typography>
+          <Typography color="text.secondary" sx={{ mb: 3 }}>
+            Start building with Material UI.
+          </Typography>
+          <Button variant="contained" color="primary">
+            Explore
+          </Button>
+        </Box>
+      </Box>
     </ThemeProvider>
   );
 }
+
+export default App;
