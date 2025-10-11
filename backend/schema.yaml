@@ -31,6 +31,41 @@ paths:
               schema:
                 $ref: '#/components/schemas/LibraryResponse'
           description: ''
+  /api/library/books/:
+    get:
+      operationId: library_books_retrieve
+      description: Return the list of books and their chapter summaries.
+      tags:
+      - library
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LibraryBooksResponse'
+          description: ''
+  /api/library/chapters/{chapterId}/:
+    get:
+      operationId: library_chapter_retrieve
+      description: Return the full content for a single chapter.
+      tags:
+      - library
+      parameters:
+      - in: path
+        name: chapterId
+        schema:
+          type: string
+        required: true
+        description: Identifier of the chapter to fetch.
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ChapterDetail'
+          description: ''
+        '404':
+          description: Chapter not found
 components:
   schemas:
     ContextItem:
@@ -88,9 +123,88 @@ components:
         cursor:
           type: integer
           nullable: true
+        bookId:
+          type: string
+          nullable: true
+        bookTitle:
+          type: string
+          nullable: true
+        chapterId:
+          type: string
+          nullable: true
+        chapterTitle:
+          type: string
+          nullable: true
       required:
       - content
       - tokens
+    ChapterSummary:
+      type: object
+      properties:
+        id:
+          type: string
+        title:
+          type: string
+        summary:
+          type: string
+          nullable: true
+        ordinal:
+          type: integer
+        tokens:
+          type: integer
+          nullable: true
+        wordCount:
+          type: integer
+          nullable: true
+      required:
+      - id
+      - ordinal
+      - title
+    ChapterDetail:
+      allOf:
+      - $ref: '#/components/schemas/ChapterSummary'
+      - type: object
+        properties:
+          content:
+            type: string
+          bookId:
+            type: string
+            nullable: true
+          bookTitle:
+            type: string
+            nullable: true
+        required:
+        - content
+    LibraryBook:
+      type: object
+      properties:
+        id:
+          type: string
+        title:
+          type: string
+        author:
+          type: string
+          nullable: true
+        synopsis:
+          type: string
+          nullable: true
+        chapters:
+          type: array
+          items:
+            $ref: '#/components/schemas/ChapterSummary'
+      required:
+      - chapters
+      - id
+      - title
+    LibraryBooksResponse:
+      type: object
+      properties:
+        books:
+          type: array
+          items:
+            $ref: '#/components/schemas/LibraryBook'
+      required:
+      - books
     LibraryResponse:
       type: object
       properties:
