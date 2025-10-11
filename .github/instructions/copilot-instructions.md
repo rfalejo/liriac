@@ -145,6 +145,7 @@ frontend/
 |   \-- vite-env.d.ts
 |-- .gitignore
 |-- .prettierignore
+|-- eslint.config.js
 |-- index.html
 |-- package.json
 |-- pnpm-lock.yaml
@@ -152,6 +153,8 @@ frontend/
 |-- tsconfig.json
 |-- tsconfig.node.json
 \-- vite.config.ts
+scripts/
+\-- generate_repo_tree.py
 .gitignore
 README.md
 ```
