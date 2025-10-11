@@ -78,6 +78,25 @@ description: Comprehensive guide to Liriac's architecture, state management, and
 	```
 - For project-wide TypeScript safety after touching Material UI theme types or declarations, run `pnpm typescript` from the `frontend/` directory to validate generated `.d.ts` output.
 
+## User interaction notes
+- Even if the user interacts to you in a different language, respond in English.
+- All the code you write must be in English, but use Spanish for UI labels and text content.
+- Commit messages must be in English.
+- Comments should be in English.
+
+## Commit message guidelines
+At the end of your work, provide a concise commit message summarizing the changes made. Follow these guidelines:
+- Use the conventional commit format: `<type>(<scope>): <subject>`.
+- Add two/three bullet points in the commit body to explain what was done and why.
+- Use the following types: `feat`, `fix`, `docs`, `style`, `refactor`, `test`, `chore`, etc.
+- Example:
+```
+feat(library): add book listing endpoint
+- Implemented /api/library/books/ to return a list of books in the library.
+- Updated frontend to fetch and display books on the library landing page.
+- Added tests to cover the new endpoint and frontend integration.
+```
+
 
 ## Repository layout snapshot
 
