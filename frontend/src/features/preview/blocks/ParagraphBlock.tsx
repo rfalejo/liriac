@@ -23,8 +23,9 @@ export function ParagraphBlock({ block, onEdit }: ParagraphBlockProps) {
         component="p"
         sx={{
           margin: 0,
+          pb: 0,
           color: readingThemeConstants.headingColor,
-          textIndent: "1.75em",
+          textIndent: "1.5em",
         }}
       >
         {content.length > 0 ? content : "(Sin texto en este párrafo)"}

@@ -17,7 +17,7 @@ export function SceneBoundaryBlock({ block, onEdit }: SceneBoundaryBlockProps) {
       blockType={block.type}
       onEdit={onEdit}
     >
-      <Stack spacing={1.25} alignItems="center" sx={{ textAlign: "center" }}>
+      <Stack spacing={1} alignItems="center" sx={{ textAlign: "center" }}>
         <Divider flexItem sx={{ borderColor: "rgba(15, 20, 25, 0.24)" }} />
         {(block.label || block.summary) && (
           <Typography

@@ -127,7 +127,7 @@ export function PreviewChapterView({
 
   return (
     <Fragment>
-      <Stack spacing={1.5} sx={{ mb: 2 }}>
+      <Stack spacing={1.25} sx={{ mb: 1.75 }}>
         <Typography
           variant="h4"
           sx={{
@@ -154,7 +154,7 @@ export function PreviewChapterView({
           Sin contenido.
         </Typography>
       ) : (
-        <Stack spacing={{ xs: 3, sm: 4 }}>{renderedBlocks}</Stack>
+        <Stack spacing={{ xs: 2.5, sm: 3 }}>{renderedBlocks}</Stack>
       )}
     </Fragment>
   );

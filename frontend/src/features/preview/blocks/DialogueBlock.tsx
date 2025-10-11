@@ -19,7 +19,7 @@ export function DialogueBlock({ block, onEdit }: DialogueBlockProps) {
       blockType={block.type}
       onEdit={onEdit}
     >
-      <Stack spacing={1.5} sx={{ color: readingThemeConstants.headingColor }}>
+      <Stack spacing={1.25} sx={{ color: readingThemeConstants.headingColor }}>
         {turns.length === 0 && (
           <Typography variant="body2" color={readingThemeConstants.mutedColor}>
             (Diálogo sin intervenciones)

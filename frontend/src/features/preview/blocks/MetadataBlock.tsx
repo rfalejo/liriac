@@ -24,7 +24,7 @@ export function MetadataBlock({ block, onEdit }: MetadataBlockProps) {
         blockType={block.type}
         onEdit={onEdit}
       >
-        <Stack spacing={1.25} textAlign="center">
+        <Stack spacing={1} textAlign="center">
           {typeof block.ordinal === "number" && (
             <Typography
               variant="caption"
@@ -57,7 +57,7 @@ export function MetadataBlock({ block, onEdit }: MetadataBlockProps) {
             </Typography>
           )}
           {block.epigraph && (
-            <Stack spacing={0.5} sx={{ mt: 1.5 }}>
+            <Stack spacing={0.5} sx={{ mt: 1.25 }}>
               <Typography
                 component="blockquote"
                 sx={{ fontStyle: "italic", margin: 0 }}

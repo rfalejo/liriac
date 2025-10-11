@@ -83,8 +83,8 @@ export function PreviewBlockFrame({
         width: "100%",
         position: "relative",
         borderRadius: 2,
-        px: { xs: 2, sm: 3 },
-        py: { xs: 2.25, sm: 3 },
+        px: { xs: 1.75, sm: 2.5 },
+        py: { xs: 1.75, sm: 2.25 },
         transition: "background-color 140ms ease, box-shadow 140ms ease",
         backgroundColor: showControls
           ? "rgba(15, 20, 25, 0.04)"

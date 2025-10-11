@@ -73,10 +73,10 @@ export const readingTheme: ReadingTheme = {
     boxShadow: "0 20px 60px rgba(0, 0, 0, 0.35)",
     borderRadius: 2,
     px: { xs: 3, sm: 6 },
-    py: { xs: 4, sm: 6 },
+    py: { xs: 3.5, sm: 5 },
     display: "flex",
     flexDirection: "column",
-    gap: { xs: 3, sm: 4 },
+    gap: { xs: 2.5, sm: 3 },
     position: "relative",
   },
   typography: {
