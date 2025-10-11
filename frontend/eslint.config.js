@@ -1,16 +1,16 @@
-import eslint from '@eslint/js';
-import { dirname } from 'node:path';
-import { fileURLToPath } from 'node:url';
-import tseslint from 'typescript-eslint';
+import eslint from "@eslint/js";
+import { dirname } from "node:path";
+import { fileURLToPath } from "node:url";
+import tseslint from "typescript-eslint";
 
 const projectRoot = dirname(fileURLToPath(import.meta.url));
 
 export default tseslint.config(
   {
-    ignores: ['dist', 'node_modules'],
+    ignores: ["dist", "node_modules"],
   },
   {
-    files: ['src/**/*.{ts,tsx}'],
+    files: ["src/**/*.{ts,tsx}"],
     extends: [
       eslint.configs.recommended,
       ...tseslint.configs.recommended,
@@ -23,7 +23,7 @@ export default tseslint.config(
       },
     },
     rules: {
-      '@typescript-eslint/no-deprecated': 'error',
+      "@typescript-eslint/no-deprecated": "error",
     },
   },
 );

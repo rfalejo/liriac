@@ -9,9 +9,11 @@ type LibraryState = {
 };
 
 export function useLibrarySections() {
-  const [state, setState] = useState<LibraryState>(
-    () => ({ sections: [], loading: true, error: null })
-  );
+  const [state, setState] = useState<LibraryState>(() => ({
+    sections: [],
+    loading: true,
+    error: null,
+  }));
   const [refreshToken, setRefreshToken] = useState(0);
 
   useEffect(() => {

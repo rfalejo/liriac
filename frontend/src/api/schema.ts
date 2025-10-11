@@ -3,7 +3,6 @@
  * Do not make direct changes to the file.
  */
 
-
 export interface paths {
   "/api/editor/": {
     /** @description Return the current editor snapshot. */
@@ -63,7 +62,11 @@ export interface components {
      * * `metadata` - metadata
      * @enum {string}
      */
-    ChapterBlockTypeEnum: "paragraph" | "dialogue" | "scene_boundary" | "metadata";
+    ChapterBlockTypeEnum:
+      | "paragraph"
+      | "dialogue"
+      | "scene_boundary"
+      | "metadata";
     ChapterDetail: {
       id: string;
       title: string;
@@ -156,7 +159,6 @@ export type $defs = Record<string, never>;
 export type external = Record<string, never>;
 
 export interface operations {
-
   /** @description Return the current editor snapshot. */
   editor_retrieve: {
     responses: {

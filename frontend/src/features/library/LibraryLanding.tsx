@@ -56,7 +56,7 @@ export function LibraryLanding() {
 
   const selectedBook = useMemo(
     () => books.find((book) => book.id === selectedBookId) ?? null,
-    [books, selectedBookId]
+    [books, selectedBookId],
   );
 
   const handleRefresh = useCallback(() => {
@@ -75,7 +75,11 @@ export function LibraryLanding() {
     >
       <Container maxWidth="lg" sx={{ py: { xs: 5, md: 6 } }}>
         <Stack spacing={3} alignItems="stretch">
-          <Stack direction="row" justifyContent="space-between" alignItems="center">
+          <Stack
+            direction="row"
+            justifyContent="space-between"
+            alignItems="center"
+          >
             <Typography variant="h6">Library</Typography>
             <Button
               variant="outlined"
@@ -87,13 +91,30 @@ export function LibraryLanding() {
             </Button>
           </Stack>
 
-          <Stack direction={{ xs: "column", md: "row" }} spacing={3} alignItems="stretch">
-            <Paper elevation={0} variant="outlined" sx={{ flexBasis: { md: "32%" }, flexGrow: 1, p: 3 }}>
-              <Typography variant="subtitle2" color="text.secondary" gutterBottom>
+          <Stack
+            direction={{ xs: "column", md: "row" }}
+            spacing={3}
+            alignItems="stretch"
+          >
+            <Paper
+              elevation={0}
+              variant="outlined"
+              sx={{ flexBasis: { md: "32%" }, flexGrow: 1, p: 3 }}
+            >
+              <Typography
+                variant="subtitle2"
+                color="text.secondary"
+                gutterBottom
+              >
                 Books
               </Typography>
               {booksLoading && (
-                <Stack spacing={2} alignItems="center" justifyContent="center" sx={{ py: 4 }}>
+                <Stack
+                  spacing={2}
+                  alignItems="center"
+                  justifyContent="center"
+                  sx={{ py: 4 }}
+                >
                   <CircularProgress size={20} />
                   <Typography variant="body2" color="text.secondary">
                     Loading books
@@ -101,9 +122,18 @@ export function LibraryLanding() {
                 </Stack>
               )}
               {!booksLoading && booksError && (
-                <Stack spacing={2} alignItems="center" textAlign="center" sx={{ py: 4 }}>
+                <Stack
+                  spacing={2}
+                  alignItems="center"
+                  textAlign="center"
+                  sx={{ py: 4 }}
+                >
                   <Typography variant="body2">Unable to load books.</Typography>
-                  <Button variant="contained" size="small" onClick={reloadBooks}>
+                  <Button
+                    variant="contained"
+                    size="small"
+                    onClick={reloadBooks}
+                  >
                     Retry
                   </Button>
                 </Stack>
@@ -137,8 +167,13 @@ export function LibraryLanding() {
                       <ListItemText
                         primary={book.title}
                         secondary={book.author ?? undefined}
-                        primaryTypographyProps={{ variant: "body2", fontWeight: 600 }}
-                        secondaryTypographyProps={{ variant: "caption", color: "text.secondary" }}
+                        slotProps={{
+                          primary: { variant: "body2", fontWeight: 600 },
+                          secondary: {
+                            variant: "caption",
+                            color: "text.secondary",
+                          },
+                        }}
                       />
                     </ListItemButton>
                   ))}
@@ -146,12 +181,25 @@ export function LibraryLanding() {
               )}
             </Paper>
 
-            <Paper elevation={0} variant="outlined" sx={{ flexBasis: { md: "68%" }, flexGrow: 1, p: 3 }}>
-              <Typography variant="subtitle2" color="text.secondary" gutterBottom>
+            <Paper
+              elevation={0}
+              variant="outlined"
+              sx={{ flexBasis: { md: "68%" }, flexGrow: 1, p: 3 }}
+            >
+              <Typography
+                variant="subtitle2"
+                color="text.secondary"
+                gutterBottom
+              >
                 Chapters
               </Typography>
               {booksLoading && (
-                <Stack spacing={2} alignItems="center" justifyContent="center" sx={{ py: 4 }}>
+                <Stack
+                  spacing={2}
+                  alignItems="center"
+                  justifyContent="center"
+                  sx={{ py: 4 }}
+                >
                   <CircularProgress size={20} />
                   <Typography variant="body2" color="text.secondary">
                     Loading chapters
@@ -159,8 +207,15 @@ export function LibraryLanding() {
                 </Stack>
               )}
               {!booksLoading && booksError && (
-                <Stack spacing={2} alignItems="center" textAlign="center" sx={{ py: 4 }}>
-                  <Typography variant="body2">Cannot show chapters without book data.</Typography>
+                <Stack
+                  spacing={2}
+                  alignItems="center"
+                  textAlign="center"
+                  sx={{ py: 4 }}
+                >
+                  <Typography variant="body2">
+                    Cannot show chapters without book data.
+                  </Typography>
                 </Stack>
               )}
               {!booksLoading && !booksError && !selectedBook && (
@@ -197,15 +252,22 @@ export function LibraryLanding() {
                             alignItems: "flex-start",
                             py: 1,
                             borderBottom:
-                              index === selectedBook.chapters.length - 1 ? "none" : "1px solid",
+                              index === selectedBook.chapters.length - 1
+                                ? "none"
+                                : "1px solid",
                             borderColor: "divider",
                           }}
                         >
                           <ListItemText
                             primary={chapter.title}
                             secondary={chapter.summary ?? undefined}
-                            primaryTypographyProps={{ variant: "body2", fontWeight: 500 }}
-                            secondaryTypographyProps={{ variant: "caption", color: "text.secondary" }}
+                            slotProps={{
+                              primary: { variant: "body2", fontWeight: 500 },
+                              secondary: {
+                                variant: "caption",
+                                color: "text.secondary",
+                              },
+                            }}
                           />
                         </ListItem>
                       ))}
@@ -221,7 +283,12 @@ export function LibraryLanding() {
               Context
             </Typography>
             {sectionsLoading && (
-              <Stack spacing={2} alignItems="center" justifyContent="center" sx={{ py: 4 }}>
+              <Stack
+                spacing={2}
+                alignItems="center"
+                justifyContent="center"
+                sx={{ py: 4 }}
+              >
                 <CircularProgress size={20} />
                 <Typography variant="body2" color="text.secondary">
                   Loading context
@@ -229,9 +296,20 @@ export function LibraryLanding() {
               </Stack>
             )}
             {!sectionsLoading && sectionsError && (
-              <Stack spacing={2} alignItems="center" textAlign="center" sx={{ py: 4 }}>
-                <Typography variant="body2">Unable to reach context data.</Typography>
-                <Button variant="contained" size="small" onClick={reloadSections}>
+              <Stack
+                spacing={2}
+                alignItems="center"
+                textAlign="center"
+                sx={{ py: 4 }}
+              >
+                <Typography variant="body2">
+                  Unable to reach context data.
+                </Typography>
+                <Button
+                  variant="contained"
+                  size="small"
+                  onClick={reloadSections}
+                >
                   Retry
                 </Button>
               </Stack>
@@ -265,10 +343,12 @@ export function LibraryLanding() {
                           <ListItemText
                             primary={getItemPrimaryText(item)}
                             secondary={getItemSecondaryText(item)}
-                            primaryTypographyProps={{ variant: "body2" }}
-                            secondaryTypographyProps={{
-                              variant: "caption",
-                              color: "text.secondary",
+                            slotProps={{
+                              primary: { variant: "body2" },
+                              secondary: {
+                                variant: "caption",
+                                color: "text.secondary",
+                              },
                             }}
                           />
                         </ListItem>

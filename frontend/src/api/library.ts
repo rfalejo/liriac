@@ -4,7 +4,8 @@ import { request } from "./client";
 export type LibraryResponse = components["schemas"]["LibraryResponse"];
 export type ContextSection = components["schemas"]["ContextSection"];
 export type ContextItem = components["schemas"]["ContextItem"];
-export type LibraryBooksResponse = components["schemas"]["LibraryBooksResponse"];
+export type LibraryBooksResponse =
+  components["schemas"]["LibraryBooksResponse"];
 export type LibraryBook = components["schemas"]["LibraryBook"];
 export type ChapterSummary = components["schemas"]["ChapterSummary"];
 

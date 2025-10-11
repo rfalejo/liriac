@@ -1,7 +1,12 @@
 const DEFAULT_API_BASE_URL = "http://localhost:8000";
-const API_BASE_URL = (
-  import.meta.env.VITE_API_URL ?? DEFAULT_API_BASE_URL
-).replace(/\/$/, "");
+
+const rawApiBaseUrl =
+  typeof import.meta.env.VITE_API_URL === "string" &&
+  import.meta.env.VITE_API_URL.length > 0
+    ? import.meta.env.VITE_API_URL
+    : DEFAULT_API_BASE_URL;
+
+const API_BASE_URL = rawApiBaseUrl.replace(/\/$/, "");
 
 interface RequestOptions extends RequestInit {
   parseJson?: boolean;
@@ -9,7 +14,7 @@ interface RequestOptions extends RequestInit {
 
 export async function request<T>(
   path: string,
-  { parseJson = true, headers, ...init }: RequestOptions = {}
+  { parseJson = true, headers, ...init }: RequestOptions = {},
 ): Promise<T> {
   const url = `${API_BASE_URL}${path}`;
   const response = await fetch(url, {
