@@ -14,7 +14,11 @@ export function DialogueBlock({ block, onEdit }: DialogueBlockProps) {
   const turns = block.turns ?? [];
 
   return (
-    <PreviewBlockFrame blockId={block.id} blockType={block.type} onEdit={onEdit}>
+    <PreviewBlockFrame
+      blockId={block.id}
+      blockType={block.type}
+      onEdit={onEdit}
+    >
       <Stack spacing={1.5} sx={{ color: readingThemeConstants.headingColor }}>
         {turns.length === 0 && (
           <Typography variant="body2" color={readingThemeConstants.mutedColor}>
@@ -42,7 +46,13 @@ export function DialogueBlock({ block, onEdit }: DialogueBlockProps) {
               {turn.utterance}
             </Typography>
             {turn.stageDirection && (
-              <Typography component="span" sx={{ fontStyle: "italic", color: readingThemeConstants.mutedColor }}>
+              <Typography
+                component="span"
+                sx={{
+                  fontStyle: "italic",
+                  color: readingThemeConstants.mutedColor,
+                }}
+              >
                 {turn.stageDirection}
               </Typography>
             )}

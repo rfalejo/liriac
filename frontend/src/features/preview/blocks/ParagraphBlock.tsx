@@ -14,7 +14,11 @@ export function ParagraphBlock({ block, onEdit }: ParagraphBlockProps) {
   const content = block.text?.trim() ?? "";
 
   return (
-    <PreviewBlockFrame blockId={block.id} blockType={block.type} onEdit={onEdit}>
+    <PreviewBlockFrame
+      blockId={block.id}
+      blockType={block.type}
+      onEdit={onEdit}
+    >
       <Typography
         component="p"
         sx={{

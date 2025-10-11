@@ -12,7 +12,8 @@ export type ReadingTheme = {
   };
 };
 
-const serifStack = "ui-serif, Georgia, Cambria, \"Times New Roman\", Times, serif";
+const serifStack =
+  'ui-serif, Georgia, Cambria, "Times New Roman", Times, serif';
 
 export const readingTheme: ReadingTheme = {
   shell: {

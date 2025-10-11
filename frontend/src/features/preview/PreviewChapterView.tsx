@@ -1,8 +1,19 @@
 import { Fragment, useMemo } from "react";
-import { Box, Button, CircularProgress, Stack, Typography } from "@mui/material";
+import {
+  Box,
+  Button,
+  CircularProgress,
+  Stack,
+  Typography,
+} from "@mui/material";
 import type { ChapterDetail } from "../../api/chapters";
 import type { components } from "../../api/schema";
-import { DialogueBlock, MetadataBlock, ParagraphBlock, SceneBoundaryBlock } from "./blocks";
+import {
+  DialogueBlock,
+  MetadataBlock,
+  ParagraphBlock,
+  SceneBoundaryBlock,
+} from "./blocks";
 import { readingTheme, readingThemeConstants } from "./readingTheme";
 
 type ChapterBlock = components["schemas"]["ChapterBlock"];
@@ -46,21 +57,31 @@ export function PreviewChapterView({
 
     return chapter.blocks.flatMap((block) => {
       if (block.type === "paragraph") {
-        return [<ParagraphBlock key={block.id} block={block} onEdit={onEditBlock} />];
+        return [
+          <ParagraphBlock key={block.id} block={block} onEdit={onEditBlock} />,
+        ];
       }
 
       if (block.type === "dialogue") {
-        return [<DialogueBlock key={block.id} block={block} onEdit={onEditBlock} />];
+        return [
+          <DialogueBlock key={block.id} block={block} onEdit={onEditBlock} />,
+        ];
       }
 
       if (block.type === "scene_boundary") {
         return [
-          <SceneBoundaryBlock key={block.id} block={block} onEdit={onEditBlock} />,
+          <SceneBoundaryBlock
+            key={block.id}
+            block={block}
+            onEdit={onEditBlock}
+          />,
         ];
       }
 
       if (block.type === "metadata") {
-        const node = <MetadataBlock key={block.id} block={block} onEdit={onEditBlock} />;
+        const node = (
+          <MetadataBlock key={block.id} block={block} onEdit={onEditBlock} />
+        );
         return node ? [node] : [];
       }
 
@@ -70,9 +91,17 @@ export function PreviewChapterView({
 
   if (loading) {
     return (
-      <Stack direction="row" spacing={2} alignItems="center" justifyContent="center">
+      <Stack
+        direction="row"
+        spacing={2}
+        alignItems="center"
+        justifyContent="center"
+      >
         <CircularProgress size={24} color="inherit" />
-        <Typography component="span" sx={{ color: readingThemeConstants.mutedColor }}>
+        <Typography
+          component="span"
+          sx={{ color: readingThemeConstants.mutedColor }}
+        >
           Cargando vista previa...
         </Typography>
       </Stack>
@@ -82,7 +111,9 @@ export function PreviewChapterView({
   if (error) {
     return (
       <Stack spacing={2} alignItems="center" textAlign="center">
-        <Typography color="error.main">No se pudo cargar el capítulo.</Typography>
+        <Typography color="error.main">
+          No se pudo cargar el capítulo.
+        </Typography>
         <Button variant="outlined" onClick={onRetry}>
           Reintentar
         </Button>
@@ -107,13 +138,19 @@ export function PreviewChapterView({
           {chapter.title}
         </Typography>
         {chapter.summary && (
-          <Typography variant="subtitle1" sx={{ color: readingThemeConstants.mutedColor }}>
+          <Typography
+            variant="subtitle1"
+            sx={{ color: readingThemeConstants.mutedColor }}
+          >
             {chapter.summary}
           </Typography>
         )}
       </Stack>
       {renderedBlocks.length === 0 ? (
-        <Typography variant="body2" sx={{ color: readingThemeConstants.mutedColor }}>
+        <Typography
+          variant="body2"
+          sx={{ color: readingThemeConstants.mutedColor }}
+        >
           Sin contenido.
         </Typography>
       ) : (

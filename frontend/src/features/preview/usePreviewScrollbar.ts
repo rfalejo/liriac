@@ -61,9 +61,12 @@ export function usePreviewScrollbar(
     return () => window.cancelAnimationFrame(id);
   }, [evaluateScrollable, isOpen, contentKey]);
 
-  useEffect(() => () => {
-    clearHideTimer();
-  }, [clearHideTimer]);
+  useEffect(
+    () => () => {
+      clearHideTimer();
+    },
+    [clearHideTimer],
+  );
 
   const scheduleHide = useCallback(() => {
     clearHideTimer();
@@ -82,11 +85,15 @@ export function usePreviewScrollbar(
     reveal();
   }, [reveal]);
 
-  const handlePointerEnter = useCallback<MouseEventHandler<HTMLDivElement>>(() => {
+  const handlePointerEnter = useCallback<
+    MouseEventHandler<HTMLDivElement>
+  >(() => {
     reveal();
   }, [reveal]);
 
-  const handlePointerLeave = useCallback<MouseEventHandler<HTMLDivElement>>(() => {
+  const handlePointerLeave = useCallback<
+    MouseEventHandler<HTMLDivElement>
+  >(() => {
     if (!scrollable) return;
     scheduleHide();
   }, [scheduleHide, scrollable]);

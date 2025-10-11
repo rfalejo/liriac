@@ -86,7 +86,9 @@ export function PreviewBlockFrame({
         px: { xs: 2, sm: 3 },
         py: { xs: 2.25, sm: 3 },
         transition: "background-color 140ms ease, box-shadow 140ms ease",
-        backgroundColor: showControls ? "rgba(15, 20, 25, 0.04)" : "transparent",
+        backgroundColor: showControls
+          ? "rgba(15, 20, 25, 0.04)"
+          : "transparent",
         boxShadow: showControls
           ? "0 0 0 1px rgba(15, 20, 25, 0.12)"
           : "0 0 0 1px transparent",
@@ -114,7 +116,9 @@ export function PreviewBlockFrame({
           backgroundColor: "rgba(15, 20, 25, 0.72)",
           color: "#f5f0e6",
           boxShadow: "none",
-          opacity: showControls ? BUTTON_OPACITY_VISIBLE : BUTTON_OPACITY_HIDDEN,
+          opacity: showControls
+            ? BUTTON_OPACITY_VISIBLE
+            : BUTTON_OPACITY_HIDDEN,
           pointerEvents: showControls ? "auto" : "none",
           transition: "opacity 140ms ease",
           "&:hover": {

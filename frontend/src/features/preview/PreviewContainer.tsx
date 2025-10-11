@@ -11,8 +11,15 @@ type PreviewContainerProps = {
   onClose: () => void;
 };
 
-export function PreviewContainer({ chapterId, open, onClose }: PreviewContainerProps) {
-  const targetChapterId = useMemo(() => (open ? chapterId : null), [chapterId, open]);
+export function PreviewContainer({
+  chapterId,
+  open,
+  onClose,
+}: PreviewContainerProps) {
+  const targetChapterId = useMemo(
+    () => (open ? chapterId : null),
+    [chapterId, open],
+  );
   const { chapter, loading, error, reload } = useChapterDetail(targetChapterId);
   const contentSignature = useMemo(() => {
     if (!chapter) {
@@ -48,11 +55,20 @@ export function PreviewContainer({ chapterId, open, onClose }: PreviewContainerP
             <Typography
               id="preview-container-heading"
               variant="subtitle1"
-              sx={{ color: "grey.200", letterSpacing: "0.08em", textTransform: "uppercase" }}
+              sx={{
+                color: "grey.200",
+                letterSpacing: "0.08em",
+                textTransform: "uppercase",
+              }}
             >
               Vista previa
             </Typography>
-            <Button variant="text" color="inherit" onClick={onClose} sx={{ color: "grey.200" }}>
+            <Button
+              variant="text"
+              color="inherit"
+              onClick={onClose}
+              sx={{ color: "grey.200" }}
+            >
               Cerrar
             </Button>
           </Stack>
