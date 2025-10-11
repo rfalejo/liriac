@@ -80,6 +80,7 @@ export function PreviewBlockFrame({
       onMouseEnter={() => setHovered(true)}
       onMouseLeave={() => setHovered(false)}
       sx={{
+        width: "100%",
         position: "relative",
         borderRadius: 2,
         px: { xs: 2, sm: 3 },

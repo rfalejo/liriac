@@ -27,6 +27,7 @@ export const readingTheme: ReadingTheme = {
     flex: 1,
     display: "flex",
     justifyContent: "center",
+    alignItems: "stretch",
     overflowY: "auto",
     px: { xs: 2, sm: 4, md: 6 },
     py: { xs: 4, sm: 6, md: 8 },
@@ -43,6 +44,8 @@ export const readingTheme: ReadingTheme = {
     display: "flex",
     flexDirection: "column",
     gap: { xs: 3, sm: 4 },
+    position: "relative",
+    overflow: "hidden",
   },
   typography: {
     fontFamily: serifStack,
