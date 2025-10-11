@@ -1,9 +1,11 @@
-import { useCallback, useMemo } from "react";
-import { Box, Button, Fade, Modal, Stack, Typography } from "@mui/material";
-import { useChapterDetail } from "../library/useChapterDetail";
+import { useCallback } from "react";
+import { Box, Fade, Modal } from "@mui/material";
 import { readingTheme } from "./readingTheme";
 import { PreviewChapterView } from "./PreviewChapterView";
 import { usePreviewScrollbar } from "./usePreviewScrollbar";
+import { usePreviewChapterNavigation } from "./usePreviewChapterNavigation";
+import { useSidebarHover } from "./useSidebarHover";
+import { PreviewSidebar } from "./PreviewSidebar";
 
 type PreviewContainerProps = {
   chapterId: string;
@@ -16,17 +18,19 @@ export function PreviewContainer({
   open,
   onClose,
 }: PreviewContainerProps) {
-  const targetChapterId = useMemo(
-    () => (open ? chapterId : null),
-    [chapterId, open],
-  );
-  const { chapter, loading, error, reload } = useChapterDetail(targetChapterId);
-  const contentSignature = useMemo(() => {
-    if (!chapter) {
-      return `${chapterId}-empty`;
-    }
-    return `${chapter.id}:${chapter.blocks.length}`;
-  }, [chapter, chapterId]);
+  const {
+    activeChapterId,
+    chapter,
+    chapterOptions,
+    booksError,
+    booksLoading,
+    bookTitle,
+    contentSignature,
+    error,
+    handleSelectChapter,
+    loading,
+    reload,
+  } = usePreviewChapterNavigation({ chapterId, open });
 
   const { scrollAreaRef, handlers, scrollbarClassName } = usePreviewScrollbar(
     open,
@@ -36,6 +40,10 @@ export function PreviewContainer({
   const handleEditBlock = useCallback((blockId: string) => {
     void blockId;
   }, []);
+  const { sidebarVisible, handleSidebarEnter, handleSidebarLeave } =
+    useSidebarHover({ open });
+
+  const selectedChapterId = chapter?.id ?? activeChapterId;
 
   return (
     <Modal
@@ -46,32 +54,18 @@ export function PreviewContainer({
     >
       <Fade in={open}>
         <Box sx={readingTheme.shell}>
-          <Stack
-            direction="row"
-            alignItems="center"
-            justifyContent="space-between"
-            sx={{ px: { xs: 2, sm: 4 }, py: { xs: 2, sm: 3 } }}
-          >
-            <Typography
-              id="preview-container-heading"
-              variant="subtitle1"
-              sx={{
-                color: "grey.200",
-                letterSpacing: "0.08em",
-                textTransform: "uppercase",
-              }}
-            >
-              Vista previa
-            </Typography>
-            <Button
-              variant="text"
-              color="inherit"
-              onClick={onClose}
-              sx={{ color: "grey.200" }}
-            >
-              Cerrar
-            </Button>
-          </Stack>
+          <PreviewSidebar
+            activeChapterId={selectedChapterId}
+            bookTitle={bookTitle}
+            chapters={chapterOptions}
+            error={booksError}
+            loading={booksLoading}
+            onClose={onClose}
+            onEnter={handleSidebarEnter}
+            onLeave={handleSidebarLeave}
+            onSelectChapter={handleSelectChapter}
+            visible={sidebarVisible}
+          />
           <Box
             ref={scrollAreaRef}
             sx={readingTheme.page}
