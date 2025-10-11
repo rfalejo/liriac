@@ -1,4 +1,4 @@
-import { Box, Button } from "@mui/material";
+import { Box, IconButton } from "@mui/material";
 import {
   type FocusEventHandler,
   type MouseEventHandler,
@@ -8,6 +8,7 @@ import {
   useMemo,
   useState,
 } from "react";
+import EditRoundedIcon from "@mui/icons-material/EditRounded";
 import type { components } from "../../../api/schema";
 
 const BUTTON_OPACITY_VISIBLE = 1;
@@ -96,25 +97,16 @@ export function PreviewBlockFrame({
       }}
     >
       {children}
-      <Button
+      <IconButton
         size="small"
-        variant="contained"
         onClick={handleEdit}
         aria-label="Editar bloque"
         sx={{
           position: "absolute",
           top: { xs: 8, sm: 12 },
           right: { xs: 8, sm: 12 },
-          px: 1.75,
-          py: 0.5,
-          minWidth: "auto",
-          fontSize: "0.675rem",
-          fontWeight: 600,
-          letterSpacing: "0.08em",
-          textTransform: "uppercase",
+          color: "rgba(15, 20, 25, 0.6)",
           borderRadius: 999,
-          backgroundColor: "rgba(15, 20, 25, 0.72)",
-          color: "#f5f0e6",
           boxShadow: "none",
           opacity: showControls
             ? BUTTON_OPACITY_VISIBLE
@@ -122,13 +114,13 @@ export function PreviewBlockFrame({
           pointerEvents: showControls ? "auto" : "none",
           transition: "opacity 140ms ease",
           "&:hover": {
-            backgroundColor: "rgba(15, 20, 25, 0.85)",
-            boxShadow: "none",
+            backgroundColor: "rgba(15, 20, 25, 0.1)",
+            color: "rgba(15, 20, 25, 0.78)",
           },
         }}
       >
-        Editar
-      </Button>
+        <EditRoundedIcon sx={{ fontSize: "1.1rem" }} />
+      </IconButton>
     </Box>
   );
 }
