@@ -101,25 +101,57 @@ feat(library): add book listing endpoint
 ## Repository layout snapshot
 
 ```
-/backend
-├── config/
-├── studio/
-├── db.sqlite3
-├── manage.py
-├── pyproject.toml
-├── schema.yaml
-└── uv.lock
-/frontend
-├── src/
-│   ├── App.tsx
-│   ├── index.css
-│   ├── main.tsx
-│   └── vite-env.d.ts
-├── index.html
-├── package.json
-├── pnpm-lock.yaml
-├── tsconfig.app.json
-├── tsconfig.json
-├── tsconfig.node.json
-└── vite.config.ts
+.github/
+\-- instructions/
+    \-- copilot-instructions.md
+backend/
+|-- config/
+|   |-- __init__.py
+|   |-- asgi.py
+|   |-- settings.py
+|   |-- urls.py
+|   \-- wsgi.py
+|-- studio/
+|   |-- migrations/
+|   |   \-- __init__.py
+|   |-- __init__.py
+|   |-- admin.py
+|   |-- apps.py
+|   |-- data.py
+|   |-- middleware.py
+|   |-- models.py
+|   |-- serializers.py
+|   |-- tests.py
+|   |-- urls.py
+|   \-- views.py
+|-- manage.py
+|-- pyproject.toml
+|-- schema.yaml
+\-- uv.lock
+frontend/
+|-- src/
+|   |-- api/
+|   |   |-- client.ts
+|   |   |-- library.ts
+|   |   \-- schema.ts
+|   |-- features/
+|   |   \-- library/
+|   |       |-- LibraryLanding.tsx
+|   |       |-- useLibraryBooks.ts
+|   |       \-- useLibrarySections.ts
+|   |-- App.tsx
+|   |-- index.css
+|   |-- main.tsx
+|   \-- vite-env.d.ts
+|-- .gitignore
+|-- .prettierignore
+|-- index.html
+|-- package.json
+|-- pnpm-lock.yaml
+|-- tsconfig.app.json
+|-- tsconfig.json
+|-- tsconfig.node.json
+\-- vite.config.ts
+.gitignore
+README.md
 ```
