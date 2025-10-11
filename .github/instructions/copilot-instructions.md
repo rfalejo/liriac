@@ -23,6 +23,12 @@ description: Comprehensive guide to Liriac's architecture, state management, and
 	- `pnpm run --silent preview`
 - TypeScript configuration is centralized in `tsconfig.app.json`; keep source files inside `src/`.
 
+## Frontend good practices
+- Start with a flat `src/` tree, then promote components into feature folders as they grow; collocate tests, styles, hooks, and types with each component so its public API stays focused while implementation details remain private.
+- Reach for MUI's `sx` prop for single-use tweaks and escalate to `styled()` helpers or theme overrides when patterns repeat; never target global state class names without a component selector to avoid leaking styles across the app.
+- Hoist shared `GlobalStyles` definitions and other heavy configuration objects outside component bodies so they are instantiated once per module rather than on every render.
+- Prefer React Testing Library with Vitest for interaction-focused tests, and keep fixtures alongside the feature they exercise to reinforce the co-location model.
+
 ## Backend quick facts
 - A local Django 5.2 service remains in `backend/` (project `config`, app `studio`). Use `uv sync --python 3.11` to install dependencies; the virtualenv sits at `backend/.venv`.
 - Primary commands (prefix with `uv run`):
@@ -40,3 +46,30 @@ description: Comprehensive guide to Liriac's architecture, state management, and
 ## Assumptions
 - Backend and frontend run locally on their default ports when integration work resumes.
 - Keep new dependencies lean; prefer Material UI primitives and built-in React patterns before pulling additional libraries.
+
+
+## Repository layout snapshot
+
+```
+/backend
+├── config/
+├── studio/
+├── db.sqlite3
+├── manage.py
+├── pyproject.toml
+├── schema.yaml
+└── uv.lock
+/frontend
+├── src/
+│   ├── App.tsx
+│   ├── index.css
+│   ├── main.tsx
+│   └── vite-env.d.ts
+├── index.html
+├── package.json
+├── pnpm-lock.yaml
+├── tsconfig.app.json
+├── tsconfig.json
+├── tsconfig.node.json
+└── vite.config.ts
+```
