@@ -1,33 +1,27 @@
-import {
-  Box,
-  Button,
-  CssBaseline,
-  ThemeProvider,
-  Typography,
-  createTheme,
-} from "@mui/material";
+import { CssBaseline, ThemeProvider, createTheme } from "@mui/material";
+import { LibraryLanding } from "./features/library/LibraryLanding";
 
-const theme = createTheme();
+const theme = createTheme({
+  palette: {
+    mode: "dark",
+    primary: {
+      main: "#58a6ff",
+    },
+    background: {
+      default: "#0d1117",
+      paper: "#161b22",
+    },
+  },
+  shape: {
+    borderRadius: 16,
+  },
+});
 
 function App() {
   return (
     <ThemeProvider theme={theme}>
       <CssBaseline />
-      <Box
-        sx={{ minHeight: "100vh", display: "grid", placeItems: "center", p: 4 }}
-      >
-        <Box textAlign="center">
-          <Typography variant="h3" component="h1" gutterBottom>
-            Welcome to Liriac
-          </Typography>
-          <Typography color="text.secondary" sx={{ mb: 3 }}>
-            Start building with Material UI.
-          </Typography>
-          <Button variant="contained" color="primary">
-            Explore
-          </Button>
-        </Box>
-      </Box>
+      <LibraryLanding />
     </ThemeProvider>
   );
 }
