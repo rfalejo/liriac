@@ -9,7 +9,11 @@ import { useEffect, useRef, useState } from "react";
 import CheckRoundedIcon from "@mui/icons-material/CheckRounded";
 import CloseRoundedIcon from "@mui/icons-material/CloseRounded";
 import type { components } from "../../../api/schema";
-import { editorThemeConstants } from "../editorTheme";
+import {
+  editorBlockTheme,
+  editorBodyTypographySx,
+  editorThemeConstants,
+} from "../editorTheme";
 import { EditorBlockFrame } from "./EditorBlockFrame";
 
 type ChapterBlock = components["schemas"]["ChapterBlock"];
@@ -95,12 +99,7 @@ export function ParagraphBlock({
         }}
         disabled={disabled}
         aria-label="Guardar cambios"
-        sx={{
-          backgroundColor: "rgba(76, 175, 80, 0.16)",
-          "&:hover": {
-            backgroundColor: "rgba(76, 175, 80, 0.25)",
-          },
-        }}
+        sx={editorBlockTheme.controls.confirmButton}
       >
         {disabled ? (
           <CircularProgress size={16} thickness={5} color="inherit" />
@@ -116,12 +115,7 @@ export function ParagraphBlock({
         }}
         disabled={disabled}
         aria-label="Cancelar edición"
-        sx={{
-          backgroundColor: "rgba(244, 67, 54, 0.16)",
-          "&:hover": {
-            backgroundColor: "rgba(244, 67, 54, 0.25)",
-          },
-        }}
+        sx={editorBlockTheme.controls.cancelButton}
       >
         <CloseRoundedIcon sx={{ fontSize: "1.1rem" }} />
       </IconButton>
@@ -148,16 +142,13 @@ export function ParagraphBlock({
           onInput={handleInput}
           onKeyDown={handleKeyDown}
           sx={{
+            ...editorBodyTypographySx,
             margin: 0,
             pb: 0,
             color: editorThemeConstants.headingColor,
             textIndent: "1.5em",
             outline: "none",
             border: "none",
-            fontFamily: "inherit",
-            fontSize: "inherit",
-            lineHeight: "inherit",
-            letterSpacing: "inherit",
             minHeight: "1.4em",
             whiteSpace: "pre-wrap",
           }}
@@ -166,6 +157,7 @@ export function ParagraphBlock({
         <Typography
           component="p"
           sx={{
+            ...editorBodyTypographySx,
             margin: 0,
             pb: 0,
             color: editorThemeConstants.headingColor,

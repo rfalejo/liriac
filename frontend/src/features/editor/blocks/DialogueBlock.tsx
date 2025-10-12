@@ -11,7 +11,11 @@ import CheckRoundedIcon from "@mui/icons-material/CheckRounded";
 import CloseRoundedIcon from "@mui/icons-material/CloseRounded";
 import AddCircleOutlineRoundedIcon from "@mui/icons-material/AddCircleOutlineRounded";
 import DeleteOutlineRoundedIcon from "@mui/icons-material/DeleteOutlineRounded";
-import { editorThemeConstants } from "../editorTheme";
+import {
+  editorBlockTheme,
+  editorBodyTypographySx,
+  editorThemeConstants,
+} from "../editorTheme";
 import { EditorBlockFrame } from "./EditorBlockFrame";
 import type { ChapterBlock, DialogueField, DialogueTurn } from "../types";
 
@@ -69,12 +73,7 @@ export function DialogueBlock({
         }}
         disabled={disabled}
         aria-label="Guardar cambios"
-        sx={{
-          backgroundColor: "rgba(76, 175, 80, 0.16)",
-          "&:hover": {
-            backgroundColor: "rgba(76, 175, 80, 0.25)",
-          },
-        }}
+        sx={editorBlockTheme.controls.confirmButton}
       >
         {disabled ? (
           <CircularProgress size={16} thickness={5} color="inherit" />
@@ -90,12 +89,7 @@ export function DialogueBlock({
         }}
         disabled={disabled}
         aria-label="Cancelar edición"
-        sx={{
-          backgroundColor: "rgba(244, 67, 54, 0.16)",
-          "&:hover": {
-            backgroundColor: "rgba(244, 67, 54, 0.25)",
-          },
-        }}
+        sx={editorBlockTheme.controls.cancelButton}
       >
         <CloseRoundedIcon sx={{ fontSize: "1.1rem" }} />
       </IconButton>
@@ -112,7 +106,13 @@ export function DialogueBlock({
     >
       <Stack spacing={1.25} sx={{ color: editorThemeConstants.headingColor }}>
         {turns.length === 0 && (
-          <Typography variant="body2" color={editorThemeConstants.mutedColor}>
+          <Typography
+            variant="body2"
+            sx={{
+              ...editorBodyTypographySx,
+              color: editorThemeConstants.mutedColor,
+            }}
+          >
             (Diálogo sin intervenciones)
           </Typography>
         )}
@@ -149,9 +149,11 @@ export function DialogueBlock({
                       )
                     }
                     onKeyDown={handleKeyDown}
-                    variant="standard"
+                    variant="outlined"
+                    size="small"
                     fullWidth
                     disabled={disabled}
+                    sx={editorBlockTheme.inputs.field}
                   />
                   <TextField
                     label="Parlamento"
@@ -165,10 +167,12 @@ export function DialogueBlock({
                     }
                     onKeyDown={handleKeyDown}
                     variant="outlined"
+                    size="small"
                     fullWidth
                     multiline
                     minRows={3}
                     disabled={disabled}
+                    sx={editorBlockTheme.inputs.multiline}
                   />
                   <TextField
                     label="Acotación"
@@ -182,10 +186,12 @@ export function DialogueBlock({
                     }
                     onKeyDown={handleKeyDown}
                     variant="outlined"
+                    size="small"
                     fullWidth
                     multiline
                     minRows={2}
                     disabled={disabled}
+                    sx={editorBlockTheme.inputs.multiline}
                   />
                 </Stack>
               ) : (
@@ -194,6 +200,7 @@ export function DialogueBlock({
                     <Typography
                       component="span"
                       sx={{
+                        ...editorBodyTypographySx,
                         display: "block",
                         fontSize: "0.85rem",
                         fontWeight: 600,
@@ -205,13 +212,20 @@ export function DialogueBlock({
                       {turn.speakerName}
                     </Typography>
                   )}
-                  <Typography component="p" sx={{ margin: 0 }}>
+                  <Typography
+                    component="p"
+                    sx={{
+                      ...editorBodyTypographySx,
+                      margin: 0,
+                    }}
+                  >
                     {turn.utterance}
                   </Typography>
                   {turn.stageDirection && (
                     <Typography
                       component="span"
                       sx={{
+                        ...editorBodyTypographySx,
                         fontStyle: "italic",
                         color: editorThemeConstants.mutedColor,
                       }}
@@ -251,10 +265,7 @@ export function DialogueBlock({
             onClick={onAddTurn}
             disabled={disabled}
             aria-label="Agregar parlamento"
-            sx={{
-              alignSelf: "flex-start",
-              color: "rgba(25, 118, 210, 0.75)",
-            }}
+            sx={editorBlockTheme.controls.addButton}
           >
             <AddCircleOutlineRoundedIcon sx={{ fontSize: "1.3rem" }} />
           </IconButton>

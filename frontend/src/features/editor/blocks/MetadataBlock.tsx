@@ -1,6 +1,10 @@
 import { Stack, Typography } from "@mui/material";
 import type { components } from "../../../api/schema";
-import { editorThemeConstants } from "../editorTheme";
+import {
+  editorBodyTypographySx,
+  editorFontFamily,
+  editorThemeConstants,
+} from "../editorTheme";
 import { EditorBlockFrame } from "./EditorBlockFrame";
 
 type ChapterBlock = components["schemas"]["ChapterBlock"];
@@ -34,6 +38,7 @@ export function MetadataBlock({ block, onEdit }: MetadataBlockProps) {
             <Typography
               variant="caption"
               sx={{
+                fontFamily: editorFontFamily,
                 letterSpacing: "0.14em",
                 textTransform: "uppercase",
                 color: editorThemeConstants.mutedColor,
@@ -58,6 +63,7 @@ export function MetadataBlock({ block, onEdit }: MetadataBlockProps) {
             <Typography
               variant="subtitle2"
               sx={{
+                fontFamily: editorFontFamily,
                 color: editorThemeConstants.mutedColor,
                 fontWeight: 500,
                 letterSpacing: "0.04em",
@@ -70,14 +76,21 @@ export function MetadataBlock({ block, onEdit }: MetadataBlockProps) {
             <Stack spacing={0.5} sx={{ mt: 1.25 }}>
               <Typography
                 component="blockquote"
-                sx={{ fontStyle: "italic", margin: 0 }}
+                sx={{
+                  ...editorBodyTypographySx,
+                  fontStyle: "italic",
+                  margin: 0,
+                }}
               >
                 “{block.epigraph}”
               </Typography>
               {block.epigraphAttribution && (
                 <Typography
                   variant="caption"
-                  color={editorThemeConstants.mutedColor}
+                  sx={{
+                    fontFamily: editorFontFamily,
+                    color: editorThemeConstants.mutedColor,
+                  }}
                 >
                   — {block.epigraphAttribution}
                 </Typography>
@@ -105,6 +118,7 @@ export function MetadataBlock({ block, onEdit }: MetadataBlockProps) {
         <Typography
           variant="body2"
           sx={{
+            ...editorBodyTypographySx,
             fontStyle: "italic",
             color: editorThemeConstants.mutedColor,
           }}
@@ -117,7 +131,13 @@ export function MetadataBlock({ block, onEdit }: MetadataBlockProps) {
 
   return (
     <EditorBlockFrame blockId={block.id} blockType={block.type} onEdit={onEdit}>
-      <Typography variant="body2" color={editorThemeConstants.mutedColor}>
+      <Typography
+        variant="body2"
+        sx={{
+          ...editorBodyTypographySx,
+          color: editorThemeConstants.mutedColor,
+        }}
+      >
         (Bloque de metadatos sin representación especializada)
       </Typography>
     </EditorBlockFrame>

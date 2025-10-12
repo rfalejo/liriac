@@ -35,15 +35,7 @@ export function EditorShell({
         className={scrollbarClassName}
         {...scrollHandlers}
       >
-        <Box
-          sx={{
-            ...editorTheme.blockStack,
-            fontFamily: editorTheme.typography.fontFamily,
-            lineHeight: editorTheme.typography.lineHeight,
-            fontSize: editorTheme.typography.fontSize,
-            letterSpacing: editorTheme.typography.letterSpacing,
-          }}
-        >
+        <Box sx={editorTheme.blockStack}>
           <EditorChapterView {...chapterViewProps} />
           {children}
         </Box>

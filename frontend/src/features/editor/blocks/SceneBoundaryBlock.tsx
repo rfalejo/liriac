@@ -1,6 +1,9 @@
 import { Divider, Stack, Typography } from "@mui/material";
 import type { components } from "../../../api/schema";
-import { editorThemeConstants } from "../editorTheme";
+import {
+  editorBodyTypographySx,
+  editorThemeConstants,
+} from "../editorTheme";
 import { EditorBlockFrame } from "./EditorBlockFrame";
 
 type ChapterBlock = components["schemas"]["ChapterBlock"];
@@ -19,6 +22,7 @@ export function SceneBoundaryBlock({ block, onEdit }: SceneBoundaryBlockProps) {
           <Typography
             variant="body2"
             sx={{
+              ...editorBodyTypographySx,
               color: editorThemeConstants.mutedColor,
               letterSpacing: "0.08em",
               textTransform: "uppercase",

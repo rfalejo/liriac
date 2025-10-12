@@ -15,7 +15,12 @@ import {
   ParagraphBlock,
   SceneBoundaryBlock,
 } from "./blocks";
-import { editorTheme, editorThemeConstants } from "./editorTheme";
+import {
+  editorBodyTypographySx,
+  editorFontFamily,
+  editorTheme,
+  editorThemeConstants,
+} from "./editorTheme";
 import {
   BlockInsertMenu,
   type BlockInsertPosition,
@@ -42,6 +47,7 @@ function renderFallbackBlock(block: ChapterBlock) {
     <Box
       key={block.id}
       sx={{
+        ...editorBodyTypographySx,
         border: "1px dashed rgba(27, 27, 27, 0.25)",
         borderRadius: 1,
         p: { xs: 2, sm: 3 },
@@ -173,7 +179,10 @@ export function EditorChapterView({
         <CircularProgress size={24} color="inherit" />
         <Typography
           component="span"
-          sx={{ color: editorThemeConstants.mutedColor }}
+          sx={{
+            ...editorBodyTypographySx,
+            color: editorThemeConstants.mutedColor,
+          }}
         >
           Cargando capítulo...
         </Typography>
@@ -184,7 +193,12 @@ export function EditorChapterView({
   if (error) {
     return (
       <Stack spacing={2} alignItems="center" textAlign="center">
-        <Typography color="error.main">
+        <Typography
+          sx={{
+            ...editorBodyTypographySx,
+            color: "error.main",
+          }}
+        >
           No se pudo cargar el capítulo.
         </Typography>
         <Button variant="outlined" onClick={onRetry}>
@@ -220,7 +234,10 @@ export function EditorChapterView({
           {chapter.summary && (
             <Typography
               variant="subtitle1"
-              sx={{ color: editorThemeConstants.mutedColor }}
+              sx={{
+                fontFamily: editorFontFamily,
+                color: editorThemeConstants.mutedColor,
+              }}
             >
               {chapter.summary}
             </Typography>
@@ -231,7 +248,10 @@ export function EditorChapterView({
       {blockSequence.length === 0 ? (
         <Typography
           variant="body2"
-          sx={{ color: editorThemeConstants.mutedColor }}
+          sx={{
+            ...editorBodyTypographySx,
+            color: editorThemeConstants.mutedColor,
+          }}
         >
           Sin contenido.
         </Typography>
