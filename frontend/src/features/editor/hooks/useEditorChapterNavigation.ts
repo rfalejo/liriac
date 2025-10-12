@@ -1,8 +1,8 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
-import type { ChapterDetail } from "../../api/chapters";
-import type { ChapterSummary, LibraryBook } from "../../api/library";
-import { useLibraryData } from "../library/LibraryDataContext";
-import { useChapterDetail } from "../library/useChapterDetail";
+import type { ChapterDetail } from "../../../api/chapters";
+import type { ChapterSummary, LibraryBook } from "../../../api/library";
+import { useLibraryData } from "../../library/LibraryDataContext";
+import { useChapterDetail } from "../../library/hooks/useChapterDetail";
 
 type UseEditorChapterNavigationParams = {
   chapterId: string;

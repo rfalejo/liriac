@@ -93,7 +93,7 @@ def update_instructions(
     repo_root: Path, lines: List[str], override_path: str | None
 ) -> None:
     instructions_path = Path(override_path) if override_path else Path(
-        ".github/instructions/copilot-instructions.md"
+        ".github/chatmodes/coder.chatmode.md"
     )
     if not instructions_path.is_absolute():
         instructions_path = (repo_root / instructions_path).resolve()

@@ -1,6 +1,6 @@
-import type { LibraryBook, LibraryBooksResponse } from "../../api/library";
-import { fetchLibraryBooks } from "../../api/library";
-import { libraryQueryKeys } from "./libraryQueryKeys";
+import type { LibraryBook, LibraryBooksResponse } from "../../../api/library";
+import { fetchLibraryBooks } from "../../../api/library";
+import { libraryQueryKeys } from "../libraryQueryKeys";
 import { useLibraryResource } from "./useLibraryResource";
 
 export function useLibraryBooks() {

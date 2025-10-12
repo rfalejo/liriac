@@ -1,6 +1,6 @@
-import type { LibraryResponse } from "../../api/library";
-import { fetchLibrarySections } from "../../api/library";
-import { libraryQueryKeys } from "./libraryQueryKeys";
+import type { LibraryResponse } from "../../../api/library";
+import { fetchLibrarySections } from "../../../api/library";
+import { libraryQueryKeys } from "../libraryQueryKeys";
 import { useLibraryResource } from "./useLibraryResource";
 
 export function useLibrarySections() {

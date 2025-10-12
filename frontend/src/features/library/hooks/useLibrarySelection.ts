@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
-import type { LibraryBook } from "../../api/library";
+import type { LibraryBook } from "../../../api/library";
 
 type UseLibrarySelectionParams = {
   books: LibraryBook[];

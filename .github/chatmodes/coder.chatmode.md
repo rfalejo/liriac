@@ -106,9 +106,8 @@ When planning a big change, you can use the following tools:
 
 ```
 .github/
-\-- instructions/
-    |-- architect.instructions.md
-    \-- copilot-instructions.md
+\-- chatmodes/
+    \-- coder.chatmode.md
 backend/
 |-- config/
 |   |-- __init__.py
@@ -141,38 +140,39 @@ frontend/
 |   |   |-- library.ts
 |   |   \-- schema.ts
 |   |-- features/
-|   |   |-- library/
-|   |   |   |-- components/
-|   |   |   |   \-- LibraryPanelStatus.tsx
-|   |   |   |-- LibraryBooksPanel.tsx
-|   |   |   |-- LibraryChaptersPanel.tsx
-|   |   |   |-- LibraryContextPanel.tsx
-|   |   |   |-- LibraryDataContext.tsx
-|   |   |   |-- LibraryDataProvider.tsx
-|   |   |   |-- LibraryLanding.tsx
-|   |   |   |-- libraryQueryKeys.ts
-|   |   |   |-- useChapterDetail.ts
-|   |   |   |-- useLibraryBooks.ts
-|   |   |   |-- useLibraryEditor.ts
-|   |   |   |-- useLibraryResource.ts
-|   |   |   |-- useLibrarySections.ts
-|   |   |   \-- useLibrarySelection.ts
-|   |   \-- editor/
-|   |       |-- blocks/
-|   |       |   |-- DialogueBlock.tsx
-|   |       |   |-- EditorBlockFrame.tsx
-|   |       |   |-- MetadataBlock.tsx
-|   |       |   |-- ParagraphBlock.tsx
-|   |       |   |-- SceneBoundaryBlock.tsx
-|   |       |   \-- index.ts
-|   |       |-- EditorChapterView.tsx
-|   |       |-- EditorContainer.tsx
-|   |       |-- EditorShell.tsx
-|   |       |-- EditorSidebar.tsx
-|   |       |-- editorTheme.ts
-|   |       |-- useEditorChapterNavigation.ts
-|   |       |-- useEditorScrollbar.ts
-|   |       \-- useSidebarHover.ts
+|   |   |-- editor/
+|   |   |   |-- blocks/
+|   |   |   |   |-- BlockInsertMenu.tsx
+|   |   |   |   |-- DialogueBlock.tsx
+|   |   |   |   |-- EditorBlockFrame.tsx
+|   |   |   |   |-- MetadataBlock.tsx
+|   |   |   |   |-- ParagraphBlock.tsx
+|   |   |   |   |-- SceneBoundaryBlock.tsx
+|   |   |   |   \-- index.ts
+|   |   |   |-- EditorChapterView.tsx
+|   |   |   |-- EditorContainer.tsx
+|   |   |   |-- EditorShell.tsx
+|   |   |   |-- EditorSidebar.tsx
+|   |   |   |-- editorTheme.ts
+|   |   |   |-- useEditorChapterNavigation.ts
+|   |   |   |-- useEditorScrollbar.ts
+|   |   |   \-- useSidebarHover.ts
+|   |   \-- library/
+|   |       |-- components/
+|   |       |   \-- LibraryPanelStatus.tsx
+|   |       |-- LibraryBooksPanel.tsx
+|   |       |-- LibraryChaptersPanel.tsx
+|   |       |-- LibraryContextPanel.tsx
+|   |       |-- LibraryDataContext.tsx
+|   |       |-- LibraryDataProvider.tsx
+|   |       |-- LibraryLanding.tsx
+|   |       |-- libraryQueryKeys.ts
+|   |       |-- useChapterDetail.ts
+|   |       |-- useLibraryBooks.ts
+|   |       |-- useLibraryEditor.ts
+|   |       |-- useLibraryResource.ts
+|   |       |-- useLibrarySections.ts
+|   |       \-- useLibrarySelection.ts
 |   |-- App.tsx
 |   |-- index.css
 |   |-- main.tsx

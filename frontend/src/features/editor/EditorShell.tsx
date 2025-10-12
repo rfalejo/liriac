@@ -3,7 +3,7 @@ import type { ComponentProps, ReactNode } from "react";
 import { EditorChapterView } from "./EditorChapterView";
 import { EditorSidebar } from "./EditorSidebar";
 import { editorTheme } from "./editorTheme";
-import type { EditorScrollbarHandlers } from "./useEditorScrollbar";
+import type { EditorScrollbarHandlers } from "./hooks/useEditorScrollbar";
 
 type EditorShellProps = {
   sidebarProps: ComponentProps<typeof EditorSidebar>;

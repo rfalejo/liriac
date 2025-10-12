@@ -1,8 +1,8 @@
 import { useCallback, useMemo } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import type { ChapterDetail } from "../../api/chapters";
-import { fetchChapterDetail } from "../../api/chapters";
-import { chapterQueryKeys } from "./libraryQueryKeys";
+import type { ChapterDetail } from "../../../api/chapters";
+import { fetchChapterDetail } from "../../../api/chapters";
+import { chapterQueryKeys } from "../libraryQueryKeys";
 
 export function useChapterDetail(chapterId: string | null | undefined) {
   const queryClient = useQueryClient();

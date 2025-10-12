@@ -1,9 +1,9 @@
 import { createContext, useContext, useMemo, type ReactNode } from "react";
 import type { LibraryBook, LibraryResponse } from "../../api/library";
-import { useLibraryBooks } from "./useLibraryBooks";
-import { useLibrarySections } from "./useLibrarySections";
-import { useLibrarySelection } from "./useLibrarySelection";
-import { useLibraryEditor } from "./useLibraryEditor";
+import { useLibraryBooks } from "./hooks/useLibraryBooks";
+import { useLibrarySections } from "./hooks/useLibrarySections";
+import { useLibrarySelection } from "./hooks/useLibrarySelection";
+import { useLibraryEditor } from "./hooks/useLibraryEditor";
 
 type LibraryDataContextValue = {
   books: LibraryBook[];

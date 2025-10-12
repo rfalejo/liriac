@@ -1,8 +1,8 @@
 import { useCallback } from "react";
 import type { components } from "../../api/schema";
-import { useEditorScrollbar } from "./useEditorScrollbar";
-import { useEditorChapterNavigation } from "./useEditorChapterNavigation";
-import { useSidebarHover } from "./useSidebarHover";
+import { useEditorScrollbar } from "./hooks/useEditorScrollbar";
+import { useEditorChapterNavigation } from "./hooks/useEditorChapterNavigation";
+import { useSidebarHover } from "./hooks/useSidebarHover";
 import { EditorShell } from "./EditorShell";
 
 type EditorContainerProps = {

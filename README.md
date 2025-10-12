@@ -5,8 +5,8 @@ Liriac is a workspace for exploring and editing narrative content. It ships a Vi
 ## Repository layout
 
 - `frontend/` – React application with feature-based folders. The entry point is `src/main.tsx` → `App.tsx`, which mounts the library dashboard and the editor experience.
-	- `src/features/library/` – book and chapter discovery, shared data context, and supporting hooks.
-	- `src/features/editor/` – full-screen editor shell, chapter viewport, and editing blocks.
+	- `src/features/library/` – book and chapter discovery, shared data context, and supporting hooks inside `hooks/`.
+	- `src/features/editor/` – full-screen editor shell, chapter viewport, and editing blocks with shared hooks under `hooks/`.
 	- `src/api/` – REST helpers for the library and chapter endpoints.
 - `backend/` – Django project (`config/`) plus the `studio` app, ready for service integrations when the frontend needs live data.
 - `docs/`, `scripts/` – documentation stubs and utility scripts.
