@@ -144,6 +144,7 @@ frontend/
 |   |   |   |   |   |-- BlockEditControls.tsx
 |   |   |   |   |   |-- DialogueEditableField.tsx
 |   |   |   |   |   |-- EditableBlock.tsx
+|   |   |   |   |   |-- EditableContentField.tsx
 |   |   |   |   |   \-- EditableDialogueTurn.tsx
 |   |   |   |   |-- BlockInsertMenu.tsx
 |   |   |   |   |-- DialogueBlock.tsx
