@@ -1,4 +1,5 @@
 import { Fragment, useMemo } from "react";
+import type { ReactNode } from "react";
 import {
   Box,
   Button,
@@ -15,8 +16,13 @@ import {
   SceneBoundaryBlock,
 } from "./blocks";
 import { readingTheme, readingThemeConstants } from "./readingTheme";
+import {
+  BlockInsertMenu,
+  type BlockInsertPosition,
+} from "./blocks/BlockInsertMenu";
 
 type ChapterBlock = components["schemas"]["ChapterBlock"];
+type ChapterBlockType = components["schemas"]["ChapterBlockTypeEnum"];
 
 type PreviewChapterViewProps = {
   loading: boolean;
@@ -24,6 +30,10 @@ type PreviewChapterViewProps = {
   chapter: ChapterDetail | null;
   onRetry: () => void;
   onEditBlock: (blockId: string) => void;
+  onInsertBlock?: (
+    blockType: ChapterBlockType,
+    position: BlockInsertPosition,
+  ) => void;
 };
 
 function renderFallbackBlock(block: ChapterBlock) {
@@ -49,44 +59,52 @@ export function PreviewChapterView({
   chapter,
   onRetry,
   onEditBlock,
+  onInsertBlock,
 }: PreviewChapterViewProps) {
-  const renderedBlocks = useMemo(() => {
+  const blockSequence = useMemo(() => {
     if (!chapter) {
-      return [];
+      return [] as Array<{ id: string; node: ReactNode }>;
     }
 
-    return chapter.blocks.flatMap((block) => {
+    const entries: Array<{ id: string; node: ReactNode }> = [];
+
+    chapter.blocks.forEach((block) => {
       if (block.type === "paragraph") {
-        return [
-          <ParagraphBlock key={block.id} block={block} onEdit={onEditBlock} />,
-        ];
+        entries.push({
+          id: block.id,
+          node: <ParagraphBlock block={block} onEdit={onEditBlock} />,
+        });
+        return;
       }
 
       if (block.type === "dialogue") {
-        return [
-          <DialogueBlock key={block.id} block={block} onEdit={onEditBlock} />,
-        ];
+        entries.push({
+          id: block.id,
+          node: <DialogueBlock block={block} onEdit={onEditBlock} />,
+        });
+        return;
       }
 
       if (block.type === "scene_boundary") {
-        return [
-          <SceneBoundaryBlock
-            key={block.id}
-            block={block}
-            onEdit={onEditBlock}
-          />,
-        ];
+        entries.push({
+          id: block.id,
+          node: <SceneBoundaryBlock block={block} onEdit={onEditBlock} />,
+        });
+        return;
       }
 
       if (block.type === "metadata") {
-        const node = (
-          <MetadataBlock key={block.id} block={block} onEdit={onEditBlock} />
-        );
-        return node ? [node] : [];
+        const node = <MetadataBlock block={block} onEdit={onEditBlock} />;
+        if (node) {
+          entries.push({ id: block.id, node });
+        }
+        return;
       }
 
-      return [renderFallbackBlock(block)];
+      entries.push({ id: block.id, node: renderFallbackBlock(block) });
     });
+
+    return entries;
   }, [chapter, onEditBlock]);
 
   if (loading) {
@@ -155,7 +173,7 @@ export function PreviewChapterView({
         </Stack>
       )}
 
-      {renderedBlocks.length === 0 ? (
+      {blockSequence.length === 0 ? (
         <Typography
           variant="body2"
           sx={{ color: readingThemeConstants.mutedColor }}
@@ -163,7 +181,28 @@ export function PreviewChapterView({
           Sin contenido.
         </Typography>
       ) : (
-        <Stack spacing={{ xs: 2.5, sm: 3 }}>{renderedBlocks}</Stack>
+        <Stack spacing={0}>
+          {blockSequence.map((entry, index) => {
+            const previous = blockSequence[index - 1];
+            const insertPosition: BlockInsertPosition = {
+              afterBlockId: previous?.id ?? null,
+              beforeBlockId: entry.id,
+              index,
+            };
+
+            return (
+              <Fragment key={entry.id}>
+                {index > 0 && (
+                  <BlockInsertMenu
+                    position={insertPosition}
+                    onInsertBlock={onInsertBlock}
+                  />
+                )}
+                {entry.node}
+              </Fragment>
+            );
+          })}
+        </Stack>
       )}
     </Fragment>
   );

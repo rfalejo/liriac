@@ -1,4 +1,5 @@
 import { useCallback } from "react";
+import type { components } from "../../api/schema";
 import { usePreviewScrollbar } from "./usePreviewScrollbar";
 import { usePreviewChapterNavigation } from "./usePreviewChapterNavigation";
 import { useSidebarHover } from "./useSidebarHover";
@@ -37,6 +38,21 @@ export function PreviewContainer({
   const handleEditBlock = useCallback((blockId: string) => {
     void blockId;
   }, []);
+
+  const handleInsertBlock = useCallback(
+    (
+      blockType: components["schemas"]["ChapterBlockTypeEnum"],
+      position: {
+        afterBlockId: string | null;
+        beforeBlockId: string | null;
+        index: number;
+      },
+    ) => {
+      void blockType;
+      void position;
+    },
+    [],
+  );
   const { sidebarVisible, handleSidebarEnter, handleSidebarLeave } =
     useSidebarHover({ open });
 
@@ -64,6 +80,7 @@ export function PreviewContainer({
         chapter,
         onRetry: reload,
         onEditBlock: handleEditBlock,
+        onInsertBlock: handleInsertBlock,
       }}
       scrollAreaRef={scrollAreaRef}
       scrollHandlers={handlers}
