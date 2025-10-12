@@ -44,13 +44,16 @@ export function EditorContainer({
     chapterId: chapter?.id,
   });
 
-  const confirmDiscardChanges = useCallback((context: EditingDiscardContext) => {
-    const message =
-      context === "cancel"
-        ? "¿Deseas descartar los cambios?"
-        : "¿Quieres descartar los cambios pendientes?";
-    return window.confirm(message);
-  }, []);
+  const confirmDiscardChanges = useCallback(
+    (context: EditingDiscardContext) => {
+      const message =
+        context === "cancel"
+          ? "¿Deseas descartar los cambios?"
+          : "¿Quieres descartar los cambios pendientes?";
+      return window.confirm(message);
+    },
+    [],
+  );
 
   const notifyUpdateFailure = useCallback(() => {
     window.alert("No se pudieron guardar los cambios. Intenta de nuevo.");

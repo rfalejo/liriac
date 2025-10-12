@@ -3,6 +3,24 @@ import "@mui/material/Typography";
 import "@mui/material/styles";
 
 declare module "@mui/material/styles" {
+  interface EditorThemeTokens {
+    blockPaddingX: { xs: number; sm: number };
+    blockPaddingY: { xs: number; sm: number };
+    blockRadius: number;
+    blockTransition: string;
+    blockControlsFade: string;
+    iconButtonTransition: string;
+    paragraphIndent: string;
+  }
+
+  interface Theme {
+    editor: EditorThemeTokens;
+  }
+
+  interface ThemeOptions {
+    editor?: Partial<EditorThemeTokens>;
+  }
+
   interface EditorPalette {
     shellBg: string;
     sidebarBg: string;
@@ -60,16 +78,31 @@ declare module "@mui/material/styles" {
 
   interface TypographyVariants {
     editorBody: CSSProperties;
+    editorParagraph: CSSProperties;
+    editorParagraphEditable: CSSProperties;
+    editorMuted: CSSProperties;
+    editorDialogueSpeaker: CSSProperties;
+    editorStageDirection: CSSProperties;
   }
 
   interface TypographyVariantsOptions {
     editorBody?: CSSProperties;
+    editorParagraph?: CSSProperties;
+    editorParagraphEditable?: CSSProperties;
+    editorMuted?: CSSProperties;
+    editorDialogueSpeaker?: CSSProperties;
+    editorStageDirection?: CSSProperties;
   }
 }
 
 declare module "@mui/material/Typography" {
   interface TypographyPropsVariantOverrides {
     editorBody: true;
+    editorParagraph: true;
+    editorParagraphEditable: true;
+    editorMuted: true;
+    editorDialogueSpeaker: true;
+    editorStageDirection: true;
   }
 }
 

@@ -5,6 +5,7 @@ import type { components } from "../../../api/schema";
 import { useEditorBlockEditing } from "../context/EditorBlockEditingContext";
 import { EditorBlockFrame } from "./EditorBlockFrame";
 import { BlockEditControls } from "./components/BlockEditControls";
+import { handleEditingKeyDown } from "../utils/editingShortcuts";
 
 type ChapterBlock = components["schemas"]["ChapterBlock"];
 
@@ -63,17 +64,10 @@ export function ParagraphBlock({ block }: ParagraphBlockProps) {
     if (!isEditing) {
       return;
     }
-
-    if ((event.metaKey || event.ctrlKey) && event.key === "Enter") {
-      event.preventDefault();
-      void onSaveEdit?.();
-      return;
-    }
-
-    if (event.key === "Escape") {
-      event.preventDefault();
-      onCancelEdit?.();
-    }
+    handleEditingKeyDown(event, {
+      onConfirm: onSaveEdit,
+      onCancel: onCancelEdit,
+    });
   };
 
   const controls = isEditing ? (
@@ -103,28 +97,12 @@ export function ParagraphBlock({ block }: ParagraphBlockProps) {
           spellCheck
           onInput={handleInput}
           onKeyDown={handleKeyDown}
-          sx={(theme: Theme) => ({
-            ...theme.typography.editorBody,
-            margin: 0,
-            pb: 0,
-            color: theme.palette.editor.blockHeading,
-            textIndent: "1.5em",
-            outline: "none",
-            border: "none",
-            minHeight: "1.4em",
-            whiteSpace: "pre-wrap",
-          })}
+          sx={(theme: Theme) => theme.typography.editorParagraphEditable}
         />
       ) : (
         <Typography
           component="p"
-          sx={(theme: Theme) => ({
-            ...theme.typography.editorBody,
-            margin: 0,
-            pb: 0,
-            color: theme.palette.editor.blockHeading,
-            textIndent: "1.5em",
-          })}
+          sx={(theme: Theme) => theme.typography.editorParagraph}
         >
           {content.length > 0 ? content : "(Sin texto en este párrafo)"}
         </Typography>

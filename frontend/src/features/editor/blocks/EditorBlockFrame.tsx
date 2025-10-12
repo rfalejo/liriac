@@ -91,10 +91,10 @@ export function EditorBlockFrame({
       sx={(theme: Theme) => ({
         width: "100%",
         position: "relative",
-        borderRadius: 2,
-        px: { xs: 1.75, sm: 2.5 },
-        py: { xs: 1.75, sm: 2.25 },
-        transition: "background-color 140ms ease, box-shadow 140ms ease",
+        borderRadius: theme.editor.blockRadius,
+        px: theme.editor.blockPaddingX,
+        py: theme.editor.blockPaddingY,
+        transition: theme.editor.blockTransition,
         backgroundColor: isActive
           ? theme.palette.editor.blockActiveBg
           : showControls
@@ -110,7 +110,7 @@ export function EditorBlockFrame({
     >
       {children}
       <Box
-        sx={{
+        sx={(theme: Theme) => ({
           position: "absolute",
           top: { xs: 8, sm: 12 },
           right: { xs: 8, sm: 12 },
@@ -120,8 +120,8 @@ export function EditorBlockFrame({
             ? BUTTON_OPACITY_VISIBLE
             : BUTTON_OPACITY_HIDDEN,
           pointerEvents: showControls ? "auto" : "none",
-          transition: "opacity 140ms ease",
-        }}
+          transition: theme.editor.blockControlsFade,
+        })}
       >
         {controls ??
           (onEdit ? (
@@ -133,6 +133,7 @@ export function EditorBlockFrame({
                 color: theme.palette.editor.blockIcon,
                 borderRadius: 999,
                 boxShadow: "none",
+                transition: theme.editor.iconButtonTransition,
                 "&:hover": {
                   backgroundColor: theme.palette.editor.blockMenuHoverBg,
                   color: theme.palette.editor.blockIconHover,

@@ -100,7 +100,7 @@ export function BlockInsertMenu({
             aria-label={label}
             sx={(theme: Theme) => ({
               color: theme.palette.editor.blockMenuIcon,
-              transition: "background-color 140ms ease, color 140ms ease",
+              transition: theme.editor.iconButtonTransition,
               "&:hover": {
                 backgroundColor: theme.palette.editor.blockMenuHoverBg,
                 color: theme.palette.editor.blockMenuIconHover,

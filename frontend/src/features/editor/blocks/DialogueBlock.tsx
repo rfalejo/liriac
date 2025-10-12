@@ -8,6 +8,7 @@ import type { ChapterBlock } from "../types";
 import { EditableDialogueTurn } from "./components/EditableDialogueTurn";
 import { BlockEditControls } from "./components/BlockEditControls";
 import { useEditorBlockEditing } from "../context/EditorBlockEditingContext";
+import { handleEditingKeyDown } from "../utils/editingShortcuts";
 
 type DialogueBlockProps = {
   block: ChapterBlock;
@@ -35,17 +36,10 @@ export function DialogueBlock({ block }: DialogueBlockProps) {
     if (!isEditing) {
       return;
     }
-
-    if ((event.metaKey || event.ctrlKey) && event.key === "Enter") {
-      event.preventDefault();
-      void onSaveEdit?.();
-      return;
-    }
-
-    if (event.key === "Escape") {
-      event.preventDefault();
-      onCancelEdit?.();
-    }
+    handleEditingKeyDown(event, {
+      onConfirm: onSaveEdit,
+      onCancel: onCancelEdit,
+    });
   };
 
   const controls = isEditing ? (
@@ -71,10 +65,7 @@ export function DialogueBlock({ block }: DialogueBlockProps) {
         {turns.length === 0 && (
           <Typography
             variant="body2"
-            sx={(theme: Theme) => ({
-              ...theme.typography.editorBody,
-              color: theme.palette.editor.blockMuted,
-            })}
+            sx={(theme: Theme) => theme.typography.editorMuted}
           >
             (Diálogo sin intervenciones)
           </Typography>
@@ -88,8 +79,7 @@ export function DialogueBlock({ block }: DialogueBlockProps) {
                 borderRadius: 1,
                 px: { xs: 1.25, sm: 1.5 },
                 py: { xs: 1, sm: 1.25 },
-                transition:
-                  "background-color 140ms ease, box-shadow 140ms ease",
+                transition: theme.editor.blockTransition,
                 position: "relative",
                 backgroundColor: "transparent",
                 boxShadow: "0 0 0 1px transparent",
@@ -112,15 +102,9 @@ export function DialogueBlock({ block }: DialogueBlockProps) {
                   {turn.speakerName && (
                     <Typography
                       component="span"
-                      sx={(theme: Theme) => ({
-                        ...theme.typography.editorBody,
-                        display: "block",
-                        fontSize: "0.85rem",
-                        fontWeight: 600,
-                        letterSpacing: "0.04em",
-                        textTransform: "uppercase",
-                        color: theme.palette.editor.blockMuted,
-                      })}
+                      sx={(theme: Theme) =>
+                        theme.typography.editorDialogueSpeaker
+                      }
                     >
                       {turn.speakerName}
                     </Typography>
@@ -137,11 +121,9 @@ export function DialogueBlock({ block }: DialogueBlockProps) {
                   {turn.stageDirection && (
                     <Typography
                       component="span"
-                      sx={(theme: Theme) => ({
-                        ...theme.typography.editorBody,
-                        fontStyle: "italic",
-                        color: theme.palette.editor.blockMuted,
-                      })}
+                      sx={(theme: Theme) =>
+                        theme.typography.editorStageDirection
+                      }
                     >
                       {turn.stageDirection}
                     </Typography>
@@ -154,16 +136,16 @@ export function DialogueBlock({ block }: DialogueBlockProps) {
                   size="small"
                   onClick={() => onRemoveTurn(turn.id ?? turnKey)}
                   aria-label="Eliminar parlamento"
-                  sx={{
+                  sx={(theme: Theme) => ({
                     position: "absolute",
                     top: 8,
                     right: 8,
                     opacity: 0.6,
-                    transition: "opacity 140ms ease",
+                    transition: theme.editor.blockControlsFade,
                     "&:hover": {
                       opacity: 1,
                     },
-                  }}
+                  })}
                   disabled={disabled}
                 >
                   <DeleteOutlineRoundedIcon sx={{ fontSize: "1.1rem" }} />
@@ -181,6 +163,7 @@ export function DialogueBlock({ block }: DialogueBlockProps) {
             sx={(theme: Theme) => ({
               alignSelf: "flex-start",
               color: theme.palette.editor.controlAddColor,
+              transition: theme.editor.iconButtonTransition,
               "&:hover": {
                 color: theme.palette.editor.controlAddHoverColor,
               },

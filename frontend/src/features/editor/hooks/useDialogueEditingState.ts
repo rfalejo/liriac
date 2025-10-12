@@ -1,7 +1,11 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import type { ChapterBlockUpdatePayload } from "../../../api/chapters";
 import type { ChapterBlock, DialogueField, DialogueTurn } from "../types";
-import { cloneTurns, createEmptyTurn, equalTurns } from "../utils/dialogueTurns";
+import {
+  cloneTurns,
+  createEmptyTurn,
+  equalTurns,
+} from "../utils/dialogueTurns";
 
 export type DialogueEditingSideEffects = {
   notifyUpdateFailure: (error: unknown) => void;

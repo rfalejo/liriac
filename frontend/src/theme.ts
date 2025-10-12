@@ -3,7 +3,17 @@ import { createTheme } from "@mui/material/styles";
 const serifStack =
   'ui-serif, Georgia, Cambria, "Times New Roman", Times, serif';
 
-export const theme = createTheme({
+const editorTokens = {
+  blockPaddingX: { xs: 1.75, sm: 2.5 },
+  blockPaddingY: { xs: 1.75, sm: 2.25 },
+  blockRadius: 2,
+  blockTransition: "background-color 140ms ease, box-shadow 140ms ease",
+  blockControlsFade: "opacity 140ms ease",
+  iconButtonTransition: "background-color 140ms ease, color 140ms ease",
+  paragraphIndent: "1.5em",
+} as const;
+
+const baseTheme = createTheme({
   palette: {
     mode: "dark",
     primary: {
@@ -69,6 +79,48 @@ export const theme = createTheme({
       lineHeight: 1.65,
       fontSize: "1.0625rem",
       letterSpacing: "0.003em",
+    },
+  },
+});
+
+export const theme = createTheme(baseTheme, {
+  editor: editorTokens,
+  typography: {
+    editorParagraph: {
+      ...baseTheme.typography.editorBody,
+      margin: 0,
+      paddingBottom: 0,
+      color: baseTheme.palette.editor.blockHeading,
+      textIndent: editorTokens.paragraphIndent,
+    },
+    editorParagraphEditable: {
+      ...baseTheme.typography.editorBody,
+      margin: 0,
+      paddingBottom: 0,
+      color: baseTheme.palette.editor.blockHeading,
+      textIndent: editorTokens.paragraphIndent,
+      outline: "none",
+      border: "none",
+      whiteSpace: "pre-wrap",
+      minHeight: "1.4em",
+    },
+    editorMuted: {
+      ...baseTheme.typography.editorBody,
+      color: baseTheme.palette.editor.blockMuted,
+    },
+    editorDialogueSpeaker: {
+      ...baseTheme.typography.editorBody,
+      display: "block",
+      fontSize: "0.85rem",
+      fontWeight: 600,
+      letterSpacing: "0.04em",
+      textTransform: "uppercase",
+      color: baseTheme.palette.editor.blockMuted,
+    },
+    editorStageDirection: {
+      ...baseTheme.typography.editorBody,
+      fontStyle: "italic",
+      color: baseTheme.palette.editor.blockMuted,
     },
   },
 });

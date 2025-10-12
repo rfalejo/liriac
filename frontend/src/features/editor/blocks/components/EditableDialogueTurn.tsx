@@ -57,11 +57,7 @@ export function EditableDialogueTurn({
   const speakerFieldSx = useMemo(
     () =>
       createSharedFieldSx((theme: Theme) => ({
-        fontSize: "0.85rem",
-        fontWeight: 600,
-        letterSpacing: "0.04em",
-        textTransform: "uppercase",
-        color: theme.palette.editor.blockMuted,
+        ...theme.typography.editorDialogueSpeaker,
       })),
     [],
   );
@@ -77,8 +73,7 @@ export function EditableDialogueTurn({
   const stageDirectionFieldSx = useMemo(
     () =>
       createSharedFieldSx((theme: Theme) => ({
-        fontStyle: "italic",
-        color: theme.palette.editor.blockMuted,
+        ...theme.typography.editorStageDirection,
       })),
     [],
   );

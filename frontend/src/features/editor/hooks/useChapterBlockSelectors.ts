@@ -12,7 +12,9 @@ type ChapterBlockSelectors = {
 
 const EMPTY_MAP: ChapterBlockMap = new Map();
 
-export function useChapterBlockSelectors(chapter: ChapterDetail | null): ChapterBlockSelectors {
+export function useChapterBlockSelectors(
+  chapter: ChapterDetail | null,
+): ChapterBlockSelectors {
   const blockMap = useMemo<ChapterBlockMap>(() => {
     if (!chapter) {
       return EMPTY_MAP;
@@ -26,7 +28,9 @@ export function useChapterBlockSelectors(chapter: ChapterDetail | null): Chapter
     [blockMap],
   );
 
-  const getParagraphBlock = useCallback<ChapterBlockSelectors["getParagraphBlock"]>(
+  const getParagraphBlock = useCallback<
+    ChapterBlockSelectors["getParagraphBlock"]
+  >(
     (blockId) => {
       const block = getBlockById(blockId);
       return block?.type === "paragraph" ? block : null;
@@ -34,7 +38,9 @@ export function useChapterBlockSelectors(chapter: ChapterDetail | null): Chapter
     [getBlockById],
   );
 
-  const getDialogueBlock = useCallback<ChapterBlockSelectors["getDialogueBlock"]>(
+  const getDialogueBlock = useCallback<
+    ChapterBlockSelectors["getDialogueBlock"]
+  >(
     (blockId) => {
       const block = getBlockById(blockId);
       return block?.type === "dialogue" ? block : null;

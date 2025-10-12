@@ -26,6 +26,7 @@ export function BlockEditControls({
         aria-label="Guardar cambios"
         sx={(theme: Theme) => ({
           backgroundColor: theme.palette.editor.controlConfirmBg,
+          transition: theme.editor.iconButtonTransition,
           "&:hover": {
             backgroundColor: theme.palette.editor.controlConfirmHoverBg,
           },
@@ -51,6 +52,7 @@ export function BlockEditControls({
         aria-label="Cancelar edición"
         sx={(theme: Theme) => ({
           backgroundColor: theme.palette.editor.controlCancelBg,
+          transition: theme.editor.iconButtonTransition,
           "&:hover": {
             backgroundColor: theme.palette.editor.controlCancelHoverBg,
           },

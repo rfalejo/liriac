@@ -69,9 +69,7 @@ export function useEditorEditingState({
   }, [editingBlockId, getBlockById]);
 
   const activeParagraphBlock =
-    activeBlock?.type === "paragraph"
-      ? (activeBlock as ParagraphBlock)
-      : null;
+    activeBlock?.type === "paragraph" ? (activeBlock as ParagraphBlock) : null;
   const activeDialogueBlock =
     activeBlock?.type === "dialogue" ? (activeBlock as DialogueBlock) : null;
 
