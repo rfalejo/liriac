@@ -2,7 +2,7 @@ import { Box } from "@mui/material";
 import type { Theme } from "@mui/material/styles";
 import type { ReactNode } from "react";
 import type { components } from "../../../api/schema";
-import type { ChapterBlock, EditingState } from "../types";
+import type { ChapterBlock } from "../types";
 import { DialogueBlock } from "./DialogueBlock";
 import { MetadataBlock } from "./MetadataBlock";
 import { ParagraphBlock } from "./ParagraphBlock";
@@ -12,8 +12,6 @@ type ChapterBlockType = components["schemas"]["ChapterBlockTypeEnum"];
 
 type BlockRenderContext = {
   block: ChapterBlock;
-  editingState?: EditingState;
-  onEditBlock: (blockId: string) => void;
 };
 
 type BlockRenderer = (context: BlockRenderContext) => ReactNode | null;
@@ -21,69 +19,33 @@ type BlockRenderer = (context: BlockRenderContext) => ReactNode | null;
 type BlockRegistry = Partial<Record<ChapterBlockType, BlockRenderer>>;
 
 const blockRegistry: BlockRegistry = {
-  paragraph: ({ block, editingState, onEditBlock }) => {
+  paragraph: ({ block }) => {
     if (block.type !== "paragraph") {
       return null;
     }
 
-    const isEditing =
-      editingState?.blockType === "paragraph" &&
-      editingState.blockId === block.id
-        ? editingState
-        : undefined;
-
-    return (
-      <ParagraphBlock
-        block={block}
-        onEdit={onEditBlock}
-        isEditing={Boolean(isEditing)}
-        draftText={isEditing ? isEditing.paragraph.draftText : ""}
-        onDraftChange={isEditing?.paragraph.onChangeDraft}
-        onCancelEdit={isEditing?.onCancel}
-        onSaveEdit={isEditing?.onSave}
-        disabled={isEditing?.isSaving ?? false}
-      />
-    );
+    return <ParagraphBlock block={block} />;
   },
-  dialogue: ({ block, editingState, onEditBlock }) => {
+  dialogue: ({ block }) => {
     if (block.type !== "dialogue") {
       return null;
     }
 
-    const isEditing =
-      editingState?.blockType === "dialogue" &&
-      editingState.blockId === block.id
-        ? editingState
-        : undefined;
-
-    return (
-      <DialogueBlock
-        block={block}
-        onEdit={onEditBlock}
-        isEditing={Boolean(isEditing)}
-        draftTurns={isEditing ? isEditing.dialogue.turns : block.turns}
-        onChangeTurn={isEditing?.dialogue.onChangeTurn}
-        onAddTurn={isEditing?.dialogue.onAddTurn}
-        onRemoveTurn={isEditing?.dialogue.onRemoveTurn}
-        onCancelEdit={isEditing?.onCancel}
-        onSaveEdit={isEditing?.onSave}
-        disabled={isEditing?.isSaving ?? false}
-      />
-    );
+    return <DialogueBlock block={block} />;
   },
-  scene_boundary: ({ block, onEditBlock }) => {
+  scene_boundary: ({ block }) => {
     if (block.type !== "scene_boundary") {
       return null;
     }
 
-    return <SceneBoundaryBlock block={block} onEdit={onEditBlock} />;
+    return <SceneBoundaryBlock block={block} />;
   },
-  metadata: ({ block, onEditBlock }) => {
+  metadata: ({ block }) => {
     if (block.type !== "metadata") {
       return null;
     }
 
-    return <MetadataBlock block={block} onEdit={onEditBlock} />;
+    return <MetadataBlock block={block} />;
   },
 };
 

@@ -19,6 +19,11 @@ type ScrollState = {
   scrollable: boolean;
 };
 
+export type ScrollbarState = {
+  mode: "hidden" | "visible";
+  scrollable: boolean;
+};
+
 export function useEditorScrollbar(
   isActive: boolean,
   contentKey: unknown,
@@ -105,14 +110,15 @@ export function useEditorScrollbar(
     onMouseLeave: handlePointerLeave,
   };
 
-  const className = `editor-scroll-area ${
-    scrollable ? `scrollbar-${mode}` : "scrollbar-disabled"
-  }`;
+  const scrollbarState: ScrollbarState = {
+    mode,
+    scrollable,
+  };
 
   return {
     scrollAreaRef,
     handlers,
-    scrollbarClassName: className,
+    scrollbarState,
     scrollable,
   };
 }

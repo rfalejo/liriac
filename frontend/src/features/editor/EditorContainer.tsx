@@ -32,7 +32,7 @@ export function EditorContainer({
     reload,
   } = useEditorChapterNavigation({ chapterId });
 
-  const { scrollAreaRef, handlers, scrollbarClassName } = useEditorScrollbar(
+  const { scrollAreaRef, handlers, scrollbarState } = useEditorScrollbar(
     open,
     contentSignature,
   );
@@ -91,7 +91,7 @@ export function EditorContainer({
       }}
       scrollAreaRef={scrollAreaRef}
       scrollHandlers={handlers}
-      scrollbarClassName={scrollbarClassName}
+      scrollbarState={scrollbarState}
     />
   );
 }

@@ -2,6 +2,7 @@ import { Box, Typography } from "@mui/material";
 import type { Theme } from "@mui/material/styles";
 import { useEffect, useRef, useState } from "react";
 import type { components } from "../../../api/schema";
+import { useEditorBlockEditing } from "../context/EditorBlockEditingContext";
 import { EditorBlockFrame } from "./EditorBlockFrame";
 import { BlockEditControls } from "./components/BlockEditControls";
 
@@ -9,25 +10,22 @@ type ChapterBlock = components["schemas"]["ChapterBlock"];
 
 type ParagraphBlockProps = {
   block: ChapterBlock;
-  onEdit: (blockId: string) => void;
-  isEditing?: boolean;
-  draftText?: string;
-  onDraftChange?: (value: string) => void;
-  onCancelEdit?: () => void;
-  onSaveEdit?: () => void;
-  disabled?: boolean;
 };
 
-export function ParagraphBlock({
-  block,
-  onEdit,
-  isEditing = false,
-  draftText = "",
-  onDraftChange,
-  onCancelEdit,
-  onSaveEdit,
-  disabled = false,
-}: ParagraphBlockProps) {
+export function ParagraphBlock({ block }: ParagraphBlockProps) {
+  const { editingState, onEditBlock } = useEditorBlockEditing();
+
+  const isEditing =
+    editingState?.blockType === "paragraph" && editingState.blockId === block.id
+      ? editingState
+      : undefined;
+
+  const draftText = isEditing ? isEditing.paragraph.draftText : "";
+  const onDraftChange = isEditing?.paragraph.onChangeDraft;
+  const onCancelEdit = isEditing?.onCancel;
+  const onSaveEdit = isEditing?.onSave;
+  const disabled = isEditing?.isSaving ?? false;
+
   const content = block.text?.trim() ?? "";
   const editorRef = useRef<HTMLDivElement | null>(null);
   const [hasInitialized, setHasInitialized] = useState(false);
@@ -90,9 +88,9 @@ export function ParagraphBlock({
     <EditorBlockFrame
       blockId={block.id}
       blockType={block.type}
-      onEdit={isEditing ? undefined : onEdit}
+      onEdit={isEditing ? undefined : onEditBlock}
       controls={controls}
-      isActive={isEditing}
+      isActive={Boolean(isEditing)}
     >
       {isEditing ? (
         <Box

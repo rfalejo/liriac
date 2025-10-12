@@ -3,7 +3,10 @@ import type { SxProps, Theme } from "@mui/material/styles";
 import type { ComponentProps, ReactNode } from "react";
 import { EditorChapterView } from "./EditorChapterView";
 import { EditorSidebar } from "./EditorSidebar";
-import type { EditorScrollbarHandlers } from "./hooks/useEditorScrollbar";
+import type {
+  EditorScrollbarHandlers,
+  ScrollbarState,
+} from "./hooks/useEditorScrollbar";
 
 const shellSx: SxProps<Theme> = (theme) => ({
   minHeight: "100vh",
@@ -25,21 +28,21 @@ const pageSx: SxProps<Theme> = (theme) => ({
   scrollbarWidth: "thin",
   scrollbarColor: `${theme.palette.editor.scrollThumb} transparent`,
   transition: "scrollbar-color 320ms ease",
-  "&.editor-scroll-area.scrollbar-hidden": {
+  '&[data-scrollbar-mode="hidden"]': {
     scrollbarColor: "transparent transparent",
   },
-  "&.editor-scroll-area.scrollbar-disabled": {
+  '&[data-scrollbar-scrollable="false"]': {
     scrollbarColor: "transparent transparent",
   },
-  "&.editor-scroll-area::-webkit-scrollbar": {
+  "&::-webkit-scrollbar": {
     width: 12,
     height: 12,
   },
-  "&.editor-scroll-area::-webkit-scrollbar-track": {
+  "&::-webkit-scrollbar-track": {
     backgroundColor: "transparent",
     margin: 12,
   },
-  "&.editor-scroll-area::-webkit-scrollbar-thumb": {
+  "&::-webkit-scrollbar-thumb": {
     backgroundColor: theme.palette.editor.scrollThumb,
     borderRadius: 999,
     border: "3px solid transparent",
@@ -47,11 +50,11 @@ const pageSx: SxProps<Theme> = (theme) => ({
     transition: "opacity 320ms ease, background-color 320ms ease",
     opacity: 1,
   },
-  "&.editor-scroll-area.scrollbar-hidden::-webkit-scrollbar-thumb": {
+  '&[data-scrollbar-mode="hidden"]::-webkit-scrollbar-thumb': {
     opacity: 0,
     backgroundColor: theme.palette.editor.scrollThumbHidden,
   },
-  "&.editor-scroll-area.scrollbar-disabled::-webkit-scrollbar": {
+  '&[data-scrollbar-scrollable="false"]::-webkit-scrollbar': {
     display: "none",
   },
 });
@@ -77,7 +80,7 @@ type EditorShellProps = {
   chapterViewProps: ComponentProps<typeof EditorChapterView>;
   scrollAreaRef: React.RefObject<HTMLDivElement>;
   scrollHandlers: EditorScrollbarHandlers;
-  scrollbarClassName: string;
+  scrollbarState: ScrollbarState;
   children?: ReactNode;
 };
 
@@ -86,7 +89,7 @@ export function EditorShell({
   chapterViewProps,
   scrollAreaRef,
   scrollHandlers,
-  scrollbarClassName,
+  scrollbarState,
   children,
 }: EditorShellProps) {
   return (
@@ -99,7 +102,8 @@ export function EditorShell({
       <Box
         ref={scrollAreaRef}
         sx={pageSx}
-        className={scrollbarClassName}
+        data-scrollbar-mode={scrollbarState.mode}
+        data-scrollbar-scrollable={scrollbarState.scrollable}
         {...scrollHandlers}
       >
         <Box sx={blockStackSx}>

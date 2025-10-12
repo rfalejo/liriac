@@ -2,15 +2,16 @@ import { Stack, Typography } from "@mui/material";
 import type { Theme } from "@mui/material/styles";
 import type { components } from "../../../api/schema";
 import { EditorBlockFrame } from "./EditorBlockFrame";
+import { useEditorBlockEditing } from "../context/EditorBlockEditingContext";
 
 type ChapterBlock = components["schemas"]["ChapterBlock"];
 
 type MetadataBlockProps = {
   block: ChapterBlock;
-  onEdit: (blockId: string) => void;
 };
 
-export function MetadataBlock({ block, onEdit }: MetadataBlockProps) {
+export function MetadataBlock({ block }: MetadataBlockProps) {
+  const { onEditBlock } = useEditorBlockEditing();
   const kind = block.kind ?? "metadata";
 
   if (kind === "editorial") {
@@ -27,7 +28,7 @@ export function MetadataBlock({ block, onEdit }: MetadataBlockProps) {
       <EditorBlockFrame
         blockId={block.id}
         blockType={block.type}
-        onEdit={onEdit}
+        onEdit={onEditBlock}
       >
         <Stack spacing={1} textAlign="center">
           {typeof block.ordinal === "number" && (
@@ -109,7 +110,7 @@ export function MetadataBlock({ block, onEdit }: MetadataBlockProps) {
       <EditorBlockFrame
         blockId={block.id}
         blockType={block.type}
-        onEdit={onEdit}
+        onEdit={onEditBlock}
       >
         <Typography
           variant="body2"
@@ -126,7 +127,11 @@ export function MetadataBlock({ block, onEdit }: MetadataBlockProps) {
   }
 
   return (
-    <EditorBlockFrame blockId={block.id} blockType={block.type} onEdit={onEdit}>
+    <EditorBlockFrame
+      blockId={block.id}
+      blockType={block.type}
+      onEdit={onEditBlock}
+    >
       <Typography
         variant="body2"
         sx={(theme: Theme) => ({

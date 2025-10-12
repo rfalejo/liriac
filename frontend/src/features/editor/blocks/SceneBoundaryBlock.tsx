@@ -2,17 +2,23 @@ import { Divider, Stack, Typography } from "@mui/material";
 import type { Theme } from "@mui/material/styles";
 import type { components } from "../../../api/schema";
 import { EditorBlockFrame } from "./EditorBlockFrame";
+import { useEditorBlockEditing } from "../context/EditorBlockEditingContext";
 
 type ChapterBlock = components["schemas"]["ChapterBlock"];
 
 type SceneBoundaryBlockProps = {
   block: ChapterBlock;
-  onEdit: (blockId: string) => void;
 };
 
-export function SceneBoundaryBlock({ block, onEdit }: SceneBoundaryBlockProps) {
+export function SceneBoundaryBlock({ block }: SceneBoundaryBlockProps) {
+  const { onEditBlock } = useEditorBlockEditing();
+
   return (
-    <EditorBlockFrame blockId={block.id} blockType={block.type} onEdit={onEdit}>
+    <EditorBlockFrame
+      blockId={block.id}
+      blockType={block.type}
+      onEdit={onEditBlock}
+    >
       <Stack spacing={1} alignItems="center" sx={{ textAlign: "center" }}>
         <Divider
           flexItem

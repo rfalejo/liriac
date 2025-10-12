@@ -1,8 +1,9 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import type { ChapterDetail } from "../../../api/chapters";
-import type { ChapterSummary, LibraryBook } from "../../../api/library";
+import type { ChapterSummary } from "../../../api/library";
 import { useLibraryData } from "../../library/LibraryDataContext";
 import { useChapterDetail } from "../../library/hooks/useChapterDetail";
+import { useBookLookup } from "../../library/hooks/useBookLookup";
 
 type UseEditorChapterNavigationParams = {
   chapterId: string;
@@ -36,36 +37,19 @@ export function useEditorChapterNavigation({
   const { books, booksLoading, booksError } = useLibraryData();
   const { chapter, loading, error, reload } = useChapterDetail(activeChapterId);
 
-  const relatedBook = useMemo<LibraryBook | null>(() => {
-    if (!books.length) {
-      return null;
-    }
-
-    if (chapter?.bookId) {
-      const foundByChapter = books.find((book) => book.id === chapter.bookId);
-      if (foundByChapter) {
-        return foundByChapter;
-      }
-    }
-
-    if (activeChapterId) {
-      const foundByActiveId = books.find((book) =>
-        book.chapters.some((item) => item.id === activeChapterId),
-      );
-      if (foundByActiveId) {
-        return foundByActiveId;
-      }
-    }
-
-    return null;
-  }, [books, chapter?.bookId, activeChapterId]);
+  // Use the new book lookup hook to resolve the book
+  const { book, bookTitle: lookupBookTitle } = useBookLookup({
+    books,
+    chapterId: activeChapterId,
+    bookId: chapter?.bookId,
+  });
 
   const chapterOptions = useMemo<ChapterSummary[]>(
-    () => relatedBook?.chapters ?? [],
-    [relatedBook],
+    () => book?.chapters ?? [],
+    [book],
   );
 
-  const bookTitle = chapter?.bookTitle ?? relatedBook?.title ?? null;
+  const bookTitle = chapter?.bookTitle ?? lookupBookTitle;
 
   const handleSelectChapter = useCallback(
     (nextChapterId: string) => {

@@ -10,6 +10,7 @@ import {
 } from "./blocks/BlockInsertMenu";
 import type { EditingState } from "./types";
 import { renderEditorBlock } from "./blocks/blockRegistry";
+import { EditorBlockEditingProvider } from "./context/EditorBlockEditingContext";
 
 type ChapterBlockType = components["schemas"]["ChapterBlockTypeEnum"];
 
@@ -45,8 +46,6 @@ export function EditorChapterView({
     return chapter.blocks.reduce<BlockEntry[]>((entries, block) => {
       const rendered = renderEditorBlock({
         block,
-        editingState,
-        onEditBlock,
       });
 
       if (rendered) {
@@ -55,7 +54,7 @@ export function EditorChapterView({
 
       return entries;
     }, []);
-  }, [chapter, editingState, onEditBlock]);
+  }, [chapter]);
 
   if (loading) {
     return (
@@ -108,66 +107,71 @@ export function EditorChapterView({
   );
 
   return (
-    <Fragment>
-      {!hasChapterHeader && (
-        <Stack spacing={1.25} sx={{ mb: 1.75 }}>
-          <Typography
-            variant="h4"
-            sx={(theme: Theme) => ({
-              fontFamily: theme.typography.editorBody.fontFamily,
-              color: theme.palette.editor.blockHeading,
-            })}
-          >
-            {chapter.title}
-          </Typography>
-          {chapter.summary && (
+    <EditorBlockEditingProvider
+      editingState={editingState}
+      onEditBlock={onEditBlock}
+    >
+      <Fragment>
+        {!hasChapterHeader && (
+          <Stack spacing={1.25} sx={{ mb: 1.75 }}>
             <Typography
-              variant="subtitle1"
+              variant="h4"
               sx={(theme: Theme) => ({
                 fontFamily: theme.typography.editorBody.fontFamily,
-                color: theme.palette.editor.blockMuted,
+                color: theme.palette.editor.blockHeading,
               })}
             >
-              {chapter.summary}
+              {chapter.title}
             </Typography>
-          )}
-        </Stack>
-      )}
+            {chapter.summary && (
+              <Typography
+                variant="subtitle1"
+                sx={(theme: Theme) => ({
+                  fontFamily: theme.typography.editorBody.fontFamily,
+                  color: theme.palette.editor.blockMuted,
+                })}
+              >
+                {chapter.summary}
+              </Typography>
+            )}
+          </Stack>
+        )}
 
-      {blockSequence.length === 0 ? (
-        <Typography
-          variant="body2"
-          sx={(theme: Theme) => ({
-            ...theme.typography.editorBody,
-            color: theme.palette.editor.blockMuted,
-          })}
-        >
-          Sin contenido.
-        </Typography>
-      ) : (
-        <Stack spacing={0}>
-          {blockSequence.map((entry, index) => {
-            const previous = blockSequence[index - 1];
-            const insertPosition: BlockInsertPosition = {
-              afterBlockId: previous?.id ?? null,
-              beforeBlockId: entry.id,
-              index,
-            };
+        {blockSequence.length === 0 ? (
+          <Typography
+            variant="body2"
+            sx={(theme: Theme) => ({
+              ...theme.typography.editorBody,
+              color: theme.palette.editor.blockMuted,
+            })}
+          >
+            Sin contenido.
+          </Typography>
+        ) : (
+          <Stack spacing={0}>
+            {blockSequence.map((entry, index) => {
+              const previous = blockSequence[index - 1];
+              const insertPosition: BlockInsertPosition = {
+                afterBlockId: previous?.id ?? null,
+                beforeBlockId: entry.id,
+                index,
+              };
 
-            return (
-              <Fragment key={entry.id}>
-                {index > 0 && (
-                  <BlockInsertMenu
-                    position={insertPosition}
-                    onInsertBlock={onInsertBlock}
-                  />
-                )}
-                {entry.node}
-              </Fragment>
-            );
-          })}
-        </Stack>
-      )}
-    </Fragment>
+              return (
+                <Fragment key={entry.id}>
+                  {index > 0 && (
+                    <BlockInsertMenu
+                      position={insertPosition}
+                      onInsertBlock={onInsertBlock}
+                    />
+                  )}
+                  {entry.node}
+                </Fragment>
+              );
+            })}
+          </Stack>
+        )}
+      </Fragment>
+    </EditorBlockEditingProvider>
   );
 }

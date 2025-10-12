@@ -4,35 +4,31 @@ import type { KeyboardEvent } from "react";
 import AddCircleOutlineRoundedIcon from "@mui/icons-material/AddCircleOutlineRounded";
 import DeleteOutlineRoundedIcon from "@mui/icons-material/DeleteOutlineRounded";
 import { EditorBlockFrame } from "./EditorBlockFrame";
-import type { ChapterBlock, DialogueField, DialogueTurn } from "../types";
+import type { ChapterBlock } from "../types";
 import { EditableDialogueTurn } from "./components/EditableDialogueTurn";
 import { BlockEditControls } from "./components/BlockEditControls";
+import { useEditorBlockEditing } from "../context/EditorBlockEditingContext";
 
 type DialogueBlockProps = {
   block: ChapterBlock;
-  onEdit: (blockId: string) => void;
-  isEditing?: boolean;
-  draftTurns?: DialogueTurn[];
-  onChangeTurn?: (turnId: string, field: DialogueField, value: string) => void;
-  onAddTurn?: () => void;
-  onRemoveTurn?: (turnId: string) => void;
-  onCancelEdit?: () => void;
-  onSaveEdit?: () => void;
-  disabled?: boolean;
 };
 
-export function DialogueBlock({
-  block,
-  onEdit,
-  isEditing = false,
-  draftTurns,
-  onChangeTurn,
-  onAddTurn,
-  onRemoveTurn,
-  onCancelEdit,
-  onSaveEdit,
-  disabled = false,
-}: DialogueBlockProps) {
+export function DialogueBlock({ block }: DialogueBlockProps) {
+  const { editingState, onEditBlock } = useEditorBlockEditing();
+
+  const isEditing =
+    editingState?.blockType === "dialogue" && editingState.blockId === block.id
+      ? editingState
+      : undefined;
+
+  const draftTurns = isEditing ? isEditing.dialogue.turns : block.turns;
+  const onChangeTurn = isEditing?.dialogue.onChangeTurn;
+  const onAddTurn = isEditing?.dialogue.onAddTurn;
+  const onRemoveTurn = isEditing?.dialogue.onRemoveTurn;
+  const onCancelEdit = isEditing?.onCancel;
+  const onSaveEdit = isEditing?.onSave;
+  const disabled = isEditing?.isSaving ?? false;
+
   const turns = isEditing ? (draftTurns ?? []) : (block.turns ?? []);
 
   const handleKeyDown = (event: KeyboardEvent) => {
@@ -64,9 +60,9 @@ export function DialogueBlock({
     <EditorBlockFrame
       blockId={block.id}
       blockType={block.type}
-      onEdit={isEditing ? undefined : onEdit}
+      onEdit={isEditing ? undefined : onEditBlock}
       controls={controls}
-      isActive={isEditing}
+      isActive={Boolean(isEditing)}
     >
       <Stack
         spacing={1.25}
