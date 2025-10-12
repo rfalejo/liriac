@@ -139,9 +139,15 @@ frontend/
 |   |   \-- schema.ts
 |   |-- features/
 |   |   |-- library/
+|   |   |   |-- LibraryBooksPanel.tsx
+|   |   |   |-- LibraryChaptersPanel.tsx
+|   |   |   |-- LibraryContextPanel.tsx
+|   |   |   |-- LibraryDataProvider.tsx
 |   |   |   |-- LibraryLanding.tsx
+|   |   |   |-- libraryQueryKeys.ts
 |   |   |   |-- useChapterDetail.ts
 |   |   |   |-- useLibraryBooks.ts
+|   |   |   |-- useLibraryPreview.ts
 |   |   |   \-- useLibrarySections.ts
 |   |   \-- preview/
 |   |       |-- blocks/
