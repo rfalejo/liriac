@@ -2,10 +2,9 @@ import { Box, Typography } from "@mui/material";
 import type { Theme } from "@mui/material/styles";
 import { useEffect, useRef, useState } from "react";
 import type { components } from "../../../api/schema";
-import { useEditorBlockEditing } from "../context/EditorBlockEditingContext";
-import { EditorBlockFrame } from "./EditorBlockFrame";
-import { BlockEditControls } from "./components/BlockEditControls";
+import type { ParagraphEditingState } from "../types";
 import { handleEditingKeyDown } from "../utils/editingShortcuts";
+import { EditableBlock } from "./components/EditableBlock";
 
 type ChapterBlock = components["schemas"]["ChapterBlock"];
 
@@ -14,25 +13,48 @@ type ParagraphBlockProps = {
 };
 
 export function ParagraphBlock({ block }: ParagraphBlockProps) {
-  const { editingState, onEditBlock } = useEditorBlockEditing();
+  return (
+    <EditableBlock<ParagraphEditingState>
+      block={block}
+      selectEditingState={(state, currentBlock) => {
+        if (
+          state?.blockType === "paragraph" &&
+          state.blockId === currentBlock.id
+        ) {
+          return state;
+        }
+        return undefined;
+      }}
+      renderReadView={(currentBlock) => {
+        const content = currentBlock.text?.trim() ?? "";
+        return (
+          <Typography
+            component="p"
+            sx={(theme: Theme) => theme.typography.editorParagraph}
+          >
+            {content.length > 0 ? content : "(Sin texto en este párrafo)"}
+          </Typography>
+        );
+      }}
+      renderEditView={(currentBlock, editing) => (
+        <ParagraphEditView blockId={currentBlock.id} editingState={editing} />
+      )}
+    />
+  );
+}
 
-  const isEditing =
-    editingState?.blockType === "paragraph" && editingState.blockId === block.id
-      ? editingState
-      : undefined;
+type ParagraphEditViewProps = {
+  blockId: string;
+  editingState: ParagraphEditingState;
+};
 
-  const draftText = isEditing ? isEditing.paragraph.draftText : "";
-  const onDraftChange = isEditing?.paragraph.onChangeDraft;
-  const onCancelEdit = isEditing?.onCancel;
-  const onSaveEdit = isEditing?.onSave;
-  const disabled = isEditing?.isSaving ?? false;
-
-  const content = block.text?.trim() ?? "";
+function ParagraphEditView({ blockId, editingState }: ParagraphEditViewProps) {
   const editorRef = useRef<HTMLDivElement | null>(null);
   const [hasInitialized, setHasInitialized] = useState(false);
+  const draftText = editingState.paragraph.draftText;
 
   useEffect(() => {
-    if (!isEditing || !editorRef.current) {
+    if (!editorRef.current) {
       return;
     }
 
@@ -44,69 +66,40 @@ export function ParagraphBlock({ block }: ParagraphBlockProps) {
     if (editorRef.current.textContent !== draftText) {
       editorRef.current.textContent = draftText;
     }
-  }, [draftText, isEditing, hasInitialized]);
+  }, [draftText, hasInitialized]);
 
   useEffect(() => {
-    if (!isEditing) {
-      setHasInitialized(false);
-    }
-  }, [isEditing]);
+    setHasInitialized(false);
+  }, [blockId]);
 
   const handleInput = () => {
-    if (!onDraftChange || !editorRef.current) {
+    if (!editorRef.current) {
       return;
     }
-
-    onDraftChange(editorRef.current.textContent ?? "");
+    editingState.paragraph.onChangeDraft(
+      editorRef.current.textContent ?? "",
+    );
   };
 
   const handleKeyDown: React.KeyboardEventHandler<HTMLDivElement> = (event) => {
-    if (!isEditing) {
-      return;
-    }
     handleEditingKeyDown(event, {
-      onConfirm: onSaveEdit,
-      onCancel: onCancelEdit,
+      onConfirm: editingState.onSave,
+      onCancel: editingState.onCancel,
     });
   };
 
-  const controls = isEditing ? (
-    <BlockEditControls
-      onConfirm={onSaveEdit}
-      onCancel={onCancelEdit}
-      disabled={disabled}
-    />
-  ) : null;
-
   return (
-    <EditorBlockFrame
-      blockId={block.id}
-      blockType={block.type}
-      onEdit={isEditing ? undefined : onEditBlock}
-      controls={controls}
-      isActive={Boolean(isEditing)}
-    >
-      {isEditing ? (
-        <Box
-          ref={editorRef}
-          contentEditable
-          suppressContentEditableWarning
-          role="textbox"
-          aria-multiline
-          aria-label="Editor de párrafo"
-          spellCheck
-          onInput={handleInput}
-          onKeyDown={handleKeyDown}
-          sx={(theme: Theme) => theme.typography.editorParagraphEditable}
-        />
-      ) : (
-        <Typography
-          component="p"
-          sx={(theme: Theme) => theme.typography.editorParagraph}
-        >
-          {content.length > 0 ? content : "(Sin texto en este párrafo)"}
-        </Typography>
-      )}
-    </EditorBlockFrame>
+    <Box
+      ref={editorRef}
+      contentEditable
+      suppressContentEditableWarning
+      role="textbox"
+      aria-multiline
+      aria-label="Editor de párrafo"
+      spellCheck
+      onInput={handleInput}
+      onKeyDown={handleKeyDown}
+      sx={(theme: Theme) => theme.typography.editorParagraphEditable}
+    />
   );
 }

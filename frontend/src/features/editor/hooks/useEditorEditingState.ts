@@ -8,7 +8,9 @@ import { useChapterBlockSelectors } from "./useChapterBlockSelectors";
 import type { EditorEditingSideEffects } from "./editing/types";
 import { useDialogueBlockEditingSession } from "./editing/useDialogueBlockEditingSession";
 import { useEditingBlockManager } from "./editing/useEditingBlockManager";
+import { useMetadataBlockEditingSession } from "./editing/useMetadataBlockEditingSession";
 import { useParagraphBlockEditingSession } from "./editing/useParagraphBlockEditingSession";
+import { useSceneBoundaryBlockEditingSession } from "./editing/useSceneBoundaryBlockEditingSession";
 
 export type UseEditorEditingStateParams = {
   chapter: ChapterDetail | null;
@@ -60,6 +62,16 @@ export function useEditorEditingState({
       ? (activeBlock as ChapterBlock & { type: "dialogue" })
       : null;
 
+  const activeSceneBoundaryBlock =
+    activeBlock?.type === "scene_boundary"
+      ? (activeBlock as ChapterBlock & { type: "scene_boundary" })
+      : null;
+
+  const activeMetadataBlock =
+    activeBlock?.type === "metadata"
+      ? (activeBlock as ChapterBlock & { type: "metadata" })
+      : null;
+
   const paragraphSession = useParagraphBlockEditingSession({
     block: activeParagraphBlock,
     isActive: Boolean(activeParagraphBlock),
@@ -74,6 +86,28 @@ export function useEditorEditingState({
   const dialogueSession = useDialogueBlockEditingSession({
     block: activeDialogueBlock,
     isActive: Boolean(activeDialogueBlock),
+    isSaving: blockUpdatePending,
+    updateBlock,
+    onComplete: clearEditing,
+    sideEffects: {
+      notifyUpdateFailure: sideEffects.notifyUpdateFailure,
+    },
+  });
+
+  const sceneBoundarySession = useSceneBoundaryBlockEditingSession({
+    block: activeSceneBoundaryBlock,
+    isActive: Boolean(activeSceneBoundaryBlock),
+    isSaving: blockUpdatePending,
+    updateBlock,
+    onComplete: clearEditing,
+    sideEffects: {
+      notifyUpdateFailure: sideEffects.notifyUpdateFailure,
+    },
+  });
+
+  const metadataSession = useMetadataBlockEditingSession({
+    block: activeMetadataBlock,
+    isActive: Boolean(activeMetadataBlock),
     isSaving: blockUpdatePending,
     updateBlock,
     onComplete: clearEditing,
@@ -108,6 +142,7 @@ export function useEditorEditingState({
             void paragraphSession.save();
           },
           isSaving: blockUpdatePending,
+          hasPendingChanges: paragraphSession.hasPendingChanges,
         },
       };
     }
@@ -134,6 +169,58 @@ export function useEditorEditingState({
             void dialogueSession.save();
           },
           isSaving: blockUpdatePending,
+          hasPendingChanges: dialogueSession.hasPendingChanges,
+        },
+      };
+    }
+
+    if (activeSceneBoundaryBlock) {
+      return {
+        hasPendingChanges: sceneBoundarySession.hasPendingChanges,
+        editingState: {
+          blockId: activeSceneBoundaryBlock.id,
+          blockType: "scene_boundary" as const,
+          sceneBoundary: {
+            draft: sceneBoundarySession.draft,
+            onChangeField: sceneBoundarySession.onChangeField,
+          },
+          onCancel: () => {
+            attemptCancelEditing(sceneBoundarySession.hasPendingChanges);
+          },
+          onSave: () => {
+            if (blockUpdatePending) {
+              return;
+            }
+            void sceneBoundarySession.save();
+          },
+          isSaving: blockUpdatePending,
+          hasPendingChanges: sceneBoundarySession.hasPendingChanges,
+        },
+      };
+    }
+
+    if (activeMetadataBlock) {
+      return {
+        hasPendingChanges: metadataSession.hasPendingChanges,
+        editingState: {
+          blockId: activeMetadataBlock.id,
+          blockType: "metadata" as const,
+          metadata: {
+            kind: activeMetadataBlock.kind,
+            draft: metadataSession.draft,
+            onChangeField: metadataSession.onChangeField,
+          },
+          onCancel: () => {
+            attemptCancelEditing(metadataSession.hasPendingChanges);
+          },
+          onSave: () => {
+            if (blockUpdatePending) {
+              return;
+            }
+            void metadataSession.save();
+          },
+          isSaving: blockUpdatePending,
+          hasPendingChanges: metadataSession.hasPendingChanges,
         },
       };
     }
@@ -143,8 +230,10 @@ export function useEditorEditingState({
       editingState: undefined,
     };
   }, [
-    activeDialogueBlock,
     activeParagraphBlock,
+    activeDialogueBlock,
+    activeSceneBoundaryBlock,
+    activeMetadataBlock,
     attemptCancelEditing,
     blockUpdatePending,
     dialogueSession.hasPendingChanges,
@@ -153,10 +242,18 @@ export function useEditorEditingState({
     dialogueSession.onRemoveTurn,
     dialogueSession.save,
     dialogueSession.turns,
+    metadataSession.draft,
+    metadataSession.hasPendingChanges,
+    metadataSession.onChangeField,
+    metadataSession.save,
     paragraphSession.draftText,
     paragraphSession.hasPendingChanges,
     paragraphSession.onChangeDraft,
     paragraphSession.save,
+    sceneBoundarySession.draft,
+    sceneBoundarySession.hasPendingChanges,
+    sceneBoundarySession.onChangeField,
+    sceneBoundarySession.save,
   ]);
 
   const handleEditBlock = useCallback(

@@ -4,30 +4,72 @@ export type ChapterBlock = components["schemas"]["ChapterBlock"];
 export type DialogueTurn = components["schemas"]["DialogueTurn"];
 export type DialogueField = "speakerName" | "utterance" | "stageDirection";
 
-export type ParagraphEditingState = {
+type BaseEditingState<TType extends ChapterBlock["type"]> = {
   blockId: string;
-  blockType: "paragraph";
+  blockType: TType;
+  onCancel: () => void;
+  onSave: () => void;
+  isSaving: boolean;
+  hasPendingChanges: boolean;
+};
+
+export type ParagraphEditingState = BaseEditingState<"paragraph"> & {
   paragraph: {
     draftText: string;
     onChangeDraft: (value: string) => void;
   };
-  onCancel: () => void;
-  onSave: () => void;
-  isSaving: boolean;
 };
 
-export type DialogueEditingState = {
-  blockId: string;
-  blockType: "dialogue";
+export type DialogueEditingState = BaseEditingState<"dialogue"> & {
   dialogue: {
     turns: DialogueTurn[];
     onChangeTurn: (turnId: string, field: DialogueField, value: string) => void;
     onAddTurn: () => void;
     onRemoveTurn: (turnId: string) => void;
   };
-  onCancel: () => void;
-  onSave: () => void;
-  isSaving: boolean;
 };
 
-export type EditingState = ParagraphEditingState | DialogueEditingState;
+export type SceneBoundaryEditableField = "label" | "summary";
+
+export type SceneBoundaryDraft = {
+  label: string;
+  summary: string;
+};
+
+export type SceneBoundaryEditingState = BaseEditingState<"scene_boundary"> & {
+  sceneBoundary: {
+    draft: SceneBoundaryDraft;
+    onChangeField: (field: SceneBoundaryEditableField, value: string) => void;
+  };
+};
+
+export type MetadataEditableField =
+  | "title"
+  | "subtitle"
+  | "epigraph"
+  | "epigraphAttribution"
+  | "context"
+  | "text";
+
+export type MetadataDraft = {
+  title: string;
+  subtitle: string;
+  epigraph: string;
+  epigraphAttribution: string;
+  context: string;
+  text: string;
+};
+
+export type MetadataEditingState = BaseEditingState<"metadata"> & {
+  metadata: {
+    kind: ChapterBlock["kind"];
+    draft: MetadataDraft;
+    onChangeField: (field: MetadataEditableField, value: string) => void;
+  };
+};
+
+export type EditingState =
+  | ParagraphEditingState
+  | DialogueEditingState
+  | SceneBoundaryEditingState
+  | MetadataEditingState;

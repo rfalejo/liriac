@@ -143,6 +143,7 @@ frontend/
 |   |   |   |   |-- components/
 |   |   |   |   |   |-- BlockEditControls.tsx
 |   |   |   |   |   |-- DialogueEditableField.tsx
+|   |   |   |   |   |-- EditableBlock.tsx
 |   |   |   |   |   \-- EditableDialogueTurn.tsx
 |   |   |   |   |-- BlockInsertMenu.tsx
 |   |   |   |   |-- DialogueBlock.tsx
@@ -166,14 +167,18 @@ frontend/
 |   |   |   |   |   |-- types.ts
 |   |   |   |   |   |-- useDialogueBlockEditingSession.ts
 |   |   |   |   |   |-- useEditingBlockManager.ts
-|   |   |   |   |   \-- useParagraphBlockEditingSession.ts
+|   |   |   |   |   |-- useMetadataBlockEditingSession.ts
+|   |   |   |   |   |-- useParagraphBlockEditingSession.ts
+|   |   |   |   |   \-- useSceneBoundaryBlockEditingSession.ts
 |   |   |   |   |-- useChapterBlockSelectors.ts
 |   |   |   |   |-- useChapterBlocks.ts
 |   |   |   |   |-- useDialogueEditingState.ts
 |   |   |   |   |-- useEditorChapterNavigation.ts
 |   |   |   |   |-- useEditorEditingState.ts
 |   |   |   |   |-- useEditorScrollbar.ts
+|   |   |   |   |-- useMetadataEditingState.ts
 |   |   |   |   |-- useParagraphEditingState.ts
+|   |   |   |   |-- useSceneBoundaryEditingState.ts
 |   |   |   |   |-- useSidebarHover.ts
 |   |   |   |   \-- useUpdateChapterBlock.ts
 |   |   |   |-- sidebar/
@@ -190,6 +195,7 @@ frontend/
 |   |   |   \-- types.ts
 |   |   \-- library/
 |   |       |-- components/
+|   |       |   |-- LibraryPanel.tsx
 |   |       |   \-- LibraryPanelStatus.tsx
 |   |       |-- hooks/
 |   |       |   |-- useBookLookup.ts
