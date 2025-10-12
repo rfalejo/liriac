@@ -3,6 +3,19 @@ from __future__ import annotations
 from rest_framework import serializers
 
 
+class BookUpsertSerializer(serializers.Serializer):
+    id = serializers.CharField(required=False)
+    title = serializers.CharField()
+    author = serializers.CharField(required=False, allow_blank=True)
+    synopsis = serializers.CharField(required=False, allow_blank=True)
+    order = serializers.IntegerField(required=False, min_value=0)
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        if self.partial:
+            self.fields["title"].required = False
+
+
 class DialogueTurnSerializer(serializers.Serializer):
     id = serializers.CharField()
     speakerId = serializers.CharField(required=False, allow_blank=True, allow_null=True)
@@ -137,6 +150,20 @@ class LibraryBookSerializer(serializers.Serializer):
 
 class LibraryBooksResponseSerializer(serializers.Serializer):
     books = LibraryBookSerializer(many=True)
+
+
+class ChapterUpsertSerializer(serializers.Serializer):
+    id = serializers.CharField(required=False)
+    title = serializers.CharField()
+    summary = serializers.CharField(required=False, allow_blank=True, allow_null=True)
+    ordinal = serializers.IntegerField(required=False, min_value=0)
+    tokens = serializers.IntegerField(required=False, allow_null=True, min_value=0)
+    wordCount = serializers.IntegerField(required=False, allow_null=True, min_value=0)
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        if self.partial:
+            self.fields["title"].required = False
 
 
 class ChapterDetailSerializer(ChapterSummarySerializer):

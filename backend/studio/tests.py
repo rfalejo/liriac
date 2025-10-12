@@ -3,6 +3,8 @@ from __future__ import annotations
 from django.test import TestCase
 from django.urls import reverse
 
+from studio.models import Book, Chapter
+
 ORIGIN = "http://localhost:5173"
 
 
@@ -24,6 +26,36 @@ class LibraryEndpointTests(TestCase):
         first_book = payload["books"][0]
         self.assertIn("chapters", first_book)
         self.assertGreaterEqual(len(first_book["chapters"]), 1)
+        self.assertEqual(response["Access-Control-Allow-Origin"], ORIGIN)
+
+    def test_create_library_book(self) -> None:
+        response = self.client.post(
+            reverse("library-books"),
+            data={"title": "Manual del cronista"},
+            content_type="application/json",
+            HTTP_ORIGIN=ORIGIN,
+        )
+        self.assertEqual(response.status_code, 201)
+        payload = response.json()
+        self.assertIn("id", payload)
+        self.assertEqual(payload["title"], "Manual del cronista")
+        self.assertTrue(Book.objects.filter(id=payload["id"]).exists())
+        self.assertEqual(response["Access-Control-Allow-Origin"], ORIGIN)
+
+    def test_update_library_book(self) -> None:
+        book = Book.objects.create(id="test-book", title="Borrador", order=99)
+        response = self.client.patch(
+            reverse("library-book-detail", kwargs={"book_id": book.id}),
+            data={"title": "Borrador revisado", "synopsis": "Nueva sinopsis"},
+            content_type="application/json",
+            HTTP_ORIGIN=ORIGIN,
+        )
+        self.assertEqual(response.status_code, 200)
+        payload = response.json()
+        self.assertEqual(payload["title"], "Borrador revisado")
+        book.refresh_from_db()
+        self.assertEqual(book.title, "Borrador revisado")
+        self.assertEqual(book.synopsis, "Nueva sinopsis")
         self.assertEqual(response["Access-Control-Allow-Origin"], ORIGIN)
 
 
@@ -57,6 +89,36 @@ class ChapterEndpointTests(TestCase):
             HTTP_ORIGIN=ORIGIN,
         )
         self.assertEqual(response.status_code, 404)
+        self.assertEqual(response["Access-Control-Allow-Origin"], ORIGIN)
+
+    def test_create_chapter_for_book(self) -> None:
+        book = Book.objects.get(pk="bk-karamazov")
+        response = self.client.post(
+            reverse("library-book-chapters", kwargs={"book_id": book.id}),
+            data={"title": "Capítulo inédito", "summary": "Nuevo misterio."},
+            content_type="application/json",
+            HTTP_ORIGIN=ORIGIN,
+        )
+        self.assertEqual(response.status_code, 201)
+        payload = response.json()
+        self.assertIn("id", payload)
+        self.assertEqual(payload["title"], "Capítulo inédito")
+        self.assertTrue(Chapter.objects.filter(id=payload["id"]).exists())
+        self.assertEqual(response["Access-Control-Allow-Origin"], ORIGIN)
+
+    def test_update_chapter_metadata(self) -> None:
+        chapter = Chapter.objects.get(pk="bk-karamazov-ch-01")
+        response = self.client.patch(
+            reverse("library-chapter-detail", kwargs={"chapter_id": chapter.id}),
+            data={"summary": "Resumen actualizado."},
+            content_type="application/json",
+            HTTP_ORIGIN=ORIGIN,
+        )
+        self.assertEqual(response.status_code, 200)
+        payload = response.json()
+        self.assertEqual(payload["id"], chapter.id)
+        chapter.refresh_from_db()
+        self.assertEqual(chapter.summary, "Resumen actualizado.")
         self.assertEqual(response["Access-Control-Allow-Origin"], ORIGIN)
 
     def test_patch_paragraph_block_updates_text(self) -> None:

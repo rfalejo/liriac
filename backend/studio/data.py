@@ -4,7 +4,8 @@ from copy import deepcopy
 from typing import Any, Dict, List, Optional, cast
 from uuid import uuid4
 
-from django.db import transaction
+from django.db import IntegrityError, transaction
+from django.db.models import Max
 
 from .models import (
     Book,
@@ -15,6 +16,7 @@ from .models import (
 )
 from .payloads import (
     ChapterDetailPayload,
+    ChapterSummaryPayload,
     ContextSectionPayload,
     EditorPayload,
     LibraryBookPayload,
@@ -85,6 +87,145 @@ def get_chapter_detail(chapter_id: str) -> Optional[ChapterDetailPayload]:
     except Chapter.DoesNotExist:
         return _build_sample_chapter_detail(chapter_id)
     return chapter.to_detail_payload()
+
+
+def _next_book_order() -> int:
+    current_max = Book.objects.aggregate(Max("order")).get("order__max")
+    if current_max is None:
+        return 0
+    return int(current_max) + 1
+
+
+def _next_chapter_ordinal(book: Book) -> int:
+    current_max = book.chapters.aggregate(Max("ordinal")).get("ordinal__max")
+    if current_max is None:
+        return 0
+    return int(current_max) + 1
+
+
+def create_book(
+    *,
+    title: str,
+    author: Optional[str] = None,
+    synopsis: Optional[str] = None,
+    order: Optional[int] = None,
+    book_id: Optional[str] = None,
+) -> LibraryBookPayload:
+    with transaction.atomic():
+        effective_order = _next_book_order() if order is None else int(order)
+        try:
+            book = Book.objects.create(
+                id=book_id or uuid4().hex,
+                title=title,
+                author=author or "",
+                synopsis=synopsis or "",
+                order=effective_order,
+            )
+        except IntegrityError as exc:
+            raise ValueError("Ya existe un libro con ese identificador.") from exc
+    return book.to_payload()
+
+
+def update_book(book_id: str, changes: Dict[str, Any]) -> LibraryBookPayload:
+    with transaction.atomic():
+        try:
+            book = Book.objects.select_for_update().prefetch_related("chapters").get(pk=book_id)
+        except Book.DoesNotExist as exc:
+            raise KeyError(f"Unknown book: {book_id}") from exc
+
+        fields_to_update: List[str] = []
+
+        if "title" in changes and changes["title"] is not None:
+            book.title = str(changes["title"])
+            fields_to_update.append("title")
+
+        if "author" in changes:
+            book.author = str(changes["author"] or "")
+            fields_to_update.append("author")
+
+        if "synopsis" in changes:
+            book.synopsis = str(changes["synopsis"] or "")
+            fields_to_update.append("synopsis")
+
+        if "order" in changes and changes["order"] is not None:
+            book.order = int(changes["order"])
+            fields_to_update.append("order")
+
+        if fields_to_update:
+            book.save(update_fields=fields_to_update)
+
+    return book.to_payload()
+
+
+def create_chapter(
+    *,
+    book_id: str,
+    title: str,
+    summary: Optional[str] = None,
+    ordinal: Optional[int] = None,
+    tokens: Optional[int] = None,
+    word_count: Optional[int] = None,
+    chapter_id: Optional[str] = None,
+) -> ChapterSummaryPayload:
+    with transaction.atomic():
+        try:
+            book = Book.objects.select_for_update().get(pk=book_id)
+        except Book.DoesNotExist as exc:
+            raise KeyError(f"Unknown book: {book_id}") from exc
+
+        effective_ordinal = _next_chapter_ordinal(book) if ordinal is None else int(ordinal)
+
+        try:
+            chapter = Chapter.objects.create(
+                id=chapter_id or uuid4().hex,
+                book=book,
+                title=title,
+                summary=summary or "",
+                ordinal=effective_ordinal,
+                tokens=int(tokens) if tokens is not None else None,
+                word_count=int(word_count) if word_count is not None else None,
+            )
+        except IntegrityError as exc:
+            raise ValueError("Ya existe un capítulo con ese identificador.") from exc
+
+    return chapter.to_summary_payload()
+
+
+def update_chapter(chapter_id: str, changes: Dict[str, Any]) -> ChapterSummaryPayload:
+    with transaction.atomic():
+        try:
+            chapter = Chapter.objects.select_for_update().get(pk=chapter_id)
+        except Chapter.DoesNotExist as exc:
+            raise KeyError(f"Unknown chapter: {chapter_id}") from exc
+
+        fields_to_update: List[str] = []
+
+        if "title" in changes and changes["title"] is not None:
+            chapter.title = str(changes["title"])
+            fields_to_update.append("title")
+
+        if "summary" in changes:
+            chapter.summary = str(changes["summary"] or "")
+            fields_to_update.append("summary")
+
+        if "ordinal" in changes and changes["ordinal"] is not None:
+            chapter.ordinal = int(changes["ordinal"])
+            fields_to_update.append("ordinal")
+
+        if "tokens" in changes:
+            tokens = changes["tokens"]
+            chapter.tokens = int(tokens) if tokens is not None else None
+            fields_to_update.append("tokens")
+
+        if "word_count" in changes:
+            word_count = changes["word_count"]
+            chapter.word_count = int(word_count) if word_count is not None else None
+            fields_to_update.append("word_count")
+
+        if fields_to_update:
+            chapter.save(update_fields=fields_to_update)
+
+    return chapter.to_summary_payload()
 
 
 def get_editor_state(chapter_id: Optional[str] = None) -> EditorPayload:

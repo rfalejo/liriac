@@ -2,21 +2,30 @@ from __future__ import annotations
 
 from django.http import Http404
 from drf_spectacular.utils import extend_schema
+from rest_framework import status
 from rest_framework.exceptions import ValidationError
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
 from .data import (
+    create_book,
+    create_chapter,
     get_chapter_detail,
     get_editor_state,
     get_library_books,
     get_library_sections,
+    update_book,
     update_chapter_block,
+    update_chapter,
 )
 from .serializers import (
+    BookUpsertSerializer,
     ChapterBlockUpdateSerializer,
     ChapterDetailSerializer,
+    ChapterSummarySerializer,
+    ChapterUpsertSerializer,
     EditorStateSerializer,
+    LibraryBookSerializer,
     LibraryBooksResponseSerializer,
     LibraryResponseSerializer,
 )
@@ -47,6 +56,89 @@ class LibraryBooksView(APIView):
         serializer = LibraryBooksResponseSerializer({"books": books})
         return Response(serializer.data)
 
+    @extend_schema(request=BookUpsertSerializer, responses=LibraryBookSerializer)
+    def post(self, request):
+        serializer = BookUpsertSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        payload = serializer.validated_data
+
+        book_id = payload.get("id")
+        try:
+            book = create_book(
+                book_id=book_id,
+                title=payload["title"],
+                author=payload.get("author"),
+                synopsis=payload.get("synopsis"),
+                order=payload.get("order"),
+            )
+        except ValueError as exc:
+            raise ValidationError(str(exc)) from exc
+
+        response_serializer = LibraryBookSerializer(book)
+        return Response(response_serializer.data, status=status.HTTP_201_CREATED)
+
+
+class LibraryBookDetailView(APIView):
+    """Update metadata for a single book."""
+
+    authentication_classes: list = []
+    permission_classes: list = []
+
+    @extend_schema(request=BookUpsertSerializer, responses=LibraryBookSerializer)
+    def patch(self, request, book_id: str):
+        serializer = BookUpsertSerializer(data=request.data, partial=True)
+        serializer.is_valid(raise_exception=True)
+        payload = serializer.validated_data
+
+        if "id" in payload and payload["id"] != book_id:
+            raise ValidationError({"id": "El identificador del libro no coincide con la ruta."})
+
+        try:
+            book = update_book(
+                book_id,
+                {
+                    key: value
+                    for key, value in payload.items()
+                    if key in {"title", "author", "synopsis", "order"}
+                },
+            )
+        except KeyError as exc:
+            raise Http404(str(exc)) from exc
+
+        response_serializer = LibraryBookSerializer(book)
+        return Response(response_serializer.data)
+
+
+class LibraryBookChaptersView(APIView):
+    """Manage chapters belonging to a single book."""
+
+    authentication_classes: list = []
+    permission_classes: list = []
+
+    @extend_schema(request=ChapterUpsertSerializer, responses=ChapterSummarySerializer)
+    def post(self, request, book_id: str):
+        serializer = ChapterUpsertSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        payload = serializer.validated_data
+
+        try:
+            chapter = create_chapter(
+                book_id=book_id,
+                chapter_id=payload.get("id"),
+                title=payload["title"],
+                summary=payload.get("summary"),
+                ordinal=payload.get("ordinal"),
+                tokens=payload.get("tokens"),
+                word_count=payload.get("wordCount"),
+            )
+        except KeyError as exc:
+            raise Http404(str(exc)) from exc
+        except ValueError as exc:
+            raise ValidationError(str(exc)) from exc
+
+        response_serializer = ChapterSummarySerializer(chapter)
+        return Response(response_serializer.data, status=status.HTTP_201_CREATED)
+
 
 class ChapterDetailView(APIView):
     """Return the full content for a single chapter."""
@@ -61,6 +153,35 @@ class ChapterDetailView(APIView):
             raise Http404("Chapter not found")
         serializer = ChapterDetailSerializer(chapter)
         return Response(serializer.data)
+
+    @extend_schema(request=ChapterUpsertSerializer, responses=ChapterSummarySerializer)
+    def patch(self, request, chapter_id: str):
+        serializer = ChapterUpsertSerializer(data=request.data, partial=True)
+        serializer.is_valid(raise_exception=True)
+        payload = serializer.validated_data
+
+        if "id" in payload and payload["id"] != chapter_id:
+            raise ValidationError({"id": "El identificador del capítulo no coincide con la ruta."})
+
+        updates = {}
+        if "title" in payload:
+            updates["title"] = payload["title"]
+        if "summary" in payload:
+            updates["summary"] = payload["summary"]
+        if "ordinal" in payload:
+            updates["ordinal"] = payload["ordinal"]
+        if "tokens" in payload:
+            updates["tokens"] = payload["tokens"]
+        if "wordCount" in payload:
+            updates["word_count"] = payload["wordCount"]
+
+        try:
+            chapter = update_chapter(chapter_id, updates)
+        except KeyError as exc:
+            raise Http404(str(exc)) from exc
+
+        response_serializer = ChapterSummarySerializer(chapter)
+        return Response(response_serializer.data)
 
 
 class ChapterBlockUpdateView(APIView):
