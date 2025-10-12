@@ -1,6 +1,6 @@
 import { Button, CircularProgress, Stack, Typography } from "@mui/material";
 
-type LibraryPanelStatusProps = {
+export type LibraryPanelStatusProps = {
   state: "loading" | "error" | "empty";
   message: string;
   actionLabel?: string;

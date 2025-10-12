@@ -1,14 +1,7 @@
-import {
-  Divider,
-  List,
-  ListItemButton,
-  ListItemText,
-  Paper,
-  Stack,
-  Typography,
-} from "@mui/material";
+import { Divider, List, ListItemButton, ListItemText, Stack, Typography } from "@mui/material";
 import type { LibraryBook } from "../../api/library";
-import { LibraryPanelStatus } from "./components/LibraryPanelStatus";
+import { LibraryPanel } from "./components/LibraryPanel";
+import type { LibraryPanelStatusProps } from "./components/LibraryPanelStatus";
 
 type LibraryChaptersPanelProps = {
   book: LibraryBook | null;
@@ -23,36 +16,40 @@ export function LibraryChaptersPanel({
   error,
   onOpenChapter,
 }: LibraryChaptersPanelProps) {
+  const status: LibraryPanelStatusProps | null = (() => {
+    if (loading) {
+      return {
+        state: "loading",
+        message: "Cargando capítulos",
+        centered: true,
+      };
+    }
+
+    if (error) {
+      return {
+        state: "error",
+        message: "No es posible mostrar capítulos sin datos de libros.",
+        centered: true,
+      };
+    }
+
+    if (!book) {
+      return {
+        state: "empty",
+        message: "Selecciona un libro para editar sus capítulos.",
+      };
+    }
+
+    return null;
+  })();
+
   return (
-    <Paper
-      elevation={0}
-      variant="outlined"
-      sx={{ flexBasis: { md: "68%" }, flexGrow: 1, p: 3 }}
+    <LibraryPanel
+      title="Capítulos"
+      status={status}
+      sx={{ flexBasis: { md: "68%" }, flexGrow: 1 }}
     >
-      <Typography variant="subtitle2" color="text.secondary" gutterBottom>
-        Capítulos
-      </Typography>
-      {loading && (
-        <LibraryPanelStatus
-          state="loading"
-          message="Cargando capítulos"
-          centered
-        />
-      )}
-      {!loading && error && (
-        <LibraryPanelStatus
-          state="error"
-          message="No es posible mostrar capítulos sin datos de libros."
-          centered
-        />
-      )}
-      {!loading && !error && !book && (
-        <LibraryPanelStatus
-          state="empty"
-          message="Selecciona un libro para editar sus capítulos."
-        />
-      )}
-      {!loading && !error && book && (
+      {book && (
         <Stack spacing={1}>
           <Typography variant="body1" fontWeight={600}>
             {book.title}
@@ -109,6 +106,6 @@ export function LibraryChaptersPanel({
           )}
         </Stack>
       )}
-    </Paper>
+    </LibraryPanel>
   );
 }

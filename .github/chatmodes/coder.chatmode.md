@@ -152,10 +152,23 @@ frontend/
 |   |   |   |   |-- SceneBoundaryBlock.tsx
 |   |   |   |   |-- blockRegistry.tsx
 |   |   |   |   \-- index.ts
+|   |   |   |-- chapter/
+|   |   |   |   |-- ChapterBlockList.tsx
+|   |   |   |   |-- ChapterEmptyState.tsx
+|   |   |   |   |-- ChapterErrorState.tsx
+|   |   |   |   |-- ChapterHeading.tsx
+|   |   |   |   \-- ChapterLoadingState.tsx
 |   |   |   |-- context/
 |   |   |   |   \-- EditorBlockEditingContext.tsx
 |   |   |   |-- hooks/
+|   |   |   |   |-- editing/
+|   |   |   |   |   |-- constants.ts
+|   |   |   |   |   |-- types.ts
+|   |   |   |   |   |-- useDialogueBlockEditingSession.ts
+|   |   |   |   |   |-- useEditingBlockManager.ts
+|   |   |   |   |   \-- useParagraphBlockEditingSession.ts
 |   |   |   |   |-- useChapterBlockSelectors.ts
+|   |   |   |   |-- useChapterBlocks.ts
 |   |   |   |   |-- useDialogueEditingState.ts
 |   |   |   |   |-- useEditorChapterNavigation.ts
 |   |   |   |   |-- useEditorEditingState.ts
@@ -163,8 +176,13 @@ frontend/
 |   |   |   |   |-- useParagraphEditingState.ts
 |   |   |   |   |-- useSidebarHover.ts
 |   |   |   |   \-- useUpdateChapterBlock.ts
+|   |   |   |-- sidebar/
+|   |   |   |   |-- SidebarChapterList.tsx
+|   |   |   |   |-- SidebarHeader.tsx
+|   |   |   |   \-- SidebarShell.tsx
 |   |   |   |-- utils/
-|   |   |   |   \-- dialogueTurns.ts
+|   |   |   |   |-- dialogueTurns.ts
+|   |   |   |   \-- editingShortcuts.ts
 |   |   |   |-- EditorChapterView.tsx
 |   |   |   |-- EditorContainer.tsx
 |   |   |   |-- EditorShell.tsx

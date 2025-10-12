@@ -1,12 +1,7 @@
-import {
-  List,
-  ListItemText,
-  ListItemButton,
-  Paper,
-  Typography,
-} from "@mui/material";
+import { List, ListItemText, ListItemButton } from "@mui/material";
 import type { LibraryBook } from "../../api/library";
-import { LibraryPanelStatus } from "./components/LibraryPanelStatus";
+import { LibraryPanel } from "./components/LibraryPanel";
+import type { LibraryPanelStatusProps } from "./components/LibraryPanelStatus";
 
 type LibraryBooksPanelProps = {
   books: LibraryBook[];
@@ -25,39 +20,36 @@ export function LibraryBooksPanel({
   onSelectBook,
   onReload,
 }: LibraryBooksPanelProps) {
-  const showList = !loading && !error && books.length > 0;
+  const status: LibraryPanelStatusProps | null = (() => {
+    if (loading) {
+      return { state: "loading", message: "Cargando libros", centered: true };
+    }
+
+    if (error) {
+      return {
+        state: "error",
+        message: "No se pudieron cargar los libros.",
+        actionLabel: "Reintentar",
+        onAction: onReload,
+        centered: true,
+      };
+    }
+
+    if (books.length === 0) {
+      return { state: "empty", message: "Aún no hay libros disponibles." };
+    }
+
+    return null;
+  })();
+
+  const showList = !status;
 
   return (
-    <Paper
-      elevation={0}
-      variant="outlined"
-      sx={{ flexBasis: { md: "32%" }, flexGrow: 1, p: 3 }}
+    <LibraryPanel
+      title="Libros"
+      status={status}
+      sx={{ flexBasis: { md: "32%" }, flexGrow: 1 }}
     >
-      <Typography variant="subtitle2" color="text.secondary" gutterBottom>
-        Libros
-      </Typography>
-      {loading && (
-        <LibraryPanelStatus
-          state="loading"
-          message="Cargando libros"
-          centered
-        />
-      )}
-      {!loading && error && (
-        <LibraryPanelStatus
-          state="error"
-          message="No se pudieron cargar los libros."
-          actionLabel="Reintentar"
-          onAction={onReload}
-          centered
-        />
-      )}
-      {!loading && !error && books.length === 0 && (
-        <LibraryPanelStatus
-          state="empty"
-          message="Aún no hay libros disponibles."
-        />
-      )}
       {showList && (
         <List disablePadding>
           {books.map((book) => (
@@ -92,6 +84,6 @@ export function LibraryBooksPanel({
           ))}
         </List>
       )}
-    </Paper>
+    </LibraryPanel>
   );
 }

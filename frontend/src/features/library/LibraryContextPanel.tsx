@@ -1,14 +1,7 @@
-import {
-  Button,
-  CircularProgress,
-  List,
-  ListItem,
-  ListItemText,
-  Paper,
-  Stack,
-  Typography,
-} from "@mui/material";
+import { List, ListItem, ListItemText, Stack, Typography } from "@mui/material";
 import type { ContextItem, LibraryResponse } from "../../api/library";
+import { LibraryPanel } from "./components/LibraryPanel";
+import type { LibraryPanelStatusProps } from "./components/LibraryPanelStatus";
 
 type LibraryContextPanelProps = {
   sections: LibraryResponse["sections"];
@@ -31,45 +24,40 @@ export function LibraryContextPanel({
   error,
   onReload,
 }: LibraryContextPanelProps) {
+  const status: LibraryPanelStatusProps | null = (() => {
+    if (loading) {
+      return {
+        state: "loading",
+        message: "Cargando contexto",
+        centered: true,
+      };
+    }
+
+    if (error) {
+      return {
+        state: "error",
+        message: "No se pudo obtener el contexto.",
+        actionLabel: "Reintentar",
+        onAction: onReload,
+        centered: true,
+      };
+    }
+
+    if (sections.length === 0) {
+      return {
+        state: "empty",
+        message: "Aún no hay elementos de contexto.",
+      };
+    }
+
+    return null;
+  })();
+
+  const showSections = !status && sections.length > 0;
+
   return (
-    <Paper elevation={0} variant="outlined" sx={{ p: 3 }}>
-      <Typography variant="subtitle2" color="text.secondary" gutterBottom>
-        Contexto
-      </Typography>
-      {loading && (
-        <Stack
-          spacing={2}
-          alignItems="center"
-          justifyContent="center"
-          sx={{ py: 4 }}
-        >
-          <CircularProgress size={20} />
-          <Typography variant="body2" color="text.secondary">
-            Cargando contexto
-          </Typography>
-        </Stack>
-      )}
-      {!loading && error && (
-        <Stack
-          spacing={2}
-          alignItems="center"
-          textAlign="center"
-          sx={{ py: 4 }}
-        >
-          <Typography variant="body2">
-            No se pudo obtener el contexto.
-          </Typography>
-          <Button variant="contained" size="small" onClick={onReload}>
-            Reintentar
-          </Button>
-        </Stack>
-      )}
-      {!loading && !error && sections.length === 0 && (
-        <Typography variant="body2" color="text.secondary">
-          Aún no hay elementos de contexto.
-        </Typography>
-      )}
-      {!loading && !error && sections.length > 0 && (
+    <LibraryPanel title="Contexto" status={status}>
+      {showSections && (
         <Stack spacing={3}>
           {sections.map((section) => (
             <Stack key={section.id} spacing={1.5}>
@@ -108,6 +96,6 @@ export function LibraryContextPanel({
           ))}
         </Stack>
       )}
-    </Paper>
+    </LibraryPanel>
   );
 }
