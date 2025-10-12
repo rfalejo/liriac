@@ -1,48 +1,25 @@
-import { useCallback, useEffect, useState } from "react";
-import { LibraryBook, fetchLibraryBooks } from "../../api/library";
-
-type BooksState = {
-  books: LibraryBook[];
-  loading: boolean;
-  error: Error | null;
-};
+import { useCallback } from "react";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
+import type { LibraryBook, LibraryBooksResponse } from "../../api/library";
+import { fetchLibraryBooks } from "../../api/library";
+import { libraryQueryKeys } from "./libraryQueryKeys";
 
 export function useLibraryBooks() {
-  const [state, setState] = useState<BooksState>(() => ({
-    books: [],
-    loading: true,
-    error: null,
-  }));
-  const [refreshToken, setRefreshToken] = useState(0);
-
-  useEffect(() => {
-    let isActive = true;
-
-    setState((current) => ({ ...current, loading: true, error: null }));
-
-    fetchLibraryBooks()
-      .then((response) => {
-        if (!isActive) return;
-        setState({ books: response.books, loading: false, error: null });
-      })
-      .catch((error: Error) => {
-        if (!isActive) return;
-        setState({ books: [], loading: false, error });
-      });
-
-    return () => {
-      isActive = false;
-    };
-  }, [refreshToken]);
+  const queryClient = useQueryClient();
+  const booksQuery = useQuery<LibraryBooksResponse, Error, LibraryBook[]>({
+    queryKey: libraryQueryKeys.books(),
+    queryFn: fetchLibraryBooks,
+    select: (response) => response.books,
+  });
 
   const reload = useCallback(() => {
-    setRefreshToken((value) => value + 1);
-  }, []);
+    void queryClient.invalidateQueries({ queryKey: libraryQueryKeys.books() });
+  }, [queryClient]);
 
   return {
-    books: state.books,
-    loading: state.loading,
-    error: state.error,
+    books: booksQuery.data ?? [],
+    loading: booksQuery.isPending || booksQuery.isFetching,
+    error: booksQuery.error ?? null,
     reload,
   };
 }

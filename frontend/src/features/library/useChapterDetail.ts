@@ -1,69 +1,54 @@
-import { useCallback, useEffect, useRef, useState } from "react";
-import { ChapterDetail, fetchChapterDetail } from "../../api/chapters";
-
-type ChapterDetailState = {
-  chapter: ChapterDetail | null;
-  loading: boolean;
-  error: Error | null;
-};
-
-type CacheMap = Map<string, ChapterDetail>;
+import { useCallback, useMemo } from "react";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
+import type { ChapterDetail } from "../../api/chapters";
+import { fetchChapterDetail } from "../../api/chapters";
+import { chapterQueryKeys } from "./libraryQueryKeys";
 
 export function useChapterDetail(chapterId: string | null | undefined) {
-  const [state, setState] = useState<ChapterDetailState>(() => ({
-    chapter: null,
-    loading: false,
-    error: null,
-  }));
-  const [refreshToken, setRefreshToken] = useState(0);
-  const cacheRef = useRef<CacheMap>(new Map());
+  const queryClient = useQueryClient();
+  const queryKey = useMemo(
+    () =>
+      chapterId
+        ? chapterQueryKeys.detail(chapterId)
+        : chapterQueryKeys.detailPlaceholder(),
+    [chapterId],
+  );
 
-  useEffect(() => {
+  const chapterQuery = useQuery<ChapterDetail, Error>({
+    queryKey,
+    queryFn: async () => {
+      if (!chapterId) {
+        throw new Error("Missing chapter identifier");
+      }
+
+      return fetchChapterDetail(chapterId);
+    },
+    enabled: Boolean(chapterId),
+    placeholderData: () => {
+      if (!chapterId) {
+        return undefined;
+      }
+
+      return queryClient.getQueryData<ChapterDetail>(
+        chapterQueryKeys.detail(chapterId),
+      );
+    },
+  });
+
+  const reload = useCallback(() => {
     if (!chapterId) {
-      setState({ chapter: null, loading: false, error: null });
       return;
     }
 
-    const cachedChapter = cacheRef.current.get(chapterId) ?? null;
-
-    setState({
-      chapter: cachedChapter,
-      loading: cachedChapter === null,
-      error: null,
+    void queryClient.invalidateQueries({
+      queryKey: chapterQueryKeys.detail(chapterId),
     });
-
-    let isActive = true;
-
-    fetchChapterDetail(chapterId)
-      .then((chapter) => {
-        if (!isActive) return;
-        cacheRef.current.set(chapterId, chapter);
-        setState({ chapter, loading: false, error: null });
-      })
-      .catch((error: Error) => {
-        if (!isActive) return;
-        setState((current) => ({
-          chapter: current.chapter,
-          loading: false,
-          error,
-        }));
-      });
-
-    return () => {
-      isActive = false;
-    };
-  }, [chapterId, refreshToken]);
-
-  const reload = useCallback(() => {
-    if (!chapterId) return;
-    cacheRef.current.delete(chapterId);
-    setRefreshToken((value) => value + 1);
-  }, [chapterId]);
+  }, [chapterId, queryClient]);
 
   return {
-    chapter: state.chapter,
-    loading: state.loading,
-    error: state.error,
+    chapter: chapterQuery.data ?? null,
+    loading: chapterQuery.isPending || chapterQuery.isFetching,
+    error: chapterQuery.error ?? null,
     reload,
   };
 }

@@ -1,49 +1,31 @@
-import { useCallback, useEffect, useState } from "react";
+import { useCallback } from "react";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
+import type { LibraryResponse } from "../../api/library";
 import { fetchLibrarySections } from "../../api/library";
-import type { ContextSection } from "../../api/library";
-
-type LibraryState = {
-  sections: ContextSection[];
-  loading: boolean;
-  error: Error | null;
-};
+import { libraryQueryKeys } from "./libraryQueryKeys";
 
 export function useLibrarySections() {
-  const [state, setState] = useState<LibraryState>(() => ({
-    sections: [],
-    loading: true,
-    error: null,
-  }));
-  const [refreshToken, setRefreshToken] = useState(0);
-
-  useEffect(() => {
-    let isActive = true;
-
-    setState((current) => ({ ...current, loading: true, error: null }));
-
-    fetchLibrarySections()
-      .then((response) => {
-        if (!isActive) return;
-        setState({ sections: response.sections, loading: false, error: null });
-      })
-      .catch((error: Error) => {
-        if (!isActive) return;
-        setState({ sections: [], loading: false, error });
-      });
-
-    return () => {
-      isActive = false;
-    };
-  }, [refreshToken]);
+  const queryClient = useQueryClient();
+  const sectionsQuery = useQuery<
+    LibraryResponse,
+    Error,
+    LibraryResponse["sections"]
+  >({
+    queryKey: libraryQueryKeys.sections(),
+    queryFn: fetchLibrarySections,
+    select: (response) => response.sections,
+  });
 
   const reload = useCallback(() => {
-    setRefreshToken((value) => value + 1);
-  }, []);
+    void queryClient.invalidateQueries({
+      queryKey: libraryQueryKeys.sections(),
+    });
+  }, [queryClient]);
 
   return {
-    sections: state.sections,
-    loading: state.loading,
-    error: state.error,
+    sections: sectionsQuery.data ?? [],
+    loading: sectionsQuery.isPending || sectionsQuery.isFetching,
+    error: sectionsQuery.error ?? null,
     reload,
   };
 }
