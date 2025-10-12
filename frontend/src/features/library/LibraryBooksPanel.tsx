@@ -1,7 +1,8 @@
-import { List, ListItemText, ListItemButton } from "@mui/material";
+import { List, ListItemText } from "@mui/material";
 import type { LibraryBook } from "../../api/library";
 import { LibraryPanel } from "./components/LibraryPanel";
-import type { LibraryPanelStatusProps } from "./components/LibraryPanelStatus";
+import { resolveLibraryPanelStatus } from "./components/panelStatus";
+import { LibraryListItemButton } from "./components/LibraryListItemButton";
 
 type LibraryBooksPanelProps = {
   books: LibraryBook[];
@@ -20,27 +21,21 @@ export function LibraryBooksPanel({
   onSelectBook,
   onReload,
 }: LibraryBooksPanelProps) {
-  const status: LibraryPanelStatusProps | null = (() => {
-    if (loading) {
-      return { state: "loading", message: "Cargando libros", centered: true };
-    }
-
-    if (error) {
-      return {
-        state: "error",
+  const status = resolveLibraryPanelStatus({
+    loading,
+    error,
+    isEmpty: books.length === 0,
+    config: {
+      loading: { message: "Cargando libros", centered: true },
+      error: {
         message: "No se pudieron cargar los libros.",
         actionLabel: "Reintentar",
         onAction: onReload,
         centered: true,
-      };
-    }
-
-    if (books.length === 0) {
-      return { state: "empty", message: "Aún no hay libros disponibles." };
-    }
-
-    return null;
-  })();
+      },
+      empty: { message: "Aún no hay libros disponibles." },
+    },
+  });
 
   const showList = !status;
 
@@ -53,21 +48,10 @@ export function LibraryBooksPanel({
       {showList && (
         <List disablePadding>
           {books.map((book) => (
-            <ListItemButton
+            <LibraryListItemButton
               key={book.id}
               selected={book.id === selectedBookId}
               onClick={() => onSelectBook(book.id)}
-              sx={{
-                borderRadius: 2,
-                mb: 1,
-                alignItems: "flex-start",
-                "&.Mui-selected": {
-                  backgroundColor: "action.selected",
-                },
-                "&.Mui-selected:hover": {
-                  backgroundColor: "action.selected",
-                },
-              }}
             >
               <ListItemText
                 primary={book.title}
@@ -80,7 +64,7 @@ export function LibraryBooksPanel({
                   },
                 }}
               />
-            </ListItemButton>
+            </LibraryListItemButton>
           ))}
         </List>
       )}

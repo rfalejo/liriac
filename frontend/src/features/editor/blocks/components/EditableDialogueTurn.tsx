@@ -1,6 +1,10 @@
 import { Stack } from "@mui/material";
 import type { Theme } from "@mui/material/styles";
-import { useCallback, useMemo, type KeyboardEvent } from "react";
+import {
+  useCallback,
+  useMemo,
+  type KeyboardEventHandler,
+} from "react";
 import type { DialogueField, DialogueTurn } from "../../types";
 import { DialogueEditableField } from "./DialogueEditableField";
 
@@ -9,7 +13,7 @@ export type EditableDialogueTurnProps = {
   turn: DialogueTurn;
   disabled: boolean;
   onChangeTurn?: (turnId: string, field: DialogueField, value: string) => void;
-  onKeyDown: (event: KeyboardEvent) => void;
+  onKeyDown: KeyboardEventHandler<HTMLDivElement>;
 };
 
 type FieldOverride = (theme: Theme) => Record<string, unknown>;

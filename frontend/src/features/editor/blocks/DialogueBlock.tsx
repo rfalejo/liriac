@@ -1,12 +1,14 @@
 import { Box, IconButton, Stack, Typography } from "@mui/material";
 import type { Theme } from "@mui/material/styles";
-import type { KeyboardEvent } from "react";
 import AddCircleOutlineRoundedIcon from "@mui/icons-material/AddCircleOutlineRounded";
 import DeleteOutlineRoundedIcon from "@mui/icons-material/DeleteOutlineRounded";
 import type { ChapterBlock, DialogueEditingState } from "../types";
 import { EditableDialogueTurn } from "./components/EditableDialogueTurn";
-import { handleEditingKeyDown } from "../utils/editingShortcuts";
 import { EditableBlock } from "./components/EditableBlock";
+import {
+  createBlockEditingSelector,
+  createEditingShortcutHandler,
+} from "./utils/blockEditingHelpers";
 
 type DialogueBlockProps = {
   block: ChapterBlock;
@@ -16,15 +18,7 @@ export function DialogueBlock({ block }: DialogueBlockProps) {
   return (
     <EditableBlock<DialogueEditingState>
       block={block}
-      selectEditingState={(state, currentBlock) => {
-        if (
-          state?.blockType === "dialogue" &&
-          state.blockId === currentBlock.id
-        ) {
-          return state;
-        }
-        return undefined;
-      }}
+      selectEditingState={createBlockEditingSelector("dialogue")}
       renderReadView={(currentBlock) => (
         <DialogueReadView block={currentBlock} />
       )}
@@ -112,13 +106,7 @@ type DialogueEditViewProps = {
 function DialogueEditView({ block, editingState }: DialogueEditViewProps) {
   const { dialogue, isSaving } = editingState;
   const turns = dialogue.turns ?? [];
-
-  const handleKeyDown = (event: KeyboardEvent) => {
-    handleEditingKeyDown(event, {
-      onConfirm: editingState.onSave,
-      onCancel: editingState.onCancel,
-    });
-  };
+  const handleKeyDown = createEditingShortcutHandler(editingState);
 
   return (
     <Stack

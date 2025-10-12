@@ -6,7 +6,7 @@ import {
   useEffect,
   useRef,
   type FormEvent,
-  type KeyboardEvent,
+  type KeyboardEventHandler,
 } from "react";
 
 export type DialogueEditableFieldProps = {
@@ -16,7 +16,7 @@ export type DialogueEditableFieldProps = {
   sx: (theme: Theme) => Record<string, unknown>;
   ariaLabel: string;
   onInput: (value: string) => void;
-  onKeyDown: (event: KeyboardEvent) => void;
+  onKeyDown: KeyboardEventHandler<HTMLDivElement>;
 };
 
 export const DialogueEditableField = forwardRef<
@@ -24,7 +24,7 @@ export const DialogueEditableField = forwardRef<
   DialogueEditableFieldProps
 >(
   (
-    { value, placeholder, disabled, sx, ariaLabel, onInput, onKeyDown },
+  { value, placeholder, disabled, sx, ariaLabel, onInput, onKeyDown },
     ref,
   ) => {
     const innerRef = useRef<HTMLDivElement | null>(null);

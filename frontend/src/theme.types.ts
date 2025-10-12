@@ -1,5 +1,5 @@
 import type { CSSProperties } from "react";
-import type { CSSObject, Theme } from "@mui/material/styles";
+import type { CSSObject } from "@mui/material/styles";
 import "@mui/material/Typography";
 import "@mui/material/styles";
 

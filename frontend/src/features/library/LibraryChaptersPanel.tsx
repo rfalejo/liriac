@@ -1,7 +1,8 @@
-import { Divider, List, ListItemButton, ListItemText, Stack, Typography } from "@mui/material";
+import { Divider, List, ListItemText, Stack, Typography } from "@mui/material";
 import type { LibraryBook } from "../../api/library";
 import { LibraryPanel } from "./components/LibraryPanel";
-import type { LibraryPanelStatusProps } from "./components/LibraryPanelStatus";
+import { resolveLibraryPanelStatus } from "./components/panelStatus";
+import { LibraryListItemButton } from "./components/LibraryListItemButton";
 
 type LibraryChaptersPanelProps = {
   book: LibraryBook | null;
@@ -16,32 +17,21 @@ export function LibraryChaptersPanel({
   error,
   onOpenChapter,
 }: LibraryChaptersPanelProps) {
-  const status: LibraryPanelStatusProps | null = (() => {
-    if (loading) {
-      return {
-        state: "loading",
-        message: "Cargando capítulos",
-        centered: true,
-      };
-    }
-
-    if (error) {
-      return {
-        state: "error",
+  const status = resolveLibraryPanelStatus({
+    loading,
+    error,
+    isEmpty: !book,
+    config: {
+      loading: { message: "Cargando capítulos", centered: true },
+      error: {
         message: "No es posible mostrar capítulos sin datos de libros.",
         centered: true,
-      };
-    }
-
-    if (!book) {
-      return {
-        state: "empty",
+      },
+      empty: {
         message: "Selecciona un libro para editar sus capítulos.",
-      };
-    }
-
-    return null;
-  })();
+      },
+    },
+  });
 
   return (
     <LibraryPanel
@@ -68,26 +58,10 @@ export function LibraryChaptersPanel({
           {book.chapters.length > 0 && (
             <List disablePadding>
               {book.chapters.map((chapter) => (
-                <ListItemButton
+                <LibraryListItemButton
                   key={chapter.id}
+                  variant="stacked"
                   onClick={() => onOpenChapter(chapter.id)}
-                  sx={{
-                    flexDirection: "column",
-                    alignItems: "flex-start",
-                    gap: 0.5,
-                    px: 2,
-                    py: 1.5,
-                    borderRadius: 2,
-                    mb: 1,
-                    textAlign: "left",
-                    backgroundColor: "transparent",
-                    "&:last-of-type": {
-                      mb: 0,
-                    },
-                    "&:hover": {
-                      backgroundColor: "action.hover",
-                    },
-                  }}
                 >
                   <ListItemText
                     primary={chapter.title}
@@ -100,7 +74,7 @@ export function LibraryChaptersPanel({
                       },
                     }}
                   />
-                </ListItemButton>
+                </LibraryListItemButton>
               ))}
             </List>
           )}

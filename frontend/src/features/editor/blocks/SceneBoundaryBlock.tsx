@@ -4,7 +4,10 @@ import type { components } from "../../../api/schema";
 import type { SceneBoundaryEditingState } from "../types";
 import { EditableBlock } from "./components/EditableBlock";
 import { EditableContentField } from "./components/EditableContentField";
-import { handleEditingKeyDown } from "../utils/editingShortcuts";
+import {
+  createBlockEditingSelector,
+  createEditingShortcutHandler,
+} from "./utils/blockEditingHelpers";
 
 type ChapterBlock = components["schemas"]["ChapterBlock"];
 
@@ -16,15 +19,7 @@ export function SceneBoundaryBlock({ block }: SceneBoundaryBlockProps) {
   return (
     <EditableBlock<SceneBoundaryEditingState>
       block={block}
-      selectEditingState={(state, currentBlock) => {
-        if (
-          state?.blockType === "scene_boundary" &&
-          state.blockId === currentBlock.id
-        ) {
-          return state;
-        }
-        return undefined;
-      }}
+      selectEditingState={createBlockEditingSelector("scene_boundary")}
       renderReadView={(currentBlock) => (
         <SceneBoundaryReadView block={currentBlock} />
       )}
@@ -68,6 +63,7 @@ type SceneBoundaryEditViewProps = {
 function SceneBoundaryEditView({ editingState }: SceneBoundaryEditViewProps) {
   const { draft, onChangeField } = editingState.sceneBoundary;
   const disabled = editingState.isSaving;
+  const handleShortcuts = createEditingShortcutHandler(editingState);
 
   return (
     <Stack spacing={1.25} sx={{ textAlign: "center" }}>
@@ -86,12 +82,7 @@ function SceneBoundaryEditView({ editingState }: SceneBoundaryEditViewProps) {
           ...theme.editor.blocks.uppercaseLabel,
           ...theme.editor.blocks.interactiveField,
         })}
-        onKeyDown={(event) => {
-          handleEditingKeyDown(event, {
-            onConfirm: editingState.onSave,
-            onCancel: editingState.onCancel,
-          });
-        }}
+        onKeyDown={handleShortcuts}
       />
       <EditableContentField
         value={draft.summary}
@@ -106,12 +97,7 @@ function SceneBoundaryEditView({ editingState }: SceneBoundaryEditViewProps) {
           color: theme.palette.editor.blockMuted,
           textAlign: "left",
         })}
-        onKeyDown={(event) => {
-          handleEditingKeyDown(event, {
-            onConfirm: editingState.onSave,
-            onCancel: editingState.onCancel,
-          });
-        }}
+        onKeyDown={handleShortcuts}
       />
     </Stack>
   );

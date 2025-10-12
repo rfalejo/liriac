@@ -1,11 +1,13 @@
 import { Typography } from "@mui/material";
 import type { Theme } from "@mui/material/styles";
-import type { KeyboardEventHandler } from "react";
 import type { components } from "../../../api/schema";
 import type { ParagraphEditingState } from "../types";
-import { handleEditingKeyDown } from "../utils/editingShortcuts";
 import { EditableBlock } from "./components/EditableBlock";
 import { EditableContentField } from "./components/EditableContentField";
+import {
+  createBlockEditingSelector,
+  createEditingShortcutHandler,
+} from "./utils/blockEditingHelpers";
 
 type ChapterBlock = components["schemas"]["ChapterBlock"];
 
@@ -17,15 +19,7 @@ export function ParagraphBlock({ block }: ParagraphBlockProps) {
   return (
     <EditableBlock<ParagraphEditingState>
       block={block}
-      selectEditingState={(state, currentBlock) => {
-        if (
-          state?.blockType === "paragraph" &&
-          state.blockId === currentBlock.id
-        ) {
-          return state;
-        }
-        return undefined;
-      }}
+      selectEditingState={createBlockEditingSelector("paragraph")}
       renderReadView={(currentBlock) => {
         const content = currentBlock.text?.trim() ?? "";
         return (
@@ -52,12 +46,9 @@ type ParagraphEditViewProps = {
 function ParagraphEditView({ blockId, editingState }: ParagraphEditViewProps) {
   const draftText = editingState.paragraph.draftText;
 
-  const handleKeyDown: KeyboardEventHandler<HTMLDivElement> = (event) => {
-    handleEditingKeyDown(event, {
-      onConfirm: editingState.onSave,
-      onCancel: editingState.onCancel,
-    });
-  };
+  const handleKeyDown = createEditingShortcutHandler<HTMLDivElement>(
+    editingState,
+  );
 
   return (
     <EditableContentField
@@ -69,7 +60,7 @@ function ParagraphEditView({ blockId, editingState }: ParagraphEditViewProps) {
       autoFocus
       focusKey={blockId}
       selectionBehavior="caret-at-end"
-      onKeyDown={handleKeyDown}
+  onKeyDown={handleKeyDown}
       spellCheck
       sx={(theme: Theme) => theme.typography.editorParagraphEditable}
     />

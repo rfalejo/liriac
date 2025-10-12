@@ -4,7 +4,10 @@ import type { components } from "../../../api/schema";
 import type { MetadataEditingState } from "../types";
 import { EditableBlock } from "./components/EditableBlock";
 import { EditableContentField } from "./components/EditableContentField";
-import { handleEditingKeyDown } from "../utils/editingShortcuts";
+import {
+  createBlockEditingSelector,
+  createEditingShortcutHandler,
+} from "./utils/blockEditingHelpers";
 
 type ChapterBlock = components["schemas"]["ChapterBlock"];
 
@@ -20,12 +23,7 @@ export function MetadataBlock({ block }: MetadataBlockProps) {
   return (
     <EditableBlock<MetadataEditingState>
       block={block}
-      selectEditingState={(state, currentBlock) => {
-        if (state?.blockType === "metadata" && state.blockId === currentBlock.id) {
-          return state;
-        }
-        return undefined;
-      }}
+      selectEditingState={createBlockEditingSelector("metadata")}
       renderReadView={(currentBlock) => (
         <MetadataReadView block={currentBlock} />
       )}
@@ -161,6 +159,7 @@ function MetadataEditView({ block, editingState }: MetadataEditViewProps) {
   const { metadata, isSaving } = editingState;
   const kind = metadata.kind ?? block.kind ?? "metadata";
   const { draft, onChangeField } = metadata;
+  const handleShortcuts = createEditingShortcutHandler(editingState);
 
   if (kind === "chapter_header") {
     return (
@@ -193,12 +192,7 @@ function MetadataEditView({ block, editingState }: MetadataEditViewProps) {
             textAlign: "center",
             ...theme.editor.blocks.interactiveField,
           })}
-          onKeyDown={(event) => {
-            handleEditingKeyDown(event, {
-              onConfirm: editingState.onSave,
-              onCancel: editingState.onCancel,
-            });
-          }}
+          onKeyDown={handleShortcuts}
         />
         <EditableContentField
           value={draft.subtitle}
@@ -214,12 +208,7 @@ function MetadataEditView({ block, editingState }: MetadataEditViewProps) {
             textAlign: "center",
             ...theme.editor.blocks.interactiveFieldDense,
           })}
-          onKeyDown={(event) => {
-            handleEditingKeyDown(event, {
-              onConfirm: editingState.onSave,
-              onCancel: editingState.onCancel,
-            });
-          }}
+          onKeyDown={handleShortcuts}
         />
         <EditableContentField
           value={draft.epigraph}
@@ -234,12 +223,7 @@ function MetadataEditView({ block, editingState }: MetadataEditViewProps) {
             marginTop: theme.spacing(1.25),
             ...theme.editor.blocks.interactiveField,
           })}
-          onKeyDown={(event) => {
-            handleEditingKeyDown(event, {
-              onConfirm: editingState.onSave,
-              onCancel: editingState.onCancel,
-            });
-          }}
+          onKeyDown={handleShortcuts}
         />
         <EditableContentField
           value={draft.epigraphAttribution}
@@ -254,12 +238,7 @@ function MetadataEditView({ block, editingState }: MetadataEditViewProps) {
             textAlign: "center",
             ...theme.editor.blocks.interactiveFieldTight,
           })}
-          onKeyDown={(event) => {
-            handleEditingKeyDown(event, {
-              onConfirm: editingState.onSave,
-              onCancel: editingState.onCancel,
-            });
-          }}
+          onKeyDown={handleShortcuts}
         />
       </Stack>
     );
@@ -280,12 +259,7 @@ function MetadataEditView({ block, editingState }: MetadataEditViewProps) {
           color: theme.palette.editor.blockMuted,
           ...theme.editor.blocks.interactiveField,
         })}
-        onKeyDown={(event) => {
-          handleEditingKeyDown(event, {
-            onConfirm: editingState.onSave,
-            onCancel: editingState.onCancel,
-          });
-        }}
+        onKeyDown={handleShortcuts}
       />
     );
   }
@@ -303,12 +277,7 @@ function MetadataEditView({ block, editingState }: MetadataEditViewProps) {
         color: theme.palette.editor.blockMuted,
         ...theme.editor.blocks.interactiveField,
       })}
-      onKeyDown={(event) => {
-        handleEditingKeyDown(event, {
-          onConfirm: editingState.onSave,
-          onCancel: editingState.onCancel,
-        });
-      }}
+      onKeyDown={handleShortcuts}
     />
   );
 }

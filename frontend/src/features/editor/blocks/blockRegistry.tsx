@@ -18,35 +18,33 @@ type BlockRenderer = (context: BlockRenderContext) => ReactNode | null;
 
 type BlockRegistry = Partial<Record<ChapterBlockType, BlockRenderer>>;
 
+type BlockByType<TType extends ChapterBlockType> = Extract<
+  ChapterBlock,
+  { type: TType }
+>;
+
+type BlockComponent<TType extends ChapterBlockType> = (props: {
+  block: BlockByType<TType>;
+}) => ReactNode;
+
+function createBlockRenderer<TType extends ChapterBlockType>(
+  type: TType,
+  Component: BlockComponent<TType>,
+): BlockRenderer {
+  return ({ block }) => {
+    if (block.type !== type) {
+      return null;
+    }
+
+    return <Component block={block as BlockByType<TType>} />;
+  };
+}
+
 const blockRegistry: BlockRegistry = {
-  paragraph: ({ block }) => {
-    if (block.type !== "paragraph") {
-      return null;
-    }
-
-    return <ParagraphBlock block={block} />;
-  },
-  dialogue: ({ block }) => {
-    if (block.type !== "dialogue") {
-      return null;
-    }
-
-    return <DialogueBlock block={block} />;
-  },
-  scene_boundary: ({ block }) => {
-    if (block.type !== "scene_boundary") {
-      return null;
-    }
-
-    return <SceneBoundaryBlock block={block} />;
-  },
-  metadata: ({ block }) => {
-    if (block.type !== "metadata") {
-      return null;
-    }
-
-    return <MetadataBlock block={block} />;
-  },
+  paragraph: createBlockRenderer("paragraph", ParagraphBlock),
+  dialogue: createBlockRenderer("dialogue", DialogueBlock),
+  scene_boundary: createBlockRenderer("scene_boundary", SceneBoundaryBlock),
+  metadata: createBlockRenderer("metadata", MetadataBlock),
 };
 
 export function renderEditorBlock(
