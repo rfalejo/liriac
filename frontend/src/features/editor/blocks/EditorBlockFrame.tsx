@@ -19,7 +19,9 @@ type ChapterBlockType = components["schemas"]["ChapterBlockTypeEnum"];
 type EditorBlockFrameProps = {
   blockId: string;
   blockType: ChapterBlockType;
-  onEdit: (blockId: string) => void;
+  onEdit?: (blockId: string) => void;
+  controls?: ReactNode;
+  isActive?: boolean;
   children: ReactNode;
 };
 
@@ -27,6 +29,8 @@ export function EditorBlockFrame({
   blockId,
   blockType,
   onEdit,
+  controls,
+  isActive = false,
   children,
 }: EditorBlockFrameProps) {
   const [focusWithin, setFocusWithin] = useState(false);
@@ -34,8 +38,8 @@ export function EditorBlockFrame({
   const [touchRevealed, setTouchRevealed] = useState(false);
 
   const showControls = useMemo(
-    () => focusWithin || hovered || touchRevealed,
-    [focusWithin, hovered, touchRevealed],
+    () => isActive || focusWithin || hovered || touchRevealed,
+    [focusWithin, hovered, touchRevealed, isActive],
   );
 
   const handlePointerDown = useCallback<PointerEventHandler<HTMLDivElement>>(
@@ -66,6 +70,9 @@ export function EditorBlockFrame({
   const handleEdit = useCallback<MouseEventHandler<HTMLButtonElement>>(
     (event) => {
       event.stopPropagation();
+      if (!onEdit) {
+        return;
+      }
       onEdit(blockId);
     },
     [blockId, onEdit],
@@ -87,40 +94,54 @@ export function EditorBlockFrame({
         px: { xs: 1.75, sm: 2.5 },
         py: { xs: 1.75, sm: 2.25 },
         transition: "background-color 140ms ease, box-shadow 140ms ease",
-        backgroundColor: showControls
-          ? "rgba(15, 20, 25, 0.04)"
-          : "transparent",
-        boxShadow: showControls
-          ? "0 0 0 1px rgba(15, 20, 25, 0.12)"
-          : "0 0 0 1px transparent",
+        backgroundColor: isActive
+          ? "rgba(25, 118, 210, 0.08)"
+          : showControls
+            ? "rgba(15, 20, 25, 0.04)"
+            : "transparent",
+        boxShadow: isActive
+          ? "0 0 0 1px rgba(25, 118, 210, 0.35)"
+          : showControls
+            ? "0 0 0 1px rgba(15, 20, 25, 0.12)"
+            : "0 0 0 1px transparent",
         outline: "none",
       }}
     >
       {children}
-      <IconButton
-        size="small"
-        onClick={handleEdit}
-        aria-label="Editar bloque"
+      <Box
         sx={{
           position: "absolute",
           top: { xs: 8, sm: 12 },
           right: { xs: 8, sm: 12 },
-          color: "rgba(15, 20, 25, 0.6)",
-          borderRadius: 999,
-          boxShadow: "none",
+          display: "flex",
+          gap: 0.5,
           opacity: showControls
             ? BUTTON_OPACITY_VISIBLE
             : BUTTON_OPACITY_HIDDEN,
           pointerEvents: showControls ? "auto" : "none",
           transition: "opacity 140ms ease",
-          "&:hover": {
-            backgroundColor: "rgba(15, 20, 25, 0.1)",
-            color: "rgba(15, 20, 25, 0.78)",
-          },
         }}
       >
-        <EditRoundedIcon sx={{ fontSize: "1.1rem" }} />
-      </IconButton>
+        {controls ??
+          (onEdit ? (
+            <IconButton
+              size="small"
+              onClick={handleEdit}
+              aria-label="Editar bloque"
+              sx={{
+                color: "rgba(15, 20, 25, 0.6)",
+                borderRadius: 999,
+                boxShadow: "none",
+                "&:hover": {
+                  backgroundColor: "rgba(15, 20, 25, 0.1)",
+                  color: "rgba(15, 20, 25, 0.78)",
+                },
+              }}
+            >
+              <EditRoundedIcon sx={{ fontSize: "1.1rem" }} />
+            </IconButton>
+          ) : null)}
+      </Box>
     </Box>
   );
 }

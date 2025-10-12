@@ -67,6 +67,17 @@ class ChapterBlockSerializer(serializers.Serializer):
     lastUpdated = serializers.CharField(required=False, allow_blank=True, allow_null=True)
 
 
+class ChapterBlockUpdateSerializer(ChapterBlockSerializer):
+    class Meta:
+        ref_name = "ChapterBlockUpdate"
+
+    def __init__(self, *args, **kwargs):
+        kwargs.setdefault("partial", True)
+        super().__init__(*args, **kwargs)
+        for field in self.fields.values():
+            field.required = False
+
+
 class ContextItemSerializer(serializers.Serializer):
     id = serializers.CharField()
     type = serializers.ChoiceField(

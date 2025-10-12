@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import List
+from typing import Any, Dict, List, Optional, TypedDict
 
 from .models import (
     ChapterBlock,
@@ -374,15 +374,60 @@ CHAPTER_02_BLOCKS: List[ChapterBlock] = [
 ]
 
 
+CHAPTER_STORE: Dict[str, "ChapterStoreEntry"] = {
+    "bk-karamazov-ch-01": {
+        "metadata": {
+            "title": "Libro I — Capítulo I: Fyodor Pavlovich Karamázov",
+            "summary": "Fyodor aguarda a sus hijos y el aire se vuelve irrespirable.",
+            "ordinal": 1,
+            "tokens": 880,
+            "word_count": 2450,
+            "book_id": "bk-karamazov",
+            "book_title": "Los hermanos Karamázov",
+        },
+        "blocks": CHAPTER_01_BLOCKS,
+    },
+    "bk-karamazov-ch-02": {
+        "metadata": {
+            "title": "Libro I — Capítulo II: Los tres hermanos",
+            "summary": "Los hermanos se reúnen ante el starets para buscar juicio.",
+            "ordinal": 2,
+            "tokens": 910,
+            "word_count": 2600,
+            "book_id": "bk-karamazov",
+            "book_title": "Los hermanos Karamázov",
+        },
+        "blocks": CHAPTER_02_BLOCKS,
+    },
+}
+
+
+class ChapterMetadata(TypedDict, total=False):
+    title: str
+    summary: Optional[str]
+    ordinal: int
+    tokens: int
+    word_count: int
+    book_id: Optional[str]
+    book_title: Optional[str]
+
+
+class ChapterStoreEntry(TypedDict):
+    metadata: ChapterMetadata
+    blocks: List[ChapterBlock]
+
+
 def chapter_detail_from_blocks(
     *,
     chapter_id: str,
     title: str,
     ordinal: int,
-    summary: str,
+    summary: Optional[str],
     tokens: int,
     word_count: int,
     blocks: List[ChapterBlock],
+    book_id: Optional[str],
+    book_title: Optional[str],
 ) -> ChapterDetail:
     paragraphs = blocks_to_paragraphs(blocks)
     return {
@@ -395,42 +440,117 @@ def chapter_detail_from_blocks(
         "paragraphs": paragraphs,
         "content": join_paragraphs(paragraphs),
         "blocks": blocks,
-        "bookId": "bk-karamazov",
-        "bookTitle": "Los hermanos Karamázov",
+        "bookId": book_id,
+        "bookTitle": book_title,
     }
 
 
-CHAPTER_DETAILS = {
-    "bk-karamazov-ch-01": chapter_detail_from_blocks(
-        chapter_id="bk-karamazov-ch-01",
-        title="Libro I — Capítulo I: Fyodor Pavlovich Karamázov",
-        summary="Fyodor aguarda a sus hijos y el aire se vuelve irrespirable.",
-        ordinal=1,
-        tokens=880,
-        word_count=2450,
-        blocks=CHAPTER_01_BLOCKS,
-    ),
-    "bk-karamazov-ch-02": chapter_detail_from_blocks(
-        chapter_id="bk-karamazov-ch-02",
-        title="Libro I — Capítulo II: Los tres hermanos",
-        summary="Los hermanos se reúnen ante el starets para buscar juicio.",
-        ordinal=2,
-        tokens=910,
-        word_count=2600,
-        blocks=CHAPTER_02_BLOCKS,
-    ),
+def build_chapter_detail(chapter_id: str, entry: ChapterStoreEntry) -> ChapterDetail:
+    metadata = entry["metadata"]
+    return chapter_detail_from_blocks(
+        chapter_id=chapter_id,
+        title=metadata.get("title", ""),
+        summary=metadata.get("summary"),
+        ordinal=metadata.get("ordinal", 0),
+        tokens=metadata.get("tokens", 0),
+        word_count=metadata.get("word_count", 0),
+        blocks=entry["blocks"],
+        book_id=metadata.get("book_id"),
+        book_title=metadata.get("book_title"),
+    )
+
+
+CHAPTER_DETAILS: Dict[str, ChapterDetail] = {
+    chapter_id: build_chapter_detail(chapter_id, entry)
+    for chapter_id, entry in CHAPTER_STORE.items()
 }
 
 
-EDITOR_STATE: EditorPayload = {
-    "paragraphs": CHAPTER_DETAILS["bk-karamazov-ch-01"]["paragraphs"],
-    "content": CHAPTER_DETAILS["bk-karamazov-ch-01"]["content"],
-    "blocks": CHAPTER_DETAILS["bk-karamazov-ch-01"]["blocks"],
-    "tokens": 1620,
-    "cursor": None,
-    "bookId": "bk-karamazov",
-    "bookTitle": "Los hermanos Karamázov",
-    "chapterId": "bk-karamazov-ch-01",
-    "chapterTitle": "Libro I — Capítulo I: Fyodor Pavlovich Karamázov",
-}
+DEFAULT_EDITOR_CHAPTER_ID = "bk-karamazov-ch-01"
+DEFAULT_EDITOR_TOKEN_BUDGET = 1620
+
+
+def build_editor_state(source: ChapterDetail) -> EditorPayload:
+    return {
+        "paragraphs": source["paragraphs"],
+        "content": source["content"],
+        "blocks": source["blocks"],
+        "tokens": DEFAULT_EDITOR_TOKEN_BUDGET,
+        "cursor": None,
+        "bookId": source.get("bookId"),
+        "bookTitle": source.get("bookTitle"),
+        "chapterId": source["id"],
+        "chapterTitle": source["title"],
+    }
+
+
+EDITOR_STATE: EditorPayload = build_editor_state(
+    CHAPTER_DETAILS[DEFAULT_EDITOR_CHAPTER_ID]
+)
+
+
+def get_chapter_detail(chapter_id: str) -> Optional[ChapterDetail]:
+    return CHAPTER_DETAILS.get(chapter_id)
+
+
+def rebuild_chapter_detail(chapter_id: str) -> ChapterDetail:
+    entry = CHAPTER_STORE.get(chapter_id)
+    if entry is None:
+        raise KeyError(f"Unknown chapter: {chapter_id}")
+    detail = build_chapter_detail(chapter_id, entry)
+    CHAPTER_DETAILS[chapter_id] = detail
+    return detail
+
+
+def refresh_editor_state(
+    chapter_id: str,
+    detail: Optional[ChapterDetail] = None,
+) -> None:
+    global EDITOR_STATE
+    if EDITOR_STATE.get("chapterId") != chapter_id:
+        return
+    source = detail if detail is not None else CHAPTER_DETAILS[chapter_id]
+    EDITOR_STATE.update(
+        {
+            "paragraphs": source["paragraphs"],
+            "content": source["content"],
+            "blocks": source["blocks"],
+            "tokens": DEFAULT_EDITOR_TOKEN_BUDGET,
+            "cursor": None,
+            "bookId": source.get("bookId"),
+            "bookTitle": source.get("bookTitle"),
+            "chapterId": source["id"],
+            "chapterTitle": source["title"],
+        }
+    )
+
+
+def update_chapter_block(
+    chapter_id: str,
+    block_id: str,
+    changes: Dict[str, Any],
+) -> ChapterDetail:
+    entry = CHAPTER_STORE.get(chapter_id)
+    if entry is None:
+        raise KeyError(f"Unknown chapter: {chapter_id}")
+
+    for block in entry["blocks"]:
+        if block["id"] == block_id:
+            target_block = block
+            break
+    else:
+        raise KeyError(f"Unknown block: {block_id}")
+
+    # Apply field-level updates so future persistence can inspect the store.
+    for field, value in changes.items():
+        if field == "id":
+            continue
+        if value is None:
+            target_block[field] = value
+        else:
+            target_block[field] = value
+
+    updated_detail = rebuild_chapter_detail(chapter_id)
+    refresh_editor_state(chapter_id, updated_detail)
+    return updated_detail
 

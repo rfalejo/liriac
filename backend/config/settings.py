@@ -144,6 +144,20 @@ SPECTACULAR_SETTINGS = {
     "DESCRIPTION": "Local Django API serving library context and editor data for the Liriac editor.",
     "VERSION": "0.1.0",
     "SERVE_INCLUDE_SCHEMA": False,
+    "ENUM_NAME_OVERRIDES": {
+        "ChapterBlockTypeEnum": [
+            ("paragraph", "paragraph"),
+            ("dialogue", "dialogue"),
+            ("scene_boundary", "scene_boundary"),
+            ("metadata", "metadata"),
+        ],
+        "ContextItemTypeEnum": [
+            ("character", "character"),
+            ("world", "world"),
+            ("styleTone", "styleTone"),
+            ("chapter", "chapter"),
+        ],
+    },
 }
 
 

@@ -34,6 +34,14 @@ type EditorChapterViewProps = {
     blockType: ChapterBlockType,
     position: BlockInsertPosition,
   ) => void;
+  editingState?: {
+    blockId: string | null;
+    draftText: string;
+    onChangeDraft: (value: string) => void;
+    onCancel: () => void;
+    onSave: () => void;
+    isSaving: boolean;
+  };
 };
 
 function renderFallbackBlock(block: ChapterBlock) {
@@ -60,6 +68,7 @@ export function EditorChapterView({
   onRetry,
   onEditBlock,
   onInsertBlock,
+  editingState,
 }: EditorChapterViewProps) {
   const blockSequence = useMemo(() => {
     if (!chapter) {
@@ -72,7 +81,18 @@ export function EditorChapterView({
       if (block.type === "paragraph") {
         entries.push({
           id: block.id,
-          node: <ParagraphBlock block={block} onEdit={onEditBlock} />,
+          node: (
+            <ParagraphBlock
+              block={block}
+              onEdit={onEditBlock}
+              isEditing={editingState?.blockId === block.id}
+              draftText={editingState?.draftText ?? ""}
+              onDraftChange={editingState?.onChangeDraft}
+              onCancelEdit={editingState?.onCancel}
+              onSaveEdit={editingState?.onSave}
+              disabled={editingState?.isSaving ?? false}
+            />
+          ),
         });
         return;
       }
