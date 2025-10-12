@@ -1,7 +1,6 @@
 ---
 description: 'liriac - AI agent quickstart'
-tools: ['runCommands', 'runTasks', 'edit', 'search', 'web-search-prime/*', 'context7/*', 'usages', 'problems', 'changes', 'fetch']
-model: GPT-5-Codex (Preview) (copilot)
+applyTo: '**'
 ---
 # Liriac – AI agent quickstart
 
