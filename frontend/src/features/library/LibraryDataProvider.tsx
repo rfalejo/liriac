@@ -1,6 +1,7 @@
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import type { ReactNode } from "react";
 import { useState } from "react";
+import { LibraryDataContextProvider } from "./LibraryDataContext";
 
 type LibraryDataProviderProps = {
   children: ReactNode;
@@ -22,6 +23,8 @@ export function LibraryDataProvider({ children }: LibraryDataProviderProps) {
   const [queryClient] = useState(createQueryClient);
 
   return (
-    <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>
+    <QueryClientProvider client={queryClient}>
+      <LibraryDataContextProvider>{children}</LibraryDataContextProvider>
+    </QueryClientProvider>
   );
 }

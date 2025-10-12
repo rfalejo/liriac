@@ -144,12 +144,14 @@ frontend/
 |   |   |   |-- LibraryBooksPanel.tsx
 |   |   |   |-- LibraryChaptersPanel.tsx
 |   |   |   |-- LibraryContextPanel.tsx
+|   |   |   |-- LibraryDataContext.tsx
 |   |   |   |-- LibraryDataProvider.tsx
 |   |   |   |-- LibraryLanding.tsx
 |   |   |   |-- libraryQueryKeys.ts
 |   |   |   |-- useChapterDetail.ts
 |   |   |   |-- useLibraryBooks.ts
 |   |   |   |-- useLibraryPreview.ts
+|   |   |   |-- useLibraryResource.ts
 |   |   |   |-- useLibrarySections.ts
 |   |   |   \-- useLibrarySelection.ts
 |   |   \-- preview/

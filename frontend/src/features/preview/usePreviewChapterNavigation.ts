@@ -1,8 +1,8 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import type { ChapterDetail } from "../../api/chapters";
 import type { ChapterSummary, LibraryBook } from "../../api/library";
+import { useLibraryData } from "../library/LibraryDataContext";
 import { useChapterDetail } from "../library/useChapterDetail";
-import { useLibraryBooks } from "../library/useLibraryBooks";
 
 type UsePreviewChapterNavigationParams = {
   chapterId: string;
@@ -38,7 +38,7 @@ export function usePreviewChapterNavigation({
     setActiveChapterId(chapterId);
   }, [chapterId, open]);
 
-  const { books, loading: booksLoading, error: booksError } = useLibraryBooks();
+  const { books, booksLoading, booksError } = useLibraryData();
   const { chapter, loading, error, reload } = useChapterDetail(activeChapterId);
 
   const relatedBook = useMemo<LibraryBook | null>(() => {

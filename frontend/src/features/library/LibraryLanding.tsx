@@ -1,34 +1,28 @@
 import { Box, Button, Container, Stack, Typography } from "@mui/material";
-import { useLibraryBooks } from "./useLibraryBooks";
-import { useLibrarySections } from "./useLibrarySections";
 import { PreviewContainer } from "../preview/PreviewContainer";
 import { LibraryBooksPanel } from "./LibraryBooksPanel";
 import { LibraryChaptersPanel } from "./LibraryChaptersPanel";
 import { LibraryContextPanel } from "./LibraryContextPanel";
-import { useLibraryPreview } from "./useLibraryPreview";
-import { useLibrarySelection } from "./useLibrarySelection";
+import { useLibraryData } from "./LibraryDataContext";
 
 export function LibraryLanding() {
   const {
-    sections,
-    loading: sectionsLoading,
-    error: sectionsError,
-    reload: reloadSections,
-  } = useLibrarySections();
-  const {
     books,
-    loading: booksLoading,
-    error: booksError,
-    reload: reloadBooks,
-  } = useLibraryBooks();
-  const { previewState, openPreview, closePreview } = useLibraryPreview();
-
-  const { refreshLibrary, selectBook, selectedBook, selectedBookId } =
-    useLibrarySelection({
-      books,
-      reloadBooks,
-      reloadSections,
-    });
+    booksLoading,
+    booksError,
+    reloadBooks,
+    sections,
+    sectionsLoading,
+    sectionsError,
+    reloadSections,
+    refreshLibrary,
+    selectBook,
+    selectedBook,
+    selectedBookId,
+    previewState,
+    openPreview,
+    closePreview,
+  } = useLibraryData();
 
   return (
     <Box
