@@ -1,20 +1,17 @@
-import { Fragment, useMemo } from "react";
-import type { ReactNode } from "react";
-import { Button, CircularProgress, Stack, Typography } from "@mui/material";
-import type { Theme } from "@mui/material/styles";
+import { Fragment } from "react";
 import type { ChapterDetail } from "../../api/chapters";
-import type { components } from "../../api/schema";
-import {
-  BlockInsertMenu,
-  type BlockInsertPosition,
-} from "./blocks/BlockInsertMenu";
 import type { EditingState } from "./types";
-import { renderEditorBlock } from "./blocks/blockRegistry";
 import { EditorBlockEditingProvider } from "./context/EditorBlockEditingContext";
-
-type ChapterBlockType = components["schemas"]["ChapterBlockTypeEnum"];
-
-type BlockEntry = { id: string; node: ReactNode };
+import type { BlockInsertPosition } from "./blocks/BlockInsertMenu";
+import {
+  useChapterBlocks,
+  type ChapterBlockType,
+} from "./hooks/useChapterBlocks";
+import { ChapterLoadingState } from "./chapter/ChapterLoadingState";
+import { ChapterErrorState } from "./chapter/ChapterErrorState";
+import { ChapterEmptyState } from "./chapter/ChapterEmptyState";
+import { ChapterHeading } from "./chapter/ChapterHeading";
+import { ChapterBlockList } from "./chapter/ChapterBlockList";
 
 type EditorChapterViewProps = {
   loading: boolean;
@@ -38,73 +35,19 @@ export function EditorChapterView({
   onInsertBlock,
   editingState,
 }: EditorChapterViewProps) {
-  const blockSequence = useMemo(() => {
-    if (!chapter) {
-      return [] as BlockEntry[];
-    }
-
-    return chapter.blocks.reduce<BlockEntry[]>((entries, block) => {
-      const rendered = renderEditorBlock({
-        block,
-      });
-
-      if (rendered) {
-        entries.push({ id: block.id, node: rendered });
-      }
-
-      return entries;
-    }, []);
-  }, [chapter]);
+  const { blockEntries, hasChapterHeader } = useChapterBlocks(chapter);
 
   if (loading) {
-    return (
-      <Stack
-        direction="row"
-        spacing={2}
-        alignItems="center"
-        justifyContent="center"
-      >
-        <CircularProgress size={24} color="inherit" />
-        <Typography
-          component="span"
-          sx={(theme: Theme) => ({
-            ...theme.typography.editorBody,
-            color: theme.palette.editor.blockMuted,
-          })}
-        >
-          Cargando capítulo...
-        </Typography>
-      </Stack>
-    );
+    return <ChapterLoadingState />;
   }
 
   if (error) {
-    return (
-      <Stack spacing={2} alignItems="center" textAlign="center">
-        <Typography
-          sx={(theme: Theme) => ({
-            ...theme.typography.editorBody,
-            color: theme.palette.error.main,
-          })}
-        >
-          No se pudo cargar el capítulo.
-        </Typography>
-        <Button variant="outlined" onClick={onRetry}>
-          Reintentar
-        </Button>
-      </Stack>
-    );
+    return <ChapterErrorState onRetry={onRetry} />;
   }
 
   if (!chapter) {
     return null;
   }
-
-  const hasChapterHeader = chapter.blocks.some(
-    (block) =>
-      block.type === "metadata" &&
-      (block.kind ?? "metadata") === "chapter_header",
-  );
 
   return (
     <EditorBlockEditingProvider
@@ -112,64 +55,20 @@ export function EditorChapterView({
       onEditBlock={onEditBlock}
     >
       <Fragment>
-        {!hasChapterHeader && (
-          <Stack spacing={1.25} sx={{ mb: 1.75 }}>
-            <Typography
-              variant="h4"
-              sx={(theme: Theme) => ({
-                fontFamily: theme.typography.editorBody.fontFamily,
-                color: theme.palette.editor.blockHeading,
-              })}
-            >
-              {chapter.title}
-            </Typography>
-            {chapter.summary && (
-              <Typography
-                variant="subtitle1"
-                sx={(theme: Theme) => ({
-                  fontFamily: theme.typography.editorBody.fontFamily,
-                  color: theme.palette.editor.blockMuted,
-                })}
-              >
-                {chapter.summary}
-              </Typography>
-            )}
-          </Stack>
-        )}
+        {!hasChapterHeader ? (
+          <ChapterHeading
+            summary={chapter.summary ?? null}
+            title={chapter.title}
+          />
+        ) : null}
 
-        {blockSequence.length === 0 ? (
-          <Typography
-            variant="body2"
-            sx={(theme: Theme) => ({
-              ...theme.typography.editorBody,
-              color: theme.palette.editor.blockMuted,
-            })}
-          >
-            Sin contenido.
-          </Typography>
+        {blockEntries.length === 0 ? (
+          <ChapterEmptyState />
         ) : (
-          <Stack spacing={0}>
-            {blockSequence.map((entry, index) => {
-              const previous = blockSequence[index - 1];
-              const insertPosition: BlockInsertPosition = {
-                afterBlockId: previous?.id ?? null,
-                beforeBlockId: entry.id,
-                index,
-              };
-
-              return (
-                <Fragment key={entry.id}>
-                  {index > 0 && (
-                    <BlockInsertMenu
-                      position={insertPosition}
-                      onInsertBlock={onInsertBlock}
-                    />
-                  )}
-                  {entry.node}
-                </Fragment>
-              );
-            })}
-          </Stack>
+          <ChapterBlockList
+            blockEntries={blockEntries}
+            onInsertBlock={onInsertBlock}
+          />
         )}
       </Fragment>
     </EditorBlockEditingProvider>
