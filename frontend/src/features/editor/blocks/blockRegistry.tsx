@@ -1,7 +1,7 @@
 import { Box } from "@mui/material";
+import type { Theme } from "@mui/material/styles";
 import type { ReactNode } from "react";
 import type { components } from "../../../api/schema";
-import { editorBodyTypographySx, editorThemeConstants } from "../editorTheme";
 import type { ChapterBlock, EditingState } from "../types";
 import { DialogueBlock } from "./DialogueBlock";
 import { MetadataBlock } from "./MetadataBlock";
@@ -87,7 +87,9 @@ const blockRegistry: BlockRegistry = {
   },
 };
 
-export function renderEditorBlock(context: BlockRenderContext): ReactNode | null {
+export function renderEditorBlock(
+  context: BlockRenderContext,
+): ReactNode | null {
   const registryKey = context.block.type;
 
   if (isRegisteredBlockType(registryKey)) {
@@ -107,14 +109,14 @@ export function renderEditorBlock(context: BlockRenderContext): ReactNode | null
 function renderFallbackBlock(block: ChapterBlock) {
   return (
     <Box
-      sx={{
-        ...editorBodyTypographySx,
-        border: "1px dashed rgba(27, 27, 27, 0.25)",
+      sx={(theme: Theme) => ({
+        ...theme.typography.editorBody,
+        border: `1px dashed ${theme.palette.editor.blockFallbackBorder}`,
         borderRadius: 1,
         p: { xs: 2, sm: 3 },
         fontStyle: "italic",
-        color: editorThemeConstants.mutedColor,
-      }}
+        color: theme.palette.editor.blockMuted,
+      })}
     >
       Bloque "{block.type}" pendiente de diseño.
     </Box>

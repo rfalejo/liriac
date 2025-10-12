@@ -1,14 +1,9 @@
 import { Fragment, useMemo } from "react";
 import type { ReactNode } from "react";
 import { Button, CircularProgress, Stack, Typography } from "@mui/material";
+import type { Theme } from "@mui/material/styles";
 import type { ChapterDetail } from "../../api/chapters";
 import type { components } from "../../api/schema";
-import {
-  editorBodyTypographySx,
-  editorFontFamily,
-  editorTheme,
-  editorThemeConstants,
-} from "./editorTheme";
 import {
   BlockInsertMenu,
   type BlockInsertPosition,
@@ -73,10 +68,10 @@ export function EditorChapterView({
         <CircularProgress size={24} color="inherit" />
         <Typography
           component="span"
-          sx={{
-            ...editorBodyTypographySx,
-            color: editorThemeConstants.mutedColor,
-          }}
+          sx={(theme: Theme) => ({
+            ...theme.typography.editorBody,
+            color: theme.palette.editor.blockMuted,
+          })}
         >
           Cargando capítulo...
         </Typography>
@@ -88,10 +83,10 @@ export function EditorChapterView({
     return (
       <Stack spacing={2} alignItems="center" textAlign="center">
         <Typography
-          sx={{
-            ...editorBodyTypographySx,
-            color: "error.main",
-          }}
+          sx={(theme: Theme) => ({
+            ...theme.typography.editorBody,
+            color: theme.palette.error.main,
+          })}
         >
           No se pudo cargar el capítulo.
         </Typography>
@@ -118,20 +113,20 @@ export function EditorChapterView({
         <Stack spacing={1.25} sx={{ mb: 1.75 }}>
           <Typography
             variant="h4"
-            sx={{
-              fontFamily: editorTheme.typography.fontFamily,
-              color: editorThemeConstants.headingColor,
-            }}
+            sx={(theme: Theme) => ({
+              fontFamily: theme.typography.editorBody.fontFamily,
+              color: theme.palette.editor.blockHeading,
+            })}
           >
             {chapter.title}
           </Typography>
           {chapter.summary && (
             <Typography
               variant="subtitle1"
-              sx={{
-                fontFamily: editorFontFamily,
-                color: editorThemeConstants.mutedColor,
-              }}
+              sx={(theme: Theme) => ({
+                fontFamily: theme.typography.editorBody.fontFamily,
+                color: theme.palette.editor.blockMuted,
+              })}
             >
               {chapter.summary}
             </Typography>
@@ -142,10 +137,10 @@ export function EditorChapterView({
       {blockSequence.length === 0 ? (
         <Typography
           variant="body2"
-          sx={{
-            ...editorBodyTypographySx,
-            color: editorThemeConstants.mutedColor,
-          }}
+          sx={(theme: Theme) => ({
+            ...theme.typography.editorBody,
+            color: theme.palette.editor.blockMuted,
+          })}
         >
           Sin contenido.
         </Typography>

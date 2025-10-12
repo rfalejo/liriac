@@ -1,4 +1,5 @@
 import { Box, IconButton } from "@mui/material";
+import type { Theme } from "@mui/material/styles";
 import {
   type FocusEventHandler,
   type MouseEventHandler,
@@ -87,7 +88,7 @@ export function EditorBlockFrame({
       onBlurCapture={handleBlurCapture}
       onMouseEnter={() => setHovered(true)}
       onMouseLeave={() => setHovered(false)}
-      sx={{
+      sx={(theme: Theme) => ({
         width: "100%",
         position: "relative",
         borderRadius: 2,
@@ -95,17 +96,17 @@ export function EditorBlockFrame({
         py: { xs: 1.75, sm: 2.25 },
         transition: "background-color 140ms ease, box-shadow 140ms ease",
         backgroundColor: isActive
-          ? "rgba(25, 118, 210, 0.08)"
+          ? theme.palette.editor.blockActiveBg
           : showControls
-            ? "rgba(15, 20, 25, 0.04)"
+            ? theme.palette.editor.blockHoverBg
             : "transparent",
         boxShadow: isActive
-          ? "0 0 0 1px rgba(25, 118, 210, 0.35)"
+          ? `0 0 0 1px ${theme.palette.editor.blockActiveOutline}`
           : showControls
-            ? "0 0 0 1px rgba(15, 20, 25, 0.12)"
+            ? `0 0 0 1px ${theme.palette.editor.blockHoverOutline}`
             : "0 0 0 1px transparent",
         outline: "none",
-      }}
+      })}
     >
       {children}
       <Box
@@ -128,15 +129,15 @@ export function EditorBlockFrame({
               size="small"
               onClick={handleEdit}
               aria-label="Editar bloque"
-              sx={{
-                color: "rgba(15, 20, 25, 0.6)",
+              sx={(theme: Theme) => ({
+                color: theme.palette.editor.blockIcon,
                 borderRadius: 999,
                 boxShadow: "none",
                 "&:hover": {
-                  backgroundColor: "rgba(15, 20, 25, 0.1)",
-                  color: "rgba(15, 20, 25, 0.78)",
+                  backgroundColor: theme.palette.editor.blockMenuHoverBg,
+                  color: theme.palette.editor.blockIconHover,
                 },
-              }}
+              })}
             >
               <EditRoundedIcon sx={{ fontSize: "1.1rem" }} />
             </IconButton>

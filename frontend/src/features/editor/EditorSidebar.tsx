@@ -7,6 +7,7 @@ import {
   Stack,
   Typography,
 } from "@mui/material";
+import type { Theme } from "@mui/material/styles";
 import type { ChapterSummary } from "../../api/library";
 
 type EditorSidebarProps = {
@@ -76,28 +77,28 @@ export function EditorSidebar({
       >
         <Stack
           spacing={2.5}
-          sx={{
+          sx={(theme: Theme) => ({
             width: "100%",
             height: "100%",
             px: 3,
             py: 3,
-            bgcolor: "rgba(10, 12, 16, 0.68)",
-            borderRight: "1px solid rgba(255, 255, 255, 0.08)",
+            bgcolor: theme.palette.editor.sidebarBg,
+            borderRight: `1px solid ${theme.palette.editor.sidebarBorder}`,
             backdropFilter: "blur(14px)",
-            color: "rgba(255, 255, 255, 0.82)",
+            color: theme.palette.editor.sidebarTextPrimary,
             transform: visible ? "translateX(0)" : "translateX(-32px)",
             opacity: visible ? 1 : 0,
             transition: "opacity 180ms ease, transform 240ms ease",
-          }}
+          })}
         >
           <Typography
             id="editor-container-heading"
             variant="subtitle2"
-            sx={{
+            sx={(theme: Theme) => ({
               letterSpacing: "0.08em",
               textTransform: "uppercase",
-              color: "rgba(255, 255, 255, 0.65)",
-            }}
+              color: theme.palette.editor.sidebarHeading,
+            })}
           >
             {bookTitle ?? "Capítulos"}
           </Typography>
@@ -105,15 +106,15 @@ export function EditorSidebar({
             variant="text"
             color="inherit"
             onClick={onClose}
-            sx={{
+            sx={(theme: Theme) => ({
               alignSelf: "flex-start",
-              color: "rgba(255, 255, 255, 0.74)",
+              color: theme.palette.editor.sidebarButton,
               px: 0,
               "&:hover": {
-                color: "rgba(255, 255, 255, 0.92)",
+                color: theme.palette.editor.sidebarButtonHover,
                 backgroundColor: "transparent",
               },
-            }}
+            })}
           >
             Regresar a la librería
           </Button>
@@ -121,21 +122,27 @@ export function EditorSidebar({
             {loading ? (
               <Typography
                 variant="caption"
-                sx={{ color: "rgba(255, 255, 255, 0.6)" }}
+                sx={(theme: Theme) => ({
+                  color: theme.palette.editor.sidebarTextMuted,
+                })}
               >
                 Cargando capítulos...
               </Typography>
             ) : error ? (
               <Typography
                 variant="caption"
-                sx={{ color: "rgba(255, 128, 128, 0.85)" }}
+                sx={(theme: Theme) => ({
+                  color: theme.palette.editor.sidebarErrorText,
+                })}
               >
                 No se pudo cargar la navegación.
               </Typography>
             ) : chapters.length === 0 ? (
               <Typography
                 variant="caption"
-                sx={{ color: "rgba(255, 255, 255, 0.6)" }}
+                sx={(theme: Theme) => ({
+                  color: theme.palette.editor.sidebarTextMuted,
+                })}
               >
                 No hay capítulos disponibles.
               </Typography>
@@ -146,21 +153,21 @@ export function EditorSidebar({
                     key={chapterOption.id}
                     selected={chapterOption.id === activeChapterId}
                     onClick={() => onSelectChapter(chapterOption.id)}
-                    sx={{
+                    sx={(theme: Theme) => ({
                       alignItems: "flex-start",
                       borderRadius: 1,
                       mb: 0.5,
-                      color: "rgba(255, 255, 255, 0.78)",
+                      color: theme.palette.editor.sidebarTextPrimary,
                       transition:
                         "background-color 160ms ease, color 160ms ease",
                       "&.Mui-selected": {
-                        bgcolor: "rgba(255, 255, 255, 0.16)",
-                        color: "rgba(255, 255, 255, 0.95)",
+                        bgcolor: theme.palette.editor.sidebarSelectedBg,
+                        color: theme.palette.editor.sidebarSelectedText,
                       },
                       "&:hover": {
-                        bgcolor: "rgba(255, 255, 255, 0.12)",
+                        bgcolor: theme.palette.editor.sidebarHoverBg,
                       },
-                    }}
+                    })}
                   >
                     <ListItemText
                       primary={chapterOption.title}
@@ -172,8 +179,10 @@ export function EditorSidebar({
                         },
                         secondary: {
                           variant: "caption",
-                          color: "rgba(255, 255, 255, 0.62)",
                           noWrap: true,
+                          sx: (theme: Theme) => ({
+                            color: theme.palette.editor.sidebarTextMuted,
+                          }),
                         },
                       }}
                     />

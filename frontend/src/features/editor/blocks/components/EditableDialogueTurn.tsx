@@ -1,11 +1,7 @@
 import { Stack } from "@mui/material";
-import type { SxProps, Theme } from "@mui/material/styles";
+import type { Theme } from "@mui/material/styles";
 import { useCallback, useMemo, type KeyboardEvent } from "react";
 import type { DialogueField, DialogueTurn } from "../../types";
-import {
-  editorBodyTypographySx,
-  editorThemeConstants,
-} from "../../editorTheme";
 import { DialogueEditableField } from "./DialogueEditableField";
 
 export type EditableDialogueTurnProps = {
@@ -16,8 +12,10 @@ export type EditableDialogueTurnProps = {
   onKeyDown: (event: KeyboardEvent) => void;
 };
 
-const createSharedFieldSx = (overrides?: SxProps<Theme>): SxProps<Theme> => ({
-  ...editorBodyTypographySx,
+type FieldOverride = (theme: Theme) => Record<string, unknown>;
+
+const createSharedFieldSx = (overrides?: FieldOverride) => (theme: Theme) => ({
+  ...theme.typography.editorBody,
   width: "100%",
   minHeight: "1.4em",
   whiteSpace: "pre-wrap",
@@ -32,14 +30,14 @@ const createSharedFieldSx = (overrides?: SxProps<Theme>): SxProps<Theme> => ({
   },
   "&:empty::before": {
     content: "attr(data-placeholder)",
-    color: "rgba(15, 20, 25, 0.45)",
+    color: theme.palette.editor.blockPlaceholderText,
     pointerEvents: "none",
   },
   '&[data-disabled="true"]': {
-    color: "rgba(15, 20, 25, 0.5)",
+    color: theme.palette.editor.blockDisabledText,
     pointerEvents: "none",
   },
-  ...overrides,
+  ...(overrides ? overrides(theme) : {}),
 });
 
 export function EditableDialogueTurn({
@@ -58,30 +56,30 @@ export function EditableDialogueTurn({
 
   const speakerFieldSx = useMemo(
     () =>
-      createSharedFieldSx({
+      createSharedFieldSx((theme: Theme) => ({
         fontSize: "0.85rem",
         fontWeight: 600,
         letterSpacing: "0.04em",
         textTransform: "uppercase",
-        color: editorThemeConstants.mutedColor,
-      }),
+        color: theme.palette.editor.blockMuted,
+      })),
     [],
   );
 
   const utteranceFieldSx = useMemo(
     () =>
-      createSharedFieldSx({
-        color: editorThemeConstants.headingColor,
-      }),
+      createSharedFieldSx((theme: Theme) => ({
+        color: theme.palette.editor.blockHeading,
+      })),
     [],
   );
 
   const stageDirectionFieldSx = useMemo(
     () =>
-      createSharedFieldSx({
+      createSharedFieldSx((theme: Theme) => ({
         fontStyle: "italic",
-        color: editorThemeConstants.mutedColor,
-      }),
+        color: theme.palette.editor.blockMuted,
+      })),
     [],
   );
 

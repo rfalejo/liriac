@@ -1,10 +1,6 @@
 import { Stack, Typography } from "@mui/material";
+import type { Theme } from "@mui/material/styles";
 import type { components } from "../../../api/schema";
-import {
-  editorBodyTypographySx,
-  editorFontFamily,
-  editorThemeConstants,
-} from "../editorTheme";
 import { EditorBlockFrame } from "./EditorBlockFrame";
 
 type ChapterBlock = components["schemas"]["ChapterBlock"];
@@ -37,13 +33,13 @@ export function MetadataBlock({ block, onEdit }: MetadataBlockProps) {
           {typeof block.ordinal === "number" && (
             <Typography
               variant="caption"
-              sx={{
-                fontFamily: editorFontFamily,
+              sx={(theme: Theme) => ({
+                fontFamily: theme.typography.editorBody.fontFamily,
                 letterSpacing: "0.14em",
                 textTransform: "uppercase",
-                color: editorThemeConstants.mutedColor,
+                color: theme.palette.editor.blockMuted,
                 opacity: 0.75,
-              }}
+              })}
             >
               Capítulo {block.ordinal + 1}
             </Typography>
@@ -51,10 +47,10 @@ export function MetadataBlock({ block, onEdit }: MetadataBlockProps) {
           {primaryHeading && (
             <Typography
               variant="h4"
-              sx={{
+              sx={(theme: Theme) => ({
                 fontFamily: "inherit",
-                color: editorThemeConstants.headingColor,
-              }}
+                color: theme.palette.editor.blockHeading,
+              })}
             >
               {primaryHeading}
             </Typography>
@@ -62,12 +58,12 @@ export function MetadataBlock({ block, onEdit }: MetadataBlockProps) {
           {shouldShowSupportingTitle && (
             <Typography
               variant="subtitle2"
-              sx={{
-                fontFamily: editorFontFamily,
-                color: editorThemeConstants.mutedColor,
+              sx={(theme: Theme) => ({
+                fontFamily: theme.typography.editorBody.fontFamily,
+                color: theme.palette.editor.blockMuted,
                 fontWeight: 500,
                 letterSpacing: "0.04em",
-              }}
+              })}
             >
               {block.subtitle}
             </Typography>
@@ -76,21 +72,21 @@ export function MetadataBlock({ block, onEdit }: MetadataBlockProps) {
             <Stack spacing={0.5} sx={{ mt: 1.25 }}>
               <Typography
                 component="blockquote"
-                sx={{
-                  ...editorBodyTypographySx,
+                sx={(theme: Theme) => ({
+                  ...theme.typography.editorBody,
                   fontStyle: "italic",
                   margin: 0,
-                }}
+                })}
               >
                 “{block.epigraph}”
               </Typography>
               {block.epigraphAttribution && (
                 <Typography
                   variant="caption"
-                  sx={{
-                    fontFamily: editorFontFamily,
-                    color: editorThemeConstants.mutedColor,
-                  }}
+                  sx={(theme: Theme) => ({
+                    fontFamily: theme.typography.editorBody.fontFamily,
+                    color: theme.palette.editor.blockMuted,
+                  })}
                 >
                   — {block.epigraphAttribution}
                 </Typography>
@@ -117,11 +113,11 @@ export function MetadataBlock({ block, onEdit }: MetadataBlockProps) {
       >
         <Typography
           variant="body2"
-          sx={{
-            ...editorBodyTypographySx,
+          sx={(theme: Theme) => ({
+            ...theme.typography.editorBody,
             fontStyle: "italic",
-            color: editorThemeConstants.mutedColor,
-          }}
+            color: theme.palette.editor.blockMuted,
+          })}
         >
           {contextText}
         </Typography>
@@ -133,10 +129,10 @@ export function MetadataBlock({ block, onEdit }: MetadataBlockProps) {
     <EditorBlockFrame blockId={block.id} blockType={block.type} onEdit={onEdit}>
       <Typography
         variant="body2"
-        sx={{
-          ...editorBodyTypographySx,
-          color: editorThemeConstants.mutedColor,
-        }}
+        sx={(theme: Theme) => ({
+          ...theme.typography.editorBody,
+          color: theme.palette.editor.blockMuted,
+        })}
       >
         (Bloque de metadatos sin representación especializada)
       </Typography>

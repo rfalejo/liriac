@@ -1,7 +1,7 @@
 import { CircularProgress, IconButton, Stack } from "@mui/material";
+import type { Theme } from "@mui/material/styles";
 import CheckRoundedIcon from "@mui/icons-material/CheckRounded";
 import CloseRoundedIcon from "@mui/icons-material/CloseRounded";
-import { editorBlockTheme } from "../../editorTheme";
 
 type BlockEditControlsProps = {
   onConfirm?: () => void;
@@ -24,7 +24,16 @@ export function BlockEditControls({
         }}
         disabled={disabled}
         aria-label="Guardar cambios"
-        sx={editorBlockTheme.controls.confirmButton}
+        sx={(theme: Theme) => ({
+          backgroundColor: theme.palette.editor.controlConfirmBg,
+          "&:hover": {
+            backgroundColor: theme.palette.editor.controlConfirmHoverBg,
+          },
+          "&.Mui-disabled": {
+            backgroundColor: theme.palette.editor.controlConfirmDisabledBg,
+            color: theme.palette.editor.controlGhostDisabledText,
+          },
+        })}
       >
         {disabled ? (
           <CircularProgress size={16} thickness={5} color="inherit" />
@@ -40,7 +49,16 @@ export function BlockEditControls({
         }}
         disabled={disabled}
         aria-label="Cancelar edición"
-        sx={editorBlockTheme.controls.cancelButton}
+        sx={(theme: Theme) => ({
+          backgroundColor: theme.palette.editor.controlCancelBg,
+          "&:hover": {
+            backgroundColor: theme.palette.editor.controlCancelHoverBg,
+          },
+          "&.Mui-disabled": {
+            backgroundColor: theme.palette.editor.controlCancelDisabledBg,
+            color: theme.palette.editor.controlGhostDisabledText,
+          },
+        })}
       >
         <CloseRoundedIcon sx={{ fontSize: "1.1rem" }} />
       </IconButton>

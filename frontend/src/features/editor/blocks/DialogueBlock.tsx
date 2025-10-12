@@ -1,12 +1,8 @@
 import { Box, IconButton, Stack, Typography } from "@mui/material";
+import type { Theme } from "@mui/material/styles";
 import type { KeyboardEvent } from "react";
 import AddCircleOutlineRoundedIcon from "@mui/icons-material/AddCircleOutlineRounded";
 import DeleteOutlineRoundedIcon from "@mui/icons-material/DeleteOutlineRounded";
-import {
-  editorBlockTheme,
-  editorBodyTypographySx,
-  editorThemeConstants,
-} from "../editorTheme";
 import { EditorBlockFrame } from "./EditorBlockFrame";
 import type { ChapterBlock, DialogueField, DialogueTurn } from "../types";
 import { EditableDialogueTurn } from "./components/EditableDialogueTurn";
@@ -72,14 +68,17 @@ export function DialogueBlock({
       controls={controls}
       isActive={isEditing}
     >
-      <Stack spacing={1.25} sx={{ color: editorThemeConstants.headingColor }}>
+      <Stack
+        spacing={1.25}
+        sx={(theme: Theme) => ({ color: theme.palette.editor.blockHeading })}
+      >
         {turns.length === 0 && (
           <Typography
             variant="body2"
-            sx={{
-              ...editorBodyTypographySx,
-              color: editorThemeConstants.mutedColor,
-            }}
+            sx={(theme: Theme) => ({
+              ...theme.typography.editorBody,
+              color: theme.palette.editor.blockMuted,
+            })}
           >
             (Diálogo sin intervenciones)
           </Typography>
@@ -89,7 +88,7 @@ export function DialogueBlock({
           return (
             <Box
               key={turnKey}
-              sx={{
+              sx={(theme: Theme) => ({
                 borderRadius: 1,
                 px: { xs: 1.25, sm: 1.5 },
                 py: { xs: 1, sm: 1.25 },
@@ -99,10 +98,10 @@ export function DialogueBlock({
                 backgroundColor: "transparent",
                 boxShadow: "0 0 0 1px transparent",
                 "&:focus-within": {
-                  backgroundColor: "rgba(25, 118, 210, 0.08)",
-                  boxShadow: "0 0 0 1px rgba(25, 118, 210, 0.35)",
+                  backgroundColor: theme.palette.editor.blockActiveBg,
+                  boxShadow: `0 0 0 1px ${theme.palette.editor.blockActiveOutline}`,
                 },
-              }}
+              })}
             >
               {isEditing ? (
                 <EditableDialogueTurn
@@ -117,36 +116,36 @@ export function DialogueBlock({
                   {turn.speakerName && (
                     <Typography
                       component="span"
-                      sx={{
-                        ...editorBodyTypographySx,
+                      sx={(theme: Theme) => ({
+                        ...theme.typography.editorBody,
                         display: "block",
                         fontSize: "0.85rem",
                         fontWeight: 600,
                         letterSpacing: "0.04em",
                         textTransform: "uppercase",
-                        color: editorThemeConstants.mutedColor,
-                      }}
+                        color: theme.palette.editor.blockMuted,
+                      })}
                     >
                       {turn.speakerName}
                     </Typography>
                   )}
                   <Typography
                     component="p"
-                    sx={{
-                      ...editorBodyTypographySx,
+                    sx={(theme: Theme) => ({
+                      ...theme.typography.editorBody,
                       margin: 0,
-                    }}
+                    })}
                   >
                     {turn.utterance}
                   </Typography>
                   {turn.stageDirection && (
                     <Typography
                       component="span"
-                      sx={{
-                        ...editorBodyTypographySx,
+                      sx={(theme: Theme) => ({
+                        ...theme.typography.editorBody,
                         fontStyle: "italic",
-                        color: editorThemeConstants.mutedColor,
-                      }}
+                        color: theme.palette.editor.blockMuted,
+                      })}
                     >
                       {turn.stageDirection}
                     </Typography>
@@ -183,7 +182,16 @@ export function DialogueBlock({
             onClick={onAddTurn}
             disabled={disabled}
             aria-label="Agregar parlamento"
-            sx={editorBlockTheme.controls.addButton}
+            sx={(theme: Theme) => ({
+              alignSelf: "flex-start",
+              color: theme.palette.editor.controlAddColor,
+              "&:hover": {
+                color: theme.palette.editor.controlAddHoverColor,
+              },
+              "&.Mui-disabled": {
+                color: theme.palette.editor.controlAddDisabledColor,
+              },
+            })}
           >
             <AddCircleOutlineRoundedIcon sx={{ fontSize: "1.3rem" }} />
           </IconButton>

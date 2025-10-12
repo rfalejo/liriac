@@ -1,5 +1,6 @@
 import { useCallback, useMemo, useRef, useState } from "react";
 import { Box, IconButton, Paper, Tooltip } from "@mui/material";
+import type { Theme } from "@mui/material/styles";
 import MoreHorizRoundedIcon from "@mui/icons-material/MoreHorizRounded";
 import SubjectRoundedIcon from "@mui/icons-material/SubjectRounded";
 import ChatBubbleOutlineRoundedIcon from "@mui/icons-material/ChatBubbleOutlineRounded";
@@ -97,14 +98,14 @@ export function BlockInsertMenu({
               setExpanded(false);
             }}
             aria-label={label}
-            sx={{
-              color: "rgba(15, 20, 25, 0.64)",
+            sx={(theme: Theme) => ({
+              color: theme.palette.editor.blockMenuIcon,
               transition: "background-color 140ms ease, color 140ms ease",
               "&:hover": {
-                backgroundColor: "rgba(15, 20, 25, 0.08)",
-                color: "rgba(15, 20, 25, 0.85)",
+                backgroundColor: theme.palette.editor.blockMenuHoverBg,
+                color: theme.palette.editor.blockMenuIconHover,
               },
-            }}
+            })}
           >
             <Icon fontSize="small" />
           </IconButton>
@@ -134,7 +135,7 @@ export function BlockInsertMenu({
     >
       <Paper
         elevation={0}
-        sx={{
+        sx={(theme: Theme) => ({
           display: "flex",
           alignItems: "center",
           justifyContent: "center",
@@ -143,12 +144,16 @@ export function BlockInsertMenu({
           py: 0,
           minHeight: "100%",
           borderRadius: 999,
-          backgroundColor: expanded ? "rgba(15, 20, 25, 0.06)" : "transparent",
-          boxShadow: expanded ? "0 0 0 1px rgba(15, 20, 25, 0.12)" : "none",
+          backgroundColor: expanded
+            ? theme.palette.editor.blockHoverBg
+            : "transparent",
+          boxShadow: expanded
+            ? `0 0 0 1px ${theme.palette.editor.blockHoverOutline}`
+            : "none",
           transition:
             "background-color 160ms ease, box-shadow 160ms ease, padding 160ms ease",
           pointerEvents: visible ? "auto" : "none",
-        }}
+        })}
       >
         {expanded ? (
           optionButtons
@@ -157,16 +162,16 @@ export function BlockInsertMenu({
             size="small"
             aria-label="Mostrar tipos de bloque disponibles"
             onClick={handleToggle}
-            sx={{
+            sx={(theme: Theme) => ({
               opacity: visible ? 0.96 : 0,
               transition: "opacity 160ms ease",
-              color: "rgba(15, 20, 25, 0.56)",
+              color: theme.palette.editor.blockMenuTrigger,
               pointerEvents: visible ? "auto" : "none",
               "&:hover": {
-                backgroundColor: "rgba(15, 20, 25, 0.08)",
-                color: "rgba(15, 20, 25, 0.85)",
+                backgroundColor: theme.palette.editor.blockMenuHoverBg,
+                color: theme.palette.editor.blockMenuTriggerHover,
               },
-            }}
+            })}
           >
             <MoreHorizRoundedIcon fontSize="small" />
           </IconButton>

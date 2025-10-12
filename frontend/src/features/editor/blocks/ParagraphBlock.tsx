@@ -1,7 +1,7 @@
 import { Box, Typography } from "@mui/material";
+import type { Theme } from "@mui/material/styles";
 import { useEffect, useRef, useState } from "react";
 import type { components } from "../../../api/schema";
-import { editorBodyTypographySx, editorThemeConstants } from "../editorTheme";
 import { EditorBlockFrame } from "./EditorBlockFrame";
 import { BlockEditControls } from "./components/BlockEditControls";
 
@@ -105,28 +105,28 @@ export function ParagraphBlock({
           spellCheck
           onInput={handleInput}
           onKeyDown={handleKeyDown}
-          sx={{
-            ...editorBodyTypographySx,
+          sx={(theme: Theme) => ({
+            ...theme.typography.editorBody,
             margin: 0,
             pb: 0,
-            color: editorThemeConstants.headingColor,
+            color: theme.palette.editor.blockHeading,
             textIndent: "1.5em",
             outline: "none",
             border: "none",
             minHeight: "1.4em",
             whiteSpace: "pre-wrap",
-          }}
+          })}
         />
       ) : (
         <Typography
           component="p"
-          sx={{
-            ...editorBodyTypographySx,
+          sx={(theme: Theme) => ({
+            ...theme.typography.editorBody,
             margin: 0,
             pb: 0,
-            color: editorThemeConstants.headingColor,
+            color: theme.palette.editor.blockHeading,
             textIndent: "1.5em",
-          }}
+          })}
         >
           {content.length > 0 ? content : "(Sin texto en este párrafo)"}
         </Typography>
