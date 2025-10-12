@@ -77,7 +77,7 @@ export function ParagraphBlock({
 
     if ((event.metaKey || event.ctrlKey) && event.key === "Enter") {
       event.preventDefault();
-      onSaveEdit?.();
+      void onSaveEdit?.();
       return;
     }
 
@@ -92,7 +92,9 @@ export function ParagraphBlock({
       <IconButton
         size="small"
         color="success"
-        onClick={onSaveEdit}
+        onClick={() => {
+          void onSaveEdit?.();
+        }}
         disabled={disabled}
         aria-label="Guardar cambios"
         sx={{
@@ -111,7 +113,9 @@ export function ParagraphBlock({
       <IconButton
         size="small"
         color="error"
-        onClick={onCancelEdit}
+        onClick={() => {
+          onCancelEdit?.();
+        }}
         disabled={disabled}
         aria-label="Cancelar edición"
         sx={{

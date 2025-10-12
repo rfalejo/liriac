@@ -23,6 +23,39 @@ import {
 
 type ChapterBlock = components["schemas"]["ChapterBlock"];
 type ChapterBlockType = components["schemas"]["ChapterBlockTypeEnum"];
+type DialogueTurn = components["schemas"]["DialogueTurn"];
+
+type ParagraphEditingState = {
+  blockId: string;
+  blockType: "paragraph";
+  paragraph: {
+    draftText: string;
+    onChangeDraft: (value: string) => void;
+  };
+  onCancel: () => void;
+  onSave: () => void;
+  isSaving: boolean;
+};
+
+type DialogueEditingState = {
+  blockId: string;
+  blockType: "dialogue";
+  dialogue: {
+    turns: DialogueTurn[];
+    onChangeTurn: (
+      index: number,
+      field: "speakerName" | "utterance" | "stageDirection",
+      value: string,
+    ) => void;
+    onAddTurn: () => void;
+    onRemoveTurn: (index: number) => void;
+  };
+  onCancel: () => void;
+  onSave: () => void;
+  isSaving: boolean;
+};
+
+type EditingState = ParagraphEditingState | DialogueEditingState;
 
 type EditorChapterViewProps = {
   loading: boolean;
@@ -34,14 +67,7 @@ type EditorChapterViewProps = {
     blockType: ChapterBlockType,
     position: BlockInsertPosition,
   ) => void;
-  editingState?: {
-    blockId: string | null;
-    draftText: string;
-    onChangeDraft: (value: string) => void;
-    onCancel: () => void;
-    onSave: () => void;
-    isSaving: boolean;
-  };
+  editingState?: EditingState;
 };
 
 function renderFallbackBlock(block: ChapterBlock) {
@@ -70,6 +96,11 @@ export function EditorChapterView({
   onInsertBlock,
   editingState,
 }: EditorChapterViewProps) {
+  const paragraphEditing =
+    editingState?.blockType === "paragraph" ? editingState : undefined;
+  const dialogueEditing =
+    editingState?.blockType === "dialogue" ? editingState : undefined;
+
   const blockSequence = useMemo(() => {
     if (!chapter) {
       return [] as Array<{ id: string; node: ReactNode }>;
@@ -79,17 +110,23 @@ export function EditorChapterView({
 
     chapter.blocks.forEach((block) => {
       if (block.type === "paragraph") {
+        const isEditing = paragraphEditing?.blockId === block.id;
+        const paragraphDraft = paragraphEditing?.paragraph;
         entries.push({
           id: block.id,
           node: (
             <ParagraphBlock
               block={block}
               onEdit={onEditBlock}
-              isEditing={editingState?.blockId === block.id}
-              draftText={editingState?.draftText ?? ""}
-              onDraftChange={editingState?.onChangeDraft}
-              onCancelEdit={editingState?.onCancel}
-              onSaveEdit={editingState?.onSave}
+              isEditing={isEditing}
+              draftText={
+                isEditing ? paragraphDraft?.draftText ?? "" : ""
+              }
+              onDraftChange={
+                isEditing ? paragraphDraft?.onChangeDraft : undefined
+              }
+              onCancelEdit={isEditing ? paragraphEditing?.onCancel : undefined}
+              onSaveEdit={isEditing ? paragraphEditing?.onSave : undefined}
               disabled={editingState?.isSaving ?? false}
             />
           ),
@@ -98,9 +135,32 @@ export function EditorChapterView({
       }
 
       if (block.type === "dialogue") {
+        const isEditing = dialogueEditing?.blockId === block.id;
+        const dialogueDraft = dialogueEditing?.dialogue;
         entries.push({
           id: block.id,
-          node: <DialogueBlock block={block} onEdit={onEditBlock} />,
+          node: (
+            <DialogueBlock
+              block={block}
+              onEdit={onEditBlock}
+              isEditing={isEditing}
+              draftTurns={
+                isEditing ? dialogueDraft?.turns ?? [] : block.turns ?? []
+              }
+              onChangeTurn={
+                isEditing ? dialogueDraft?.onChangeTurn : undefined
+              }
+              onAddTurn={
+                isEditing ? dialogueDraft?.onAddTurn : undefined
+              }
+              onRemoveTurn={
+                isEditing ? dialogueDraft?.onRemoveTurn : undefined
+              }
+              onCancelEdit={isEditing ? dialogueEditing?.onCancel : undefined}
+              onSaveEdit={isEditing ? dialogueEditing?.onSave : undefined}
+              disabled={editingState?.isSaving ?? false}
+            />
+          ),
         });
         return;
       }
@@ -128,12 +188,19 @@ export function EditorChapterView({
   }, [
     chapter,
     onEditBlock,
-    editingState?.blockId,
-    editingState?.draftText,
-    editingState?.onChangeDraft,
-    editingState?.onCancel,
-    editingState?.onSave,
     editingState?.isSaving,
+    paragraphEditing?.blockId,
+    paragraphEditing?.paragraph?.draftText,
+    paragraphEditing?.paragraph?.onChangeDraft,
+    paragraphEditing?.onCancel,
+    paragraphEditing?.onSave,
+    dialogueEditing?.blockId,
+    dialogueEditing?.dialogue?.turns,
+    dialogueEditing?.dialogue?.onChangeTurn,
+    dialogueEditing?.dialogue?.onAddTurn,
+    dialogueEditing?.dialogue?.onRemoveTurn,
+    dialogueEditing?.onCancel,
+    dialogueEditing?.onSave,
   ]);
 
   if (loading) {
