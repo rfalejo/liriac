@@ -5,100 +5,82 @@ model: GPT-5-Codex (Preview) (copilot)
 ---
 # Liriac – AI agent quickstart
 
-## Architecture snapshot
-- The React app in `frontend/` owns both the library dashboard and the full-screen editor experience.
-- Entry flow: `src/main.tsx` → `App.tsx`, where Material UI supplies theming, typography, and baseline layout.
-- Feature folders (`features/library`, `features/editor`) co-locate hooks, components, and tests; `src/index.css` stays minimal so the theme controls visuals.
+## Frontend architecture
+- React 18 + Vite lives in `frontend/`; the app renders through `src/main.tsx`, which wraps `<App />` in `LibraryDataProvider` to initialise React Query and shared library state.
+- `features/library` owns the dashboard and data orchestration; `features/editor` contains the chapter editor surface and its hooks.
+- API requests sit in `src/api/`. Use the `request()` helper in `client.ts` so base URLs and headers stay consistent. Generated OpenAPI types are committed in `src/api/schema.ts`.
+- The design system is powered by Material UI. `App.tsx` already includes `ThemeProvider` + `CssBaseline`, and the custom palette/types live in `theme.ts` and `theme.types.ts`.
+- When new frontend dependencies are required, prefer CLI commands such as `pnpm add <package>` (and `pnpm add -D <package>` for dev dependencies) rather than editing `package.json` manually.
 
-## Material UI usage
-- Wrap new views in the existing `ThemeProvider` inside `App.tsx`; extend the theme with `createTheme` overrides when needed.
-- Prefer the `sx` prop for styling and spacing. Reach for `Box`, `Stack`, or `Grid` before crafting custom layout code.
-- Import components directly from `@mui/material`. Icons can be added via `@mui/icons-material` if the dependency is declared.
+## Adding or extending frontend features
+1. Define or update the data contract.
+   - Add request helpers next to existing modules in `src/api/` and keep them typed. When backend schemas change, regenerate types with `pnpm generate:types` and commit the updated `schema.ts`.
+2. Introduce a query hook.
+   - Extend `libraryQueryKeys` (or create a sibling `queryKeys` module) and build a hook with React Query. Prefer the shared `useLibraryResource` pattern for read flows so loading/error handling matches the rest of the UI.
+3. Share state through the provider when multiple surfaces rely on it.
+   - Extend `LibraryDataContext` and `LibraryDataProvider` so downstream components can consume memoised values like `reload` handlers, selections, and editor state.
+4. Compose the UI inside the feature folder.
+   - Keep layout and presentational logic in `components/` files, delegating data/side effects to hooks. Follow the existing pattern of container components (e.g. `LibraryLanding`, `EditorContainer`) that wire hooks together.
+5. Handle mutations with explicit cache updates.
+   - Wrap server writes in `useMutation`. Update cached data via `setQueryData` where possible and invalidate related queries to keep derived lists in sync. Route failures through `showBlockUpdateErrorToast` or a feature-specific message.
 
-## Frontend workflows
-- Use pnpm scripts from `frontend/`:
-    - `pnpm install --frozen-lockfile --silent`
-    - `pnpm run --silent dev`
-    - `pnpm run --silent build`
-    - `pnpm run --silent preview`
-    - `pnpm run --silent typecheck` — `tsc --noEmit` for fast type safety.
-    - `pnpm run --silent lint` — ESLint with `--max-warnings 0` across `src/**/*.{ts,tsx}`.
-    - `pnpm run --silent format` — Prettier check.
-- Verification flow: lint → typecheck → format. Rely on scripts instead of manual whitespace fixes.
-- TypeScript configuration lives in `tsconfig.app.json`; keep application code inside `src/`.
+## Editor feature patterns
+- `EditorContainer` is the orchestration layer; it combines navigation (`useEditorChapterNavigation`), scroll state, and editing state before rendering `EditorShell`.
+- Blocks are rendered through `blocks/blockRegistry.tsx`. When adding a new block type, update the `ChapterBlock` typing, register the renderer, and supply editing logic through the hooks in `hooks/editing/`.
+- Editing state is centralised in `useEditorEditingState` and block-specific sessions; reuse these utilities so undo/redo, pending changes, and confirmation prompts continue to work.
+- Mutations that touch chapter content should flow through `useUpdateChapterBlock` so cache invalidation and optimistic state remain consistent.
 
-## Frontend good practices
-- Treat `features/library` and `features/editor` as primary seams; colocate hooks, tests, and helpers with each feature to keep APIs focused.
-- Use the `sx` prop for one-off styling and move repeated patterns into theme overrides or `styled()` helpers; avoid global selectors that leak styles.
-- Hoist shared configuration (query clients, theme constants, etc.) outside component bodies so they instantiate once per module.
-- Prefer React Testing Library with Vitest for interaction coverage, storing fixtures with the feature they support.
+## Styling and copy guidelines
+- Use the `sx` prop for one-off adjustments; rely on theme tokens defined in `theme.ts` for repeated styling. Extend tokens there and mirror the TypeScript declaration in `theme.types.ts` to keep IntelliSense accurate.
+- UI copy stays in Spanish. Code (identifiers, comments, errors) remains in English.
+- `index.css` is intentionally minimal; avoid introducing global selectors unless absolutely necessary.
 
-## Backend quick facts
-- Django 5.2 project lives in `backend/` (`config` project, `studio` app). Install dependencies with `uv sync --python 3.11`; the virtualenv resides in `backend/.venv`.
-- Run common commands via `uv run`:
-    - `python manage.py migrate`
-    - `python manage.py runserver`
-    - `python manage.py test`
-    - `python manage.py spectacular --file schema.yaml`
-- The frontend currently operates on mocked data, but REST endpoints such as `/api/library/` and `/api/editor/` are available when integration resumes.
+## Tooling and verification
+- Run `pnpm install` once per environment. Use `pnpm dev` for local development.
+- Quality gates from `frontend/`: `pnpm lint`, `pnpm typecheck`, and `pnpm build`. Run them before shipping meaningful changes.
+- Format with `pnpm format` if the formatter reports differences. There is no automated frontend test suite yet, so rely on type coverage and manual verification.
 
-## Frontend ↔ Backend bridge
-- If you add API calls, centralize fetch logic in a dedicated module (e.g., `src/api/client.ts`) so base URLs and headers remain consistent.
-- Default API origin should stay configurable via `VITE_API_URL` in `.env.local`.
-- Share types between backend and frontend via generated files if the API surface grows again.
+## Things to avoid (frontend)
+- Skipping React Query hooks in favour of ad-hoc `fetch` calls; this breaks cache coherence and shared loading states.
+- Bypassing `LibraryDataContext` for cross-surface state; duplicate state quickly drifts out of sync.
+- Introducing global CSS overrides or inline styles that ignore theme tokens; they fight the design system and dark theme.
+- Creating large, stateful components that mix data fetching, layout, and logic instead of composing hooks + presentational parts.
+- Adding libraries for conveniences already solved by React Query, MUI, or existing utilities without prior review.
 
-## Assumptions
-- Backend and frontend run locally on their default ports when integration work resumes.
-- Keep new dependencies lean; prefer Material UI primitives and built-in React patterns before pulling additional libraries.
+## Backend reference
+- Django 5.2 lives under `backend/` with the `config` project and `studio` app. Manage dependencies via `uv sync --python 3.11`; the virtual environment is stored in `backend/.venv`.
+- Common commands run through `uv run`: `python manage.py migrate`, `python manage.py runserver`, `python manage.py test`, and `python manage.py spectacular --file schema.yaml`.
+- Never edit `backend/schema.yaml` or `frontend/src/api/schema.ts` by hand-regenerate them with `uv run python manage.py spectacular --file schema.yaml` and `pnpm generate:types`.
+- Add backend dependencies using `uv add <package>` (or `uv add --dev <package>` for development-only needs). Avoid editing `pyproject.toml` by hand so lockfiles stay consistent.
 
-## Material UI + TypeScript quick references
-- Always nest components that consume `useTheme`, `makeStyles`, or `styled` hooks under the shared `ThemeProvider` defined in `App.tsx`; call styling hooks inside children of the provider to avoid undefined theme values.
-- When extending the theme in TypeScript (e.g., custom palette slots or breakpoints), augment the MUI module so IntelliSense and type checking stay accurate:
-	```ts
-	import { Theme } from '@mui/material/styles';
+## Things to avoid (backend)
+- Editing generated or migrated files by hand-use Django management commands or regenerate artefacts cleanly.
+- Diverging the schema from `schema.yaml` without updating and committing the OpenAPI source; the frontend relies on those contracts.
+- Adding dependencies outside `pyproject.toml` or bypassing `uv sync`, which leads to desynchronised environments.
+- Introducing blocking I/O or heavy logic inside middleware without profiling; the project serves both API and editor traffic.
+- Returning payloads that drift from the typed responses consumed in `frontend/src/api/`; always coordinate data shape changes.
 
-	declare module '@mui/styles/defaultTheme' {
-		interface DefaultTheme extends Theme {}
-	}
-
-	declare module '@mui/material/styles' {
-		interface BreakpointOverrides {
-			xs: false;
-			sm: false;
-			md: false;
-			lg: false;
-			xl: false;
-			mobile: true;
-			tablet: true;
-			laptop: true;
-			desktop: true;
-		}
-	}
-	```
-- For project-wide TypeScript safety after touching Material UI theme types or declarations, run `pnpm typescript` from the `frontend/` directory to validate generated `.d.ts` output.
-
-## User interaction notes
-- Even if the user interacts to you in a different language, respond in English.
-- All the code you write must be in English, but use Spanish for UI labels and text content.
+## Collaboration rules
+- Respond to users in English regardless of the incoming language.
+- Keep comments and identifiers in English while UI text remains Spanish.
 - Commit messages must be in English.
-- Comments should be in English.
 
 ## Commit message guidelines
-At the end of your work, provide a concise commit message summarizing the changes made. Follow these guidelines:
+At the end of your work, provide a concise commit message summarising the changes made. Follow these guidelines:
 - Use the conventional commit format: `<type>(<scope>): <subject>`.
-- Add two/three bullet points in the commit body to explain what was done and why.
-- Use the following types: `feat`, `fix`, `docs`, `style`, `refactor`, `test`, `chore`, etc.
+- Add two or three bullet points in the commit body to explain what was done and why.
+- Supported types: `feat`, `fix`, `docs`, `style`, `refactor`, `test`, `chore`, etc.
 - Example:
 ```
 feat(library): add book listing endpoint
-- Implemented /api/library/books/ to return a list of books in the library.
-- Updated frontend to fetch and display books on the library landing page.
-- Added tests to cover the new endpoint and frontend integration.
+- Implement /api/library/books/ to return the available titles.
+- Refresh the library landing page to consume the new endpoint.
+- Cover the data flow with a React Query integration test.
 ```
 
 ## Tools
 When planning a big change, you can use the following tools:
-- `context7/*`: get up-to-date information about any library or framework.
+- `context7/*`: fetch up-to-date information about external libraries or frameworks.
 
 ## Repository layout snapshot
 
