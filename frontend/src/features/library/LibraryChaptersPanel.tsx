@@ -49,7 +49,7 @@ export function LibraryChaptersPanel({
       {!loading && !error && !book && (
         <LibraryPanelStatus
           state="empty"
-          message="Selecciona un libro para previsualizar sus capítulos."
+          message="Selecciona un libro para editar sus capítulos."
         />
       )}
       {!loading && !error && book && (

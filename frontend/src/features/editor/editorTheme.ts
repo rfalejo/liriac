@@ -1,6 +1,6 @@
 import { SxProps, Theme } from "@mui/material/styles";
 
-export type ReadingTheme = {
+export type EditorTheme = {
   shell: SxProps<Theme>;
   page: SxProps<Theme>;
   blockStack: SxProps<Theme>;
@@ -15,10 +15,10 @@ export type ReadingTheme = {
 const serifStack =
   'ui-serif, Georgia, Cambria, "Times New Roman", Times, serif';
 
-export const readingTheme: ReadingTheme = {
+export const editorTheme: EditorTheme = {
   shell: {
-    position: "fixed",
-    inset: 0,
+    minHeight: "100vh",
+    position: "relative",
     bgcolor: "rgba(6, 8, 10, 0.92)",
     backdropFilter: "blur(6px)",
     display: "flex",
@@ -35,21 +35,21 @@ export const readingTheme: ReadingTheme = {
     scrollbarWidth: "thin",
     scrollbarColor: "rgba(20, 24, 32, 1) transparent",
     transition: "scrollbar-color 320ms ease",
-    "&.preview-scroll-area.scrollbar-hidden": {
+    "&.editor-scroll-area.scrollbar-hidden": {
       scrollbarColor: "transparent transparent",
     },
-    "&.preview-scroll-area.scrollbar-disabled": {
+    "&.editor-scroll-area.scrollbar-disabled": {
       scrollbarColor: "transparent transparent",
     },
-    "&.preview-scroll-area::-webkit-scrollbar": {
+    "&.editor-scroll-area::-webkit-scrollbar": {
       width: 12,
       height: 12,
     },
-    "&.preview-scroll-area::-webkit-scrollbar-track": {
+    "&.editor-scroll-area::-webkit-scrollbar-track": {
       backgroundColor: "transparent",
       margin: 12,
     },
-    "&.preview-scroll-area::-webkit-scrollbar-thumb": {
+    "&.editor-scroll-area::-webkit-scrollbar-thumb": {
       backgroundColor: "rgba(20, 24, 32, 0.6)",
       borderRadius: 999,
       border: "3px solid transparent",
@@ -57,11 +57,11 @@ export const readingTheme: ReadingTheme = {
       transition: "opacity 320ms ease, background-color 320ms ease",
       opacity: 1,
     },
-    "&.preview-scroll-area.scrollbar-hidden::-webkit-scrollbar-thumb": {
+    "&.editor-scroll-area.scrollbar-hidden::-webkit-scrollbar-thumb": {
       opacity: 0,
       backgroundColor: "rgba(20, 24, 32, 0.4)",
     },
-    "&.preview-scroll-area.scrollbar-disabled::-webkit-scrollbar": {
+    "&.editor-scroll-area.scrollbar-disabled::-webkit-scrollbar": {
       display: "none",
     },
   },
@@ -87,7 +87,7 @@ export const readingTheme: ReadingTheme = {
   },
 };
 
-export const readingThemeConstants = {
+export const editorThemeConstants = {
   headingColor: "#0f1419",
   mutedColor: "#4b4945",
 };

@@ -9,7 +9,7 @@ import {
 } from "@mui/material";
 import type { ChapterSummary } from "../../api/library";
 
-type PreviewSidebarProps = {
+type EditorSidebarProps = {
   activeChapterId: string | null;
   bookTitle: string | null;
   chapters: ChapterSummary[];
@@ -22,7 +22,7 @@ type PreviewSidebarProps = {
   visible: boolean;
 };
 
-export function PreviewSidebar({
+export function EditorSidebar({
   activeChapterId,
   bookTitle,
   chapters,
@@ -33,7 +33,7 @@ export function PreviewSidebar({
   onLeave,
   onSelectChapter,
   visible,
-}: PreviewSidebarProps) {
+}: EditorSidebarProps) {
   return (
     <Box
       sx={{
@@ -91,7 +91,7 @@ export function PreviewSidebar({
           }}
         >
           <Typography
-            id="preview-container-heading"
+            id="editor-container-heading"
             variant="subtitle2"
             sx={{
               letterSpacing: "0.08em",

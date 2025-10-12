@@ -15,7 +15,7 @@ import {
   ParagraphBlock,
   SceneBoundaryBlock,
 } from "./blocks";
-import { readingTheme, readingThemeConstants } from "./readingTheme";
+import { editorTheme, editorThemeConstants } from "./editorTheme";
 import {
   BlockInsertMenu,
   type BlockInsertPosition,
@@ -24,7 +24,7 @@ import {
 type ChapterBlock = components["schemas"]["ChapterBlock"];
 type ChapterBlockType = components["schemas"]["ChapterBlockTypeEnum"];
 
-type PreviewChapterViewProps = {
+type EditorChapterViewProps = {
   loading: boolean;
   error: Error | null;
   chapter: ChapterDetail | null;
@@ -45,7 +45,7 @@ function renderFallbackBlock(block: ChapterBlock) {
         borderRadius: 1,
         p: { xs: 2, sm: 3 },
         fontStyle: "italic",
-        color: readingThemeConstants.mutedColor,
+        color: editorThemeConstants.mutedColor,
       }}
     >
       Bloque "{block.type}" pendiente de diseño.
@@ -53,14 +53,14 @@ function renderFallbackBlock(block: ChapterBlock) {
   );
 }
 
-export function PreviewChapterView({
+export function EditorChapterView({
   loading,
   error,
   chapter,
   onRetry,
   onEditBlock,
   onInsertBlock,
-}: PreviewChapterViewProps) {
+}: EditorChapterViewProps) {
   const blockSequence = useMemo(() => {
     if (!chapter) {
       return [] as Array<{ id: string; node: ReactNode }>;
@@ -118,9 +118,9 @@ export function PreviewChapterView({
         <CircularProgress size={24} color="inherit" />
         <Typography
           component="span"
-          sx={{ color: readingThemeConstants.mutedColor }}
+          sx={{ color: editorThemeConstants.mutedColor }}
         >
-          Cargando vista previa...
+          Cargando capítulo...
         </Typography>
       </Stack>
     );
@@ -156,8 +156,8 @@ export function PreviewChapterView({
           <Typography
             variant="h4"
             sx={{
-              fontFamily: readingTheme.typography.fontFamily,
-              color: readingThemeConstants.headingColor,
+              fontFamily: editorTheme.typography.fontFamily,
+              color: editorThemeConstants.headingColor,
             }}
           >
             {chapter.title}
@@ -165,7 +165,7 @@ export function PreviewChapterView({
           {chapter.summary && (
             <Typography
               variant="subtitle1"
-              sx={{ color: readingThemeConstants.mutedColor }}
+              sx={{ color: editorThemeConstants.mutedColor }}
             >
               {chapter.summary}
             </Typography>
@@ -176,7 +176,7 @@ export function PreviewChapterView({
       {blockSequence.length === 0 ? (
         <Typography
           variant="body2"
-          sx={{ color: readingThemeConstants.mutedColor }}
+          sx={{ color: editorThemeConstants.mutedColor }}
         >
           Sin contenido.
         </Typography>

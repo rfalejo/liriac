@@ -16,19 +16,19 @@ const BUTTON_OPACITY_HIDDEN = 0;
 
 type ChapterBlockType = components["schemas"]["ChapterBlockTypeEnum"];
 
-type PreviewBlockFrameProps = {
+type EditorBlockFrameProps = {
   blockId: string;
   blockType: ChapterBlockType;
   onEdit: (blockId: string) => void;
   children: ReactNode;
 };
 
-export function PreviewBlockFrame({
+export function EditorBlockFrame({
   blockId,
   blockType,
   onEdit,
   children,
-}: PreviewBlockFrameProps) {
+}: EditorBlockFrameProps) {
   const [focusWithin, setFocusWithin] = useState(false);
   const [hovered, setHovered] = useState(false);
   const [touchRevealed, setTouchRevealed] = useState(false);
@@ -73,8 +73,8 @@ export function PreviewBlockFrame({
 
   return (
     <Box
-      data-preview-block-id={blockId}
-      data-preview-block-type={blockType}
+      data-editor-block-id={blockId}
+      data-editor-block-type={blockType}
       onPointerDown={handlePointerDown}
       onFocusCapture={() => setFocusWithin(true)}
       onBlurCapture={handleBlurCapture}

@@ -7,7 +7,7 @@ import {
   useState,
 } from "react";
 
-export type PreviewScrollbarHandlers = {
+export type EditorScrollbarHandlers = {
   onScroll: UIEventHandler<HTMLDivElement>;
   onMouseEnter: MouseEventHandler<HTMLDivElement>;
   onMouseMove: MouseEventHandler<HTMLDivElement>;
@@ -19,8 +19,8 @@ type ScrollState = {
   scrollable: boolean;
 };
 
-export function usePreviewScrollbar(
-  isOpen: boolean,
+export function useEditorScrollbar(
+  isActive: boolean,
   contentKey: unknown,
   hideDelay = 1500,
 ) {
@@ -40,7 +40,7 @@ export function usePreviewScrollbar(
 
   const evaluateScrollable = useCallback(() => {
     const node = scrollAreaRef.current;
-    if (!node || !isOpen) {
+    if (!node || !isActive) {
       setScrollState((current) => ({ ...current, scrollable: false }));
       return;
     }
@@ -49,17 +49,17 @@ export function usePreviewScrollbar(
       ...current,
       scrollable: node.scrollHeight - node.clientHeight > 4,
     }));
-  }, [isOpen]);
+  }, [isActive]);
 
   useEffect(() => {
-    if (!isOpen) {
+    if (!isActive) {
       setScrollState({ mode: "hidden", scrollable: false });
       return;
     }
 
     const id = window.requestAnimationFrame(evaluateScrollable);
     return () => window.cancelAnimationFrame(id);
-  }, [evaluateScrollable, isOpen, contentKey]);
+  }, [evaluateScrollable, isActive, contentKey]);
 
   useEffect(
     () => () => {
@@ -98,14 +98,14 @@ export function usePreviewScrollbar(
     scheduleHide();
   }, [scheduleHide, scrollable]);
 
-  const handlers: PreviewScrollbarHandlers = {
+  const handlers: EditorScrollbarHandlers = {
     onScroll: handleScroll,
     onMouseEnter: handlePointerEnter,
     onMouseMove: handlePointerEnter,
     onMouseLeave: handlePointerLeave,
   };
 
-  const className = `preview-scroll-area ${
+  const className = `editor-scroll-area ${
     scrollable ? `scrollbar-${mode}` : "scrollbar-disabled"
   }`;
 

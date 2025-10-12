@@ -1,13 +1,14 @@
 ---
 description: 'liriac - AI agent quickstart'
 tools: ['runCommands', 'edit', 'search', 'web-search-prime/*', 'context7/*', 'usages', 'problems', 'changes', 'fetch', 'todos']
+model: GPT-5-Codex (Preview) (copilot)
 ---
 # Liriac – AI agent quickstart
 
 ## Architecture snapshot
-- The repo ships a minimal Vite/React SPA in `frontend/`.
-- Entry flow: `src/main.tsx` → `App.tsx`, where Material UI manages theming, typography, and baseline layout.
-- Global styles live in `src/index.css` and intentionally stay light so Material UI can own the visual system.
+- The React app in `frontend/` owns both the library dashboard and the full-screen editor experience.
+- Entry flow: `src/main.tsx` → `App.tsx`, where Material UI supplies theming, typography, and baseline layout.
+- Feature folders (`features/library`, `features/editor`) co-locate hooks, components, and tests; `src/index.css` stays minimal so the theme controls visuals.
 
 ## Material UI usage
 - Wrap new views in the existing `ThemeProvider` inside `App.tsx`; extend the theme with `createTheme` overrides when needed.
@@ -16,32 +17,30 @@ tools: ['runCommands', 'edit', 'search', 'web-search-prime/*', 'context7/*', 'us
 
 ## Frontend workflows
 - Use pnpm scripts from `frontend/`:
-	- `pnpm install --frozen-lockfile --silent`
-	- `pnpm run --silent dev`
-	- `pnpm run --silent build`
-	- `pnpm run --silent preview`
-	- `pnpm run --silent typecheck` — runs `tsc --noEmit` for fast type enforcement.
-	- `pnpm run --silent lint` — executes ESLint with `--max-warnings 0` across `src/**/*.{ts,tsx}`.
-	- `pnpm run --silent format` — checks repository formatting with Prettier.
-	- Typical verification flow during implementation: `pnpm run --silent lint` → `pnpm run --silent typecheck` → `pnpm run --silent format`.
-	- Formatting is automated; run `pnpm run --silent format` after your changes instead of hand-tweaking whitespace so you can stay focused on feature work.
-	- Don’t burn cycles on linting or formatting chatter in responses—use the scripts when you truly need a signal and keep the conversation anchored on functionality.
-- TypeScript configuration is centralized in `tsconfig.app.json`; keep source files inside `src/`.
+    - `pnpm install --frozen-lockfile --silent`
+    - `pnpm run --silent dev`
+    - `pnpm run --silent build`
+    - `pnpm run --silent preview`
+    - `pnpm run --silent typecheck` — `tsc --noEmit` for fast type safety.
+    - `pnpm run --silent lint` — ESLint with `--max-warnings 0` across `src/**/*.{ts,tsx}`.
+    - `pnpm run --silent format` — Prettier check.
+- Verification flow: lint → typecheck → format. Rely on scripts instead of manual whitespace fixes.
+- TypeScript configuration lives in `tsconfig.app.json`; keep application code inside `src/`.
 
 ## Frontend good practices
-- Start with a flat `src/` tree, then promote components into feature folders as they grow; collocate tests, styles, hooks, and types with each component so its public API stays focused while implementation details remain private.
-- Reach for MUI's `sx` prop for single-use tweaks and escalate to `styled()` helpers or theme overrides when patterns repeat; never target global state class names without a component selector to avoid leaking styles across the app.
-- Hoist shared `GlobalStyles` definitions and other heavy configuration objects outside component bodies so they are instantiated once per module rather than on every render.
-- Prefer React Testing Library with Vitest for interaction-focused tests, and keep fixtures alongside the feature they exercise to reinforce the co-location model.
+- Treat `features/library` and `features/editor` as primary seams; colocate hooks, tests, and helpers with each feature to keep APIs focused.
+- Use the `sx` prop for one-off styling and move repeated patterns into theme overrides or `styled()` helpers; avoid global selectors that leak styles.
+- Hoist shared configuration (query clients, theme constants, etc.) outside component bodies so they instantiate once per module.
+- Prefer React Testing Library with Vitest for interaction coverage, storing fixtures with the feature they support.
 
 ## Backend quick facts
-- A local Django 5.2 service remains in `backend/` (project `config`, app `studio`). Use `uv sync --python 3.11` to install dependencies; the virtualenv sits at `backend/.venv`.
-- Primary commands (prefix with `uv run`):
-	- `python manage.py migrate`
-	- `python manage.py runserver`
-	- `python manage.py test`
-	- `python manage.py spectacular --file schema.yaml`
-- No frontend API client is bundled today, but the backend endpoints (`/api/library/`, `/api/editor/`, `/api/schema/`) are still available for future integrations.
+- Django 5.2 project lives in `backend/` (`config` project, `studio` app). Install dependencies with `uv sync --python 3.11`; the virtualenv resides in `backend/.venv`.
+- Run common commands via `uv run`:
+    - `python manage.py migrate`
+    - `python manage.py runserver`
+    - `python manage.py test`
+    - `python manage.py spectacular --file schema.yaml`
+- The frontend currently operates on mocked data, but REST endpoints such as `/api/library/` and `/api/editor/` are available when integration resumes.
 
 ## Frontend ↔ Backend bridge
 - If you add API calls, centralize fetch logic in a dedicated module (e.g., `src/api/client.ts`) so base URLs and headers remain consistent.
@@ -154,25 +153,25 @@ frontend/
 |   |   |   |-- libraryQueryKeys.ts
 |   |   |   |-- useChapterDetail.ts
 |   |   |   |-- useLibraryBooks.ts
-|   |   |   |-- useLibraryPreview.ts
+|   |   |   |-- useLibraryEditor.ts
 |   |   |   |-- useLibraryResource.ts
 |   |   |   |-- useLibrarySections.ts
 |   |   |   \-- useLibrarySelection.ts
-|   |   \-- preview/
+|   |   \-- editor/
 |   |       |-- blocks/
 |   |       |   |-- DialogueBlock.tsx
+|   |       |   |-- EditorBlockFrame.tsx
 |   |       |   |-- MetadataBlock.tsx
 |   |       |   |-- ParagraphBlock.tsx
-|   |       |   |-- PreviewBlockFrame.tsx
 |   |       |   |-- SceneBoundaryBlock.tsx
 |   |       |   \-- index.ts
-|   |       |-- PreviewChapterView.tsx
-|   |       |-- PreviewContainer.tsx
-|   |       |-- PreviewModal.tsx
-|   |       |-- PreviewSidebar.tsx
-|   |       |-- readingTheme.ts
-|   |       |-- usePreviewChapterNavigation.ts
-|   |       |-- usePreviewScrollbar.ts
+|   |       |-- EditorChapterView.tsx
+|   |       |-- EditorContainer.tsx
+|   |       |-- EditorShell.tsx
+|   |       |-- EditorSidebar.tsx
+|   |       |-- editorTheme.ts
+|   |       |-- useEditorChapterNavigation.ts
+|   |       |-- useEditorScrollbar.ts
 |   |       \-- useSidebarHover.ts
 |   |-- App.tsx
 |   |-- index.css

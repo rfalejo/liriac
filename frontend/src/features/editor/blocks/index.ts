@@ -1,4 +1,4 @@
-export { PreviewBlockFrame } from "./PreviewBlockFrame";
+export { EditorBlockFrame } from "./EditorBlockFrame";
 export { ParagraphBlock } from "./ParagraphBlock";
 export { DialogueBlock } from "./DialogueBlock";
 export { SceneBoundaryBlock } from "./SceneBoundaryBlock";

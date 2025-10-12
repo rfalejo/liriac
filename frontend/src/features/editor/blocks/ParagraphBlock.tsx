@@ -1,7 +1,7 @@
 import { Typography } from "@mui/material";
 import type { components } from "../../../api/schema";
-import { readingThemeConstants } from "../readingTheme";
-import { PreviewBlockFrame } from "./PreviewBlockFrame";
+import { editorThemeConstants } from "../editorTheme";
+import { EditorBlockFrame } from "./EditorBlockFrame";
 
 type ChapterBlock = components["schemas"]["ChapterBlock"];
 
@@ -14,7 +14,7 @@ export function ParagraphBlock({ block, onEdit }: ParagraphBlockProps) {
   const content = block.text?.trim() ?? "";
 
   return (
-    <PreviewBlockFrame
+    <EditorBlockFrame
       blockId={block.id}
       blockType={block.type}
       onEdit={onEdit}
@@ -24,12 +24,12 @@ export function ParagraphBlock({ block, onEdit }: ParagraphBlockProps) {
         sx={{
           margin: 0,
           pb: 0,
-          color: readingThemeConstants.headingColor,
+          color: editorThemeConstants.headingColor,
           textIndent: "1.5em",
         }}
       >
         {content.length > 0 ? content : "(Sin texto en este párrafo)"}
       </Typography>
-    </PreviewBlockFrame>
+    </EditorBlockFrame>
   );
 }

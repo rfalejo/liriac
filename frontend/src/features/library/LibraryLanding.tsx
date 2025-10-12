@@ -1,5 +1,5 @@
 import { Box, Button, Container, Stack, Typography } from "@mui/material";
-import { PreviewContainer } from "../preview/PreviewContainer";
+import { EditorContainer } from "../editor/EditorContainer";
 import { LibraryBooksPanel } from "./LibraryBooksPanel";
 import { LibraryChaptersPanel } from "./LibraryChaptersPanel";
 import { LibraryContextPanel } from "./LibraryContextPanel";
@@ -19,10 +19,20 @@ export function LibraryLanding() {
     selectBook,
     selectedBook,
     selectedBookId,
-    previewState,
-    openPreview,
-    closePreview,
+    editorState,
+    openEditor,
+    closeEditor,
   } = useLibraryData();
+
+  if (editorState.open && editorState.chapterId) {
+    return (
+      <EditorContainer
+        open={editorState.open}
+        chapterId={editorState.chapterId}
+        onClose={closeEditor}
+      />
+    );
+  }
 
   return (
     <Box
@@ -69,7 +79,7 @@ export function LibraryLanding() {
               book={selectedBook}
               loading={booksLoading}
               error={booksError}
-              onOpenChapter={openPreview}
+              onOpenChapter={openEditor}
             />
           </Stack>
 
@@ -81,13 +91,6 @@ export function LibraryLanding() {
           />
         </Stack>
       </Container>
-      {previewState.chapterId && (
-        <PreviewContainer
-          open={previewState.open}
-          chapterId={previewState.chapterId}
-          onClose={closePreview}
-        />
-      )}
     </Box>
   );
 }

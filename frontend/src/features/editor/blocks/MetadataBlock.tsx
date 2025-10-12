@@ -1,7 +1,7 @@
 import { Stack, Typography } from "@mui/material";
 import type { components } from "../../../api/schema";
-import { readingThemeConstants } from "../readingTheme";
-import { PreviewBlockFrame } from "./PreviewBlockFrame";
+import { editorThemeConstants } from "../editorTheme";
+import { EditorBlockFrame } from "./EditorBlockFrame";
 
 type ChapterBlock = components["schemas"]["ChapterBlock"];
 
@@ -24,7 +24,7 @@ export function MetadataBlock({ block, onEdit }: MetadataBlockProps) {
     );
 
     return (
-      <PreviewBlockFrame
+      <EditorBlockFrame
         blockId={block.id}
         blockType={block.type}
         onEdit={onEdit}
@@ -36,7 +36,7 @@ export function MetadataBlock({ block, onEdit }: MetadataBlockProps) {
               sx={{
                 letterSpacing: "0.14em",
                 textTransform: "uppercase",
-                color: readingThemeConstants.mutedColor,
+                color: editorThemeConstants.mutedColor,
                 opacity: 0.75,
               }}
             >
@@ -48,7 +48,7 @@ export function MetadataBlock({ block, onEdit }: MetadataBlockProps) {
               variant="h4"
               sx={{
                 fontFamily: "inherit",
-                color: readingThemeConstants.headingColor,
+                color: editorThemeConstants.headingColor,
               }}
             >
               {primaryHeading}
@@ -58,7 +58,7 @@ export function MetadataBlock({ block, onEdit }: MetadataBlockProps) {
             <Typography
               variant="subtitle2"
               sx={{
-                color: readingThemeConstants.mutedColor,
+                color: editorThemeConstants.mutedColor,
                 fontWeight: 500,
                 letterSpacing: "0.04em",
               }}
@@ -77,7 +77,7 @@ export function MetadataBlock({ block, onEdit }: MetadataBlockProps) {
               {block.epigraphAttribution && (
                 <Typography
                   variant="caption"
-                  color={readingThemeConstants.mutedColor}
+                  color={editorThemeConstants.mutedColor}
                 >
                   — {block.epigraphAttribution}
                 </Typography>
@@ -85,7 +85,7 @@ export function MetadataBlock({ block, onEdit }: MetadataBlockProps) {
             </Stack>
           )}
         </Stack>
-      </PreviewBlockFrame>
+      </EditorBlockFrame>
     );
   }
 
@@ -97,7 +97,7 @@ export function MetadataBlock({ block, onEdit }: MetadataBlockProps) {
     }
 
     return (
-      <PreviewBlockFrame
+      <EditorBlockFrame
         blockId={block.id}
         blockType={block.type}
         onEdit={onEdit}
@@ -106,24 +106,24 @@ export function MetadataBlock({ block, onEdit }: MetadataBlockProps) {
           variant="body2"
           sx={{
             fontStyle: "italic",
-            color: readingThemeConstants.mutedColor,
+            color: editorThemeConstants.mutedColor,
           }}
         >
           {contextText}
         </Typography>
-      </PreviewBlockFrame>
+      </EditorBlockFrame>
     );
   }
 
   return (
-    <PreviewBlockFrame
+    <EditorBlockFrame
       blockId={block.id}
       blockType={block.type}
       onEdit={onEdit}
     >
-      <Typography variant="body2" color={readingThemeConstants.mutedColor}>
+      <Typography variant="body2" color={editorThemeConstants.mutedColor}>
         (Bloque de metadatos sin representación especializada)
       </Typography>
-    </PreviewBlockFrame>
+    </EditorBlockFrame>
   );
 }

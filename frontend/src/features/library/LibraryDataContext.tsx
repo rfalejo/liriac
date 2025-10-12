@@ -3,7 +3,7 @@ import type { LibraryBook, LibraryResponse } from "../../api/library";
 import { useLibraryBooks } from "./useLibraryBooks";
 import { useLibrarySections } from "./useLibrarySections";
 import { useLibrarySelection } from "./useLibrarySelection";
-import { useLibraryPreview } from "./useLibraryPreview";
+import { useLibraryEditor } from "./useLibraryEditor";
 
 type LibraryDataContextValue = {
   books: LibraryBook[];
@@ -18,9 +18,9 @@ type LibraryDataContextValue = {
   selectedBook: LibraryBook | null;
   selectedBookId: string | null;
   selectBook: (bookId: string) => void;
-  previewState: ReturnType<typeof useLibraryPreview>["previewState"];
-  openPreview: (chapterId: string) => void;
-  closePreview: () => void;
+  editorState: ReturnType<typeof useLibraryEditor>["editorState"];
+  openEditor: (chapterId: string) => void;
+  closeEditor: () => void;
 };
 
 type LibraryDataContextProviderProps = {
@@ -52,7 +52,7 @@ export function LibraryDataContextProvider({
       reloadSections,
     });
 
-  const { previewState, openPreview, closePreview } = useLibraryPreview();
+  const { editorState, openEditor, closeEditor } = useLibraryEditor();
 
   const value = useMemo<LibraryDataContextValue>(
     () => ({
@@ -68,9 +68,9 @@ export function LibraryDataContextProvider({
       selectedBook,
       selectedBookId,
       selectBook,
-      previewState,
-      openPreview,
-      closePreview,
+      editorState,
+      openEditor,
+      closeEditor,
     }),
     [
       books,
@@ -85,9 +85,9 @@ export function LibraryDataContextProvider({
       selectedBook,
       selectedBookId,
       selectBook,
-      previewState,
-      openPreview,
-      closePreview,
+  editorState,
+  openEditor,
+  closeEditor,
     ],
   );
 

@@ -1,7 +1,7 @@
 import { Box, Stack, Typography } from "@mui/material";
 import type { components } from "../../../api/schema";
-import { readingThemeConstants } from "../readingTheme";
-import { PreviewBlockFrame } from "./PreviewBlockFrame";
+import { editorThemeConstants } from "../editorTheme";
+import { EditorBlockFrame } from "./EditorBlockFrame";
 
 type ChapterBlock = components["schemas"]["ChapterBlock"];
 
@@ -14,14 +14,14 @@ export function DialogueBlock({ block, onEdit }: DialogueBlockProps) {
   const turns = block.turns ?? [];
 
   return (
-    <PreviewBlockFrame
+    <EditorBlockFrame
       blockId={block.id}
       blockType={block.type}
       onEdit={onEdit}
     >
-      <Stack spacing={1.25} sx={{ color: readingThemeConstants.headingColor }}>
+      <Stack spacing={1.25} sx={{ color: editorThemeConstants.headingColor }}>
         {turns.length === 0 && (
-          <Typography variant="body2" color={readingThemeConstants.mutedColor}>
+          <Typography variant="body2" color={editorThemeConstants.mutedColor}>
             (Diálogo sin intervenciones)
           </Typography>
         )}
@@ -36,7 +36,7 @@ export function DialogueBlock({ block, onEdit }: DialogueBlockProps) {
                   fontWeight: 600,
                   letterSpacing: "0.04em",
                   textTransform: "uppercase",
-                  color: readingThemeConstants.mutedColor,
+                  color: editorThemeConstants.mutedColor,
                 }}
               >
                 {turn.speakerName}
@@ -50,7 +50,7 @@ export function DialogueBlock({ block, onEdit }: DialogueBlockProps) {
                 component="span"
                 sx={{
                   fontStyle: "italic",
-                  color: readingThemeConstants.mutedColor,
+                  color: editorThemeConstants.mutedColor,
                 }}
               >
                 {turn.stageDirection}
@@ -59,6 +59,6 @@ export function DialogueBlock({ block, onEdit }: DialogueBlockProps) {
           </Box>
         ))}
       </Stack>
-    </PreviewBlockFrame>
+    </EditorBlockFrame>
   );
 }

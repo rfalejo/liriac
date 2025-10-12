@@ -1,7 +1,7 @@
 import { Divider, Stack, Typography } from "@mui/material";
 import type { components } from "../../../api/schema";
-import { readingThemeConstants } from "../readingTheme";
-import { PreviewBlockFrame } from "./PreviewBlockFrame";
+import { editorThemeConstants } from "../editorTheme";
+import { EditorBlockFrame } from "./EditorBlockFrame";
 
 type ChapterBlock = components["schemas"]["ChapterBlock"];
 
@@ -12,7 +12,7 @@ type SceneBoundaryBlockProps = {
 
 export function SceneBoundaryBlock({ block, onEdit }: SceneBoundaryBlockProps) {
   return (
-    <PreviewBlockFrame
+    <EditorBlockFrame
       blockId={block.id}
       blockType={block.type}
       onEdit={onEdit}
@@ -23,7 +23,7 @@ export function SceneBoundaryBlock({ block, onEdit }: SceneBoundaryBlockProps) {
           <Typography
             variant="body2"
             sx={{
-              color: readingThemeConstants.mutedColor,
+              color: editorThemeConstants.mutedColor,
               letterSpacing: "0.08em",
               textTransform: "uppercase",
             }}
@@ -32,6 +32,6 @@ export function SceneBoundaryBlock({ block, onEdit }: SceneBoundaryBlockProps) {
           </Typography>
         )}
       </Stack>
-    </PreviewBlockFrame>
+    </EditorBlockFrame>
   );
 }

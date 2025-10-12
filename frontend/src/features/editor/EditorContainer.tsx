@@ -1,21 +1,21 @@
 import { useCallback } from "react";
 import type { components } from "../../api/schema";
-import { usePreviewScrollbar } from "./usePreviewScrollbar";
-import { usePreviewChapterNavigation } from "./usePreviewChapterNavigation";
+import { useEditorScrollbar } from "./useEditorScrollbar";
+import { useEditorChapterNavigation } from "./useEditorChapterNavigation";
 import { useSidebarHover } from "./useSidebarHover";
-import { PreviewModal } from "./PreviewModal";
+import { EditorShell } from "./EditorShell";
 
-type PreviewContainerProps = {
+type EditorContainerProps = {
   chapterId: string;
   open: boolean;
   onClose: () => void;
 };
 
-export function PreviewContainer({
+export function EditorContainer({
   chapterId,
   open,
   onClose,
-}: PreviewContainerProps) {
+}: EditorContainerProps) {
   const {
     activeChapterId,
     chapter,
@@ -28,9 +28,9 @@ export function PreviewContainer({
     handleSelectChapter,
     loading,
     reload,
-  } = usePreviewChapterNavigation({ chapterId, open });
+  } = useEditorChapterNavigation({ chapterId });
 
-  const { scrollAreaRef, handlers, scrollbarClassName } = usePreviewScrollbar(
+  const { scrollAreaRef, handlers, scrollbarClassName } = useEditorScrollbar(
     open,
     contentSignature,
   );
@@ -59,9 +59,7 @@ export function PreviewContainer({
   const selectedChapterId = chapter?.id ?? activeChapterId;
 
   return (
-    <PreviewModal
-      open={open}
-      onClose={onClose}
+    <EditorShell
       sidebarProps={{
         activeChapterId: selectedChapterId,
         bookTitle,

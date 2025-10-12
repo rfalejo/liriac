@@ -4,12 +4,11 @@ import type { ChapterSummary, LibraryBook } from "../../api/library";
 import { useLibraryData } from "../library/LibraryDataContext";
 import { useChapterDetail } from "../library/useChapterDetail";
 
-type UsePreviewChapterNavigationParams = {
+type UseEditorChapterNavigationParams = {
   chapterId: string;
-  open: boolean;
 };
 
-type PreviewChapterNavigationResult = {
+type EditorChapterNavigationResult = {
   activeChapterId: string | null;
   chapter: ChapterDetail | null;
   chapterOptions: ChapterSummary[];
@@ -23,20 +22,16 @@ type PreviewChapterNavigationResult = {
   reload: () => void;
 };
 
-export function usePreviewChapterNavigation({
+export function useEditorChapterNavigation({
   chapterId,
-  open,
-}: UsePreviewChapterNavigationParams): PreviewChapterNavigationResult {
+}: UseEditorChapterNavigationParams): EditorChapterNavigationResult {
   const [activeChapterId, setActiveChapterId] = useState<string | null>(
     () => chapterId,
   );
 
   useEffect(() => {
-    if (!open) {
-      return;
-    }
     setActiveChapterId(chapterId);
-  }, [chapterId, open]);
+  }, [chapterId]);
 
   const { books, booksLoading, booksError } = useLibraryData();
   const { chapter, loading, error, reload } = useChapterDetail(activeChapterId);
