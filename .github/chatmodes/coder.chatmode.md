@@ -1,8 +1,7 @@
 ---
-applyTo: **
-description: Comprehensive guide to Liriac's architecture, state management, and development workflows for AI agents.
+description: 'liriac - AI agent quickstart'
+tools: ['runCommands', 'edit', 'search', 'web-search-prime/*', 'context7/*', 'usages', 'problems', 'changes', 'fetch', 'todos']
 ---
-
 # Liriac – AI agent quickstart
 
 ## Architecture snapshot
@@ -97,6 +96,11 @@ feat(library): add book listing endpoint
 - Updated frontend to fetch and display books on the library landing page.
 - Added tests to cover the new endpoint and frontend integration.
 ```
+
+## Tools
+When planning a big change, you can use the following tools:
+- `todos`: to create a list of tasks to be done.
+- `context7/*`: get up-to-date information about any library or framework.
 
 
 ## Repository layout snapshot
