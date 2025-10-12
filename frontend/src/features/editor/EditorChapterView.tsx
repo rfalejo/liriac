@@ -125,7 +125,16 @@ export function EditorChapterView({
     });
 
     return entries;
-  }, [chapter, onEditBlock]);
+  }, [
+    chapter,
+    onEditBlock,
+    editingState?.blockId,
+    editingState?.draftText,
+    editingState?.onChangeDraft,
+    editingState?.onCancel,
+    editingState?.onSave,
+    editingState?.isSaving,
+  ]);
 
   if (loading) {
     return (
