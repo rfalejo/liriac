@@ -1,5 +1,5 @@
 import { Box } from "@mui/material";
-import type { SxProps, Theme } from "@mui/material/styles";
+import type { Theme } from "@mui/material/styles";
 import {
   forwardRef,
   useCallback,
@@ -13,7 +13,7 @@ export type DialogueEditableFieldProps = {
   value: string;
   placeholder: string;
   disabled: boolean;
-  sx: SxProps<Theme>;
+  sx: (theme: Theme) => Record<string, unknown>;
   ariaLabel: string;
   onInput: (value: string) => void;
   onKeyDown: (event: KeyboardEvent) => void;
@@ -80,10 +80,10 @@ export const DialogueEditableField = forwardRef<
         data-disabled={disabled ? "true" : "false"}
         onInput={handleInputEvent}
         onKeyDown={onKeyDown}
-        sx={{
-          ...sx,
+        sx={(theme: Theme) => ({
+          ...sx(theme),
           cursor: disabled ? "not-allowed" : "text",
-        }}
+        })}
       />
     );
   },
