@@ -83,8 +83,42 @@ const baseTheme = createTheme({
   },
 });
 
+const createInteractiveField = (vertical: number, horizontal: number) => ({
+  borderRadius: editorTokens.blockRadius,
+  padding: baseTheme.spacing(vertical, horizontal),
+  backgroundColor: baseTheme.palette.editor.blockActiveBg,
+  boxShadow: `inset 0 0 0 1px ${baseTheme.palette.editor.blockHoverOutline}`,
+  transition: editorTokens.blockTransition,
+  "&:focus": {
+    boxShadow: `inset 0 0 0 1px ${baseTheme.palette.editor.blockActiveOutline}`,
+  },
+});
+
+const editorBlockStyles = {
+  divider: {
+    borderColor: baseTheme.palette.editor.blockDivider,
+  },
+  interactiveField: {
+    ...createInteractiveField(1, 1.5),
+  },
+  interactiveFieldDense: {
+    ...createInteractiveField(0.75, 1.5),
+  },
+  interactiveFieldTight: {
+    ...createInteractiveField(0.5, 1.25),
+  },
+  uppercaseLabel: {
+    letterSpacing: "0.08em",
+    textTransform: "uppercase",
+    color: baseTheme.palette.editor.blockMuted,
+  },
+} as const;
+
 export const theme = createTheme(baseTheme, {
-  editor: editorTokens,
+  editor: {
+    ...editorTokens,
+    blocks: editorBlockStyles,
+  },
   typography: {
     editorParagraph: {
       ...baseTheme.typography.editorBody,

@@ -1,6 +1,15 @@
 import type { CSSProperties } from "react";
+import type { CSSObject, Theme } from "@mui/material/styles";
 import "@mui/material/Typography";
 import "@mui/material/styles";
+
+type EditorBlockStyles = Record<string, CSSObject> & {
+  divider: CSSObject;
+  interactiveField: CSSObject;
+  interactiveFieldDense: CSSObject;
+  interactiveFieldTight: CSSObject;
+  uppercaseLabel: CSSObject;
+};
 
 declare module "@mui/material/styles" {
   interface EditorThemeTokens {
@@ -11,6 +20,7 @@ declare module "@mui/material/styles" {
     blockControlsFade: string;
     iconButtonTransition: string;
     paragraphIndent: string;
+    blocks: EditorBlockStyles;
   }
 
   interface Theme {

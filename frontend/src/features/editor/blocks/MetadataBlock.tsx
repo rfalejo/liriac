@@ -191,13 +191,7 @@ function MetadataEditView({ block, editingState }: MetadataEditViewProps) {
             fontWeight: theme.typography.h4.fontWeight,
             color: theme.palette.editor.blockHeading,
             textAlign: "center",
-            borderRadius: theme.editor.blockRadius,
-            padding: theme.spacing(1, 1.5),
-            backgroundColor: theme.palette.editor.blockActiveBg,
-            boxShadow: `inset 0 0 0 1px ${theme.palette.editor.blockHoverOutline}`,
-            "&:focus": {
-              boxShadow: `inset 0 0 0 1px ${theme.palette.editor.blockActiveOutline}`,
-            },
+            ...theme.editor.blocks.interactiveField,
           })}
           onKeyDown={(event) => {
             handleEditingKeyDown(event, {
@@ -218,13 +212,7 @@ function MetadataEditView({ block, editingState }: MetadataEditViewProps) {
             fontWeight: 500,
             letterSpacing: "0.04em",
             textAlign: "center",
-            borderRadius: theme.editor.blockRadius,
-            padding: theme.spacing(0.75, 1.5),
-            backgroundColor: theme.palette.editor.blockActiveBg,
-            boxShadow: `inset 0 0 0 1px ${theme.palette.editor.blockHoverOutline}`,
-            "&:focus": {
-              boxShadow: `inset 0 0 0 1px ${theme.palette.editor.blockActiveOutline}`,
-            },
+            ...theme.editor.blocks.interactiveFieldDense,
           })}
           onKeyDown={(event) => {
             handleEditingKeyDown(event, {
@@ -244,13 +232,7 @@ function MetadataEditView({ block, editingState }: MetadataEditViewProps) {
             ...theme.typography.editorBody,
             fontStyle: "italic",
             marginTop: theme.spacing(1.25),
-            borderRadius: theme.editor.blockRadius,
-            padding: theme.spacing(1, 1.5),
-            backgroundColor: theme.palette.editor.blockActiveBg,
-            boxShadow: `inset 0 0 0 1px ${theme.palette.editor.blockHoverOutline}`,
-            "&:focus": {
-              boxShadow: `inset 0 0 0 1px ${theme.palette.editor.blockActiveOutline}`,
-            },
+            ...theme.editor.blocks.interactiveField,
           })}
           onKeyDown={(event) => {
             handleEditingKeyDown(event, {
@@ -270,13 +252,7 @@ function MetadataEditView({ block, editingState }: MetadataEditViewProps) {
             fontSize: theme.typography.caption.fontSize,
             color: theme.palette.editor.blockMuted,
             textAlign: "center",
-            borderRadius: theme.editor.blockRadius,
-            padding: theme.spacing(0.5, 1.25),
-            backgroundColor: theme.palette.editor.blockActiveBg,
-            boxShadow: `inset 0 0 0 1px ${theme.palette.editor.blockHoverOutline}`,
-            "&:focus": {
-              boxShadow: `inset 0 0 0 1px ${theme.palette.editor.blockActiveOutline}`,
-            },
+            ...theme.editor.blocks.interactiveFieldTight,
           })}
           onKeyDown={(event) => {
             handleEditingKeyDown(event, {
@@ -302,13 +278,7 @@ function MetadataEditView({ block, editingState }: MetadataEditViewProps) {
           ...theme.typography.editorBody,
           fontStyle: "italic",
           color: theme.palette.editor.blockMuted,
-          borderRadius: theme.editor.blockRadius,
-          padding: theme.spacing(1, 1.5),
-          backgroundColor: theme.palette.editor.blockActiveBg,
-          boxShadow: `inset 0 0 0 1px ${theme.palette.editor.blockHoverOutline}`,
-          "&:focus": {
-            boxShadow: `inset 0 0 0 1px ${theme.palette.editor.blockActiveOutline}`,
-          },
+          ...theme.editor.blocks.interactiveField,
         })}
         onKeyDown={(event) => {
           handleEditingKeyDown(event, {
@@ -331,13 +301,7 @@ function MetadataEditView({ block, editingState }: MetadataEditViewProps) {
       sx={(theme: Theme) => ({
         ...theme.typography.editorBody,
         color: theme.palette.editor.blockMuted,
-        borderRadius: theme.editor.blockRadius,
-        padding: theme.spacing(1, 1.5),
-        backgroundColor: theme.palette.editor.blockActiveBg,
-        boxShadow: `inset 0 0 0 1px ${theme.palette.editor.blockHoverOutline}`,
-        "&:focus": {
-          boxShadow: `inset 0 0 0 1px ${theme.palette.editor.blockActiveOutline}`,
-        },
+        ...theme.editor.blocks.interactiveField,
       })}
       onKeyDown={(event) => {
         handleEditingKeyDown(event, {

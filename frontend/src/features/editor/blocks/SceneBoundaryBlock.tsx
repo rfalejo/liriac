@@ -44,18 +44,14 @@ function SceneBoundaryReadView({ block }: SceneBoundaryViewProps) {
     <Stack spacing={1} alignItems="center" sx={{ textAlign: "center" }}>
       <Divider
         flexItem
-        sx={(theme: Theme) => ({
-          borderColor: theme.palette.editor.blockDivider,
-        })}
+        sx={(theme: Theme) => theme.editor.blocks.divider}
       />
       {(block.label || block.summary) && (
         <Typography
           variant="body2"
           sx={(theme: Theme) => ({
             ...theme.typography.editorBody,
-            color: theme.palette.editor.blockMuted,
-            letterSpacing: "0.08em",
-            textTransform: "uppercase",
+            ...theme.editor.blocks.uppercaseLabel,
           })}
         >
           {block.label ?? block.summary}
@@ -77,9 +73,7 @@ function SceneBoundaryEditView({ editingState }: SceneBoundaryEditViewProps) {
     <Stack spacing={1.25} sx={{ textAlign: "center" }}>
       <Divider
         flexItem
-        sx={(theme: Theme) => ({
-          borderColor: theme.palette.editor.blockDivider,
-        })}
+        sx={(theme: Theme) => theme.editor.blocks.divider}
       />
       <EditableContentField
         value={draft.label}
@@ -89,17 +83,8 @@ function SceneBoundaryEditView({ editingState }: SceneBoundaryEditViewProps) {
         disabled={disabled}
         sx={(theme: Theme) => ({
           ...theme.typography.editorBody,
-          color: theme.palette.editor.blockMuted,
-          letterSpacing: "0.08em",
-          textTransform: "uppercase",
-          borderRadius: theme.editor.blockRadius,
-          padding: theme.spacing(1, 1.5),
-          boxShadow: `inset 0 0 0 1px ${theme.palette.editor.blockHoverOutline}`,
-          transition: theme.editor.blockTransition,
-          backgroundColor: theme.palette.editor.blockActiveBg,
-          "&:focus": {
-            boxShadow: `inset 0 0 0 1px ${theme.palette.editor.blockActiveOutline}`,
-          },
+          ...theme.editor.blocks.uppercaseLabel,
+          ...theme.editor.blocks.interactiveField,
         })}
         onKeyDown={(event) => {
           handleEditingKeyDown(event, {
@@ -117,16 +102,9 @@ function SceneBoundaryEditView({ editingState }: SceneBoundaryEditViewProps) {
         disabled={disabled}
         sx={(theme: Theme) => ({
           ...theme.typography.editorBody,
+          ...theme.editor.blocks.interactiveField,
           color: theme.palette.editor.blockMuted,
-          borderRadius: theme.editor.blockRadius,
-          padding: theme.spacing(1, 1.5),
-          boxShadow: `inset 0 0 0 1px ${theme.palette.editor.blockHoverOutline}`,
-          transition: theme.editor.blockTransition,
-          backgroundColor: theme.palette.editor.blockActiveBg,
           textAlign: "left",
-          "&:focus": {
-            boxShadow: `inset 0 0 0 1px ${theme.palette.editor.blockActiveOutline}`,
-          },
         })}
         onKeyDown={(event) => {
           handleEditingKeyDown(event, {
