@@ -20,42 +20,9 @@ import {
   BlockInsertMenu,
   type BlockInsertPosition,
 } from "./blocks/BlockInsertMenu";
+import type { ChapterBlock, EditingState } from "./types";
 
-type ChapterBlock = components["schemas"]["ChapterBlock"];
 type ChapterBlockType = components["schemas"]["ChapterBlockTypeEnum"];
-type DialogueTurn = components["schemas"]["DialogueTurn"];
-
-type ParagraphEditingState = {
-  blockId: string;
-  blockType: "paragraph";
-  paragraph: {
-    draftText: string;
-    onChangeDraft: (value: string) => void;
-  };
-  onCancel: () => void;
-  onSave: () => void;
-  isSaving: boolean;
-};
-
-type DialogueEditingState = {
-  blockId: string;
-  blockType: "dialogue";
-  dialogue: {
-    turns: DialogueTurn[];
-    onChangeTurn: (
-      index: number,
-      field: "speakerName" | "utterance" | "stageDirection",
-      value: string,
-    ) => void;
-    onAddTurn: () => void;
-    onRemoveTurn: (index: number) => void;
-  };
-  onCancel: () => void;
-  onSave: () => void;
-  isSaving: boolean;
-};
-
-type EditingState = ParagraphEditingState | DialogueEditingState;
 
 type EditorChapterViewProps = {
   loading: boolean;
@@ -119,9 +86,7 @@ export function EditorChapterView({
               block={block}
               onEdit={onEditBlock}
               isEditing={isEditing}
-              draftText={
-                isEditing ? paragraphDraft?.draftText ?? "" : ""
-              }
+              draftText={isEditing ? (paragraphDraft?.draftText ?? "") : ""}
               onDraftChange={
                 isEditing ? paragraphDraft?.onChangeDraft : undefined
               }
@@ -145,17 +110,11 @@ export function EditorChapterView({
               onEdit={onEditBlock}
               isEditing={isEditing}
               draftTurns={
-                isEditing ? dialogueDraft?.turns ?? [] : block.turns ?? []
+                isEditing ? (dialogueDraft?.turns ?? []) : (block.turns ?? [])
               }
-              onChangeTurn={
-                isEditing ? dialogueDraft?.onChangeTurn : undefined
-              }
-              onAddTurn={
-                isEditing ? dialogueDraft?.onAddTurn : undefined
-              }
-              onRemoveTurn={
-                isEditing ? dialogueDraft?.onRemoveTurn : undefined
-              }
+              onChangeTurn={isEditing ? dialogueDraft?.onChangeTurn : undefined}
+              onAddTurn={isEditing ? dialogueDraft?.onAddTurn : undefined}
+              onRemoveTurn={isEditing ? dialogueDraft?.onRemoveTurn : undefined}
               onCancelEdit={isEditing ? dialogueEditing?.onCancel : undefined}
               onSaveEdit={isEditing ? dialogueEditing?.onSave : undefined}
               disabled={editingState?.isSaving ?? false}

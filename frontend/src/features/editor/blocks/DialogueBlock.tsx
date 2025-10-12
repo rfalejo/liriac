@@ -3,119 +3,30 @@ import {
   CircularProgress,
   IconButton,
   Stack,
+  TextField,
   Typography,
 } from "@mui/material";
-import { useEffect, useRef } from "react";
+import type { KeyboardEvent } from "react";
 import CheckRoundedIcon from "@mui/icons-material/CheckRounded";
 import CloseRoundedIcon from "@mui/icons-material/CloseRounded";
 import AddCircleOutlineRoundedIcon from "@mui/icons-material/AddCircleOutlineRounded";
 import DeleteOutlineRoundedIcon from "@mui/icons-material/DeleteOutlineRounded";
-import type { components } from "../../../api/schema";
 import { editorThemeConstants } from "../editorTheme";
 import { EditorBlockFrame } from "./EditorBlockFrame";
-
-type ChapterBlock = components["schemas"]["ChapterBlock"];
-type DialogueTurn = components["schemas"]["DialogueTurn"];
-
-type DialogueField = "speakerName" | "utterance" | "stageDirection";
+import type { ChapterBlock, DialogueField, DialogueTurn } from "../types";
 
 type DialogueBlockProps = {
   block: ChapterBlock;
   onEdit: (blockId: string) => void;
   isEditing?: boolean;
   draftTurns?: DialogueTurn[];
-  onChangeTurn?: (index: number, field: DialogueField, value: string) => void;
+  onChangeTurn?: (turnId: string, field: DialogueField, value: string) => void;
   onAddTurn?: () => void;
-  onRemoveTurn?: (index: number) => void;
+  onRemoveTurn?: (turnId: string) => void;
   onCancelEdit?: () => void;
   onSaveEdit?: () => void;
   disabled?: boolean;
 };
-
-type EditableFieldProps = {
-  value: string;
-  placeholder: string;
-  onChange?: (value: string) => void;
-  variant?: "speaker" | "utterance" | "stage";
-};
-
-function EditableField({
-  value,
-  placeholder,
-  onChange,
-  variant = "utterance",
-}: EditableFieldProps) {
-  const ref = useRef<HTMLDivElement | null>(null);
-
-  useEffect(() => {
-    if (ref.current && ref.current.textContent !== value) {
-      ref.current.textContent = value;
-    }
-  }, [value]);
-
-  const handleInput = () => {
-    if (!onChange || !ref.current) {
-      return;
-    }
-    onChange(ref.current.textContent ?? "");
-  };
-
-  const baseStyles = {
-    outline: "none",
-    border: "none",
-    backgroundColor: "transparent",
-    fontFamily: "inherit",
-    fontSize: "inherit",
-    lineHeight: "inherit",
-    letterSpacing: "inherit",
-    minHeight: "1.25em",
-    whiteSpace: "pre-wrap" as const,
-    color: editorThemeConstants.headingColor,
-  };
-
-  const variantStyles = {
-    speaker: {
-      fontSize: "0.85rem",
-      fontWeight: 600,
-      letterSpacing: "0.04em",
-      textTransform: "uppercase" as const,
-      color: editorThemeConstants.mutedColor,
-    },
-    utterance: {
-      marginTop: 0.25,
-    },
-    stage: {
-      fontStyle: "italic",
-      color: editorThemeConstants.mutedColor,
-    },
-  } as const;
-
-  return (
-    <Box
-      ref={ref}
-      component="div"
-      role="textbox"
-      contentEditable
-      suppressContentEditableWarning
-      spellCheck
-      aria-label={placeholder}
-      data-variant={variant}
-      onInput={handleInput}
-      sx={{
-        ...baseStyles,
-        ...variantStyles[variant],
-        "&:empty::before": placeholder
-          ? {
-              content: `"${placeholder}"`,
-              color: "rgba(15, 20, 25, 0.38)",
-            }
-          : undefined,
-      }}
-    >
-      {value}
-    </Box>
-  );
-}
 
 export function DialogueBlock({
   block,
@@ -129,7 +40,24 @@ export function DialogueBlock({
   onSaveEdit,
   disabled = false,
 }: DialogueBlockProps) {
-  const turns = isEditing ? draftTurns ?? [] : block.turns ?? [];
+  const turns = isEditing ? (draftTurns ?? []) : (block.turns ?? []);
+
+  const handleKeyDown = (event: KeyboardEvent) => {
+    if (!isEditing) {
+      return;
+    }
+
+    if ((event.metaKey || event.ctrlKey) && event.key === "Enter") {
+      event.preventDefault();
+      void onSaveEdit?.();
+      return;
+    }
+
+    if (event.key === "Escape") {
+      event.preventDefault();
+      onCancelEdit?.();
+    }
+  };
 
   const controls = isEditing ? (
     <Stack direction="row" spacing={0.5} alignItems="center">
@@ -174,23 +102,6 @@ export function DialogueBlock({
     </Stack>
   ) : undefined;
 
-  const handleKeyDown: React.KeyboardEventHandler<HTMLDivElement> = (event) => {
-    if (!isEditing) {
-      return;
-    }
-
-    if ((event.metaKey || event.ctrlKey) && event.key === "Enter") {
-      event.preventDefault();
-      void onSaveEdit?.();
-      return;
-    }
-
-    if (event.key === "Escape") {
-      event.preventDefault();
-      onCancelEdit?.();
-    }
-  };
-
   return (
     <EditorBlockFrame
       blockId={block.id}
@@ -199,115 +110,141 @@ export function DialogueBlock({
       controls={controls}
       isActive={isEditing}
     >
-      <Stack
-        spacing={1.25}
-        sx={{ color: editorThemeConstants.headingColor }}
-        onKeyDown={handleKeyDown}
-      >
+      <Stack spacing={1.25} sx={{ color: editorThemeConstants.headingColor }}>
         {turns.length === 0 && (
           <Typography variant="body2" color={editorThemeConstants.mutedColor}>
             (Diálogo sin intervenciones)
           </Typography>
         )}
-        {turns.map((turn, index) => (
-          <Box
-            key={`${block.id}-turn-${index}`}
-            sx={{
-              borderRadius: 1,
-              px: { xs: 1.25, sm: 1.5 },
-              py: { xs: 1, sm: 1.25 },
-              transition: "background-color 140ms ease, box-shadow 140ms ease",
-              position: "relative",
-              backgroundColor: "transparent",
-              boxShadow: "0 0 0 1px transparent",
-              "&:focus-within": {
-                backgroundColor: "rgba(25, 118, 210, 0.08)",
-                boxShadow: "0 0 0 1px rgba(25, 118, 210, 0.35)",
-              },
-            }}
-          >
-            {isEditing ? (
-              <EditableField
-                value={turn.speakerName ?? ""}
-                onChange={(value) => onChangeTurn?.(index, "speakerName", value)}
-                placeholder="Nombre del personaje"
-                variant="speaker"
-              />
-            ) : (
-              turn.speakerName && (
-                <Typography
-                  component="span"
+        {turns.map((turn, index) => {
+          const turnKey = turn.id ?? `${block.id}-turn-${index}`;
+          return (
+            <Box
+              key={turnKey}
+              sx={{
+                borderRadius: 1,
+                px: { xs: 1.25, sm: 1.5 },
+                py: { xs: 1, sm: 1.25 },
+                transition:
+                  "background-color 140ms ease, box-shadow 140ms ease",
+                position: "relative",
+                backgroundColor: "transparent",
+                boxShadow: "0 0 0 1px transparent",
+                "&:focus-within": {
+                  backgroundColor: "rgba(25, 118, 210, 0.08)",
+                  boxShadow: "0 0 0 1px rgba(25, 118, 210, 0.35)",
+                },
+              }}
+            >
+              {isEditing ? (
+                <Stack spacing={1}>
+                  <TextField
+                    label="Personaje"
+                    value={turn.speakerName ?? ""}
+                    onChange={(event) =>
+                      onChangeTurn?.(
+                        turn.id ?? turnKey,
+                        "speakerName",
+                        event.target.value,
+                      )
+                    }
+                    onKeyDown={handleKeyDown}
+                    variant="standard"
+                    fullWidth
+                    disabled={disabled}
+                  />
+                  <TextField
+                    label="Parlamento"
+                    value={turn.utterance ?? ""}
+                    onChange={(event) =>
+                      onChangeTurn?.(
+                        turn.id ?? turnKey,
+                        "utterance",
+                        event.target.value,
+                      )
+                    }
+                    onKeyDown={handleKeyDown}
+                    variant="outlined"
+                    fullWidth
+                    multiline
+                    minRows={3}
+                    disabled={disabled}
+                  />
+                  <TextField
+                    label="Acotación"
+                    value={turn.stageDirection ?? ""}
+                    onChange={(event) =>
+                      onChangeTurn?.(
+                        turn.id ?? turnKey,
+                        "stageDirection",
+                        event.target.value,
+                      )
+                    }
+                    onKeyDown={handleKeyDown}
+                    variant="outlined"
+                    fullWidth
+                    multiline
+                    minRows={2}
+                    disabled={disabled}
+                  />
+                </Stack>
+              ) : (
+                <Stack spacing={0.5}>
+                  {turn.speakerName && (
+                    <Typography
+                      component="span"
+                      sx={{
+                        display: "block",
+                        fontSize: "0.85rem",
+                        fontWeight: 600,
+                        letterSpacing: "0.04em",
+                        textTransform: "uppercase",
+                        color: editorThemeConstants.mutedColor,
+                      }}
+                    >
+                      {turn.speakerName}
+                    </Typography>
+                  )}
+                  <Typography component="p" sx={{ margin: 0 }}>
+                    {turn.utterance}
+                  </Typography>
+                  {turn.stageDirection && (
+                    <Typography
+                      component="span"
+                      sx={{
+                        fontStyle: "italic",
+                        color: editorThemeConstants.mutedColor,
+                      }}
+                    >
+                      {turn.stageDirection}
+                    </Typography>
+                  )}
+                </Stack>
+              )}
+
+              {isEditing && onRemoveTurn && turns.length > 0 && (
+                <IconButton
+                  size="small"
+                  onClick={() => onRemoveTurn(turn.id ?? turnKey)}
+                  aria-label="Eliminar parlamento"
                   sx={{
-                    display: "block",
-                    fontSize: "0.85rem",
-                    fontWeight: 600,
-                    letterSpacing: "0.04em",
-                    textTransform: "uppercase",
-                    color: editorThemeConstants.mutedColor,
+                    position: "absolute",
+                    top: 8,
+                    right: 8,
+                    opacity: 0.6,
+                    transition: "opacity 140ms ease",
+                    "&:hover": {
+                      opacity: 1,
+                    },
                   }}
+                  disabled={disabled}
                 >
-                  {turn.speakerName}
-                </Typography>
-              )
-            )}
-
-            {isEditing ? (
-              <EditableField
-                value={turn.utterance ?? ""}
-                onChange={(value) => onChangeTurn?.(index, "utterance", value)}
-                placeholder="Contenido del parlamento"
-                variant="utterance"
-              />
-            ) : (
-              <Typography component="p" sx={{ margin: 0 }}>
-                {turn.utterance}
-              </Typography>
-            )}
-
-            {isEditing ? (
-              <EditableField
-                value={turn.stageDirection ?? ""}
-                onChange={(value) =>
-                  onChangeTurn?.(index, "stageDirection", value)
-                }
-                placeholder="Acotación opcional"
-                variant="stage"
-              />
-            ) : (
-              turn.stageDirection && (
-                <Typography
-                  component="span"
-                  sx={{
-                    fontStyle: "italic",
-                    color: editorThemeConstants.mutedColor,
-                  }}
-                >
-                  {turn.stageDirection}
-                </Typography>
-              )
-            )}
-
-            {isEditing && onRemoveTurn && turns.length > 0 && (
-              <IconButton
-                size="small"
-                onClick={() => onRemoveTurn(index)}
-                aria-label="Eliminar parlamento"
-                sx={{
-                  position: "absolute",
-                  top: 8,
-                  right: 8,
-                  opacity: 0.6,
-                  transition: "opacity 140ms ease",
-                  "&:hover": {
-                    opacity: 1,
-                  },
-                }}
-              >
-                <DeleteOutlineRoundedIcon sx={{ fontSize: "1.1rem" }} />
-              </IconButton>
-            )}
-          </Box>
-        ))}
+                  <DeleteOutlineRoundedIcon sx={{ fontSize: "1.1rem" }} />
+                </IconButton>
+              )}
+            </Box>
+          );
+        })}
 
         {isEditing && onAddTurn && (
           <IconButton

@@ -5,43 +5,30 @@ import { useEditorChapterNavigation } from "./hooks/useEditorChapterNavigation";
 import { useSidebarHover } from "./hooks/useSidebarHover";
 import { EditorShell } from "./EditorShell";
 import { useUpdateChapterBlock } from "./hooks/useUpdateChapterBlock";
+import type {
+  ChapterBlock,
+  DialogueField,
+  DialogueTurn,
+  EditingState,
+} from "./types";
 
-type ChapterBlock = components["schemas"]["ChapterBlock"];
-type DialogueTurn = components["schemas"]["DialogueTurn"];
-
-type DialogField = "speakerName" | "utterance" | "stageDirection";
-
-type EditingState =
-  | {
-      blockId: string;
-      blockType: "paragraph";
-      paragraph: {
-        draftText: string;
-        onChangeDraft: (value: string) => void;
-      };
-      onCancel: () => void;
-      onSave: () => void;
-      isSaving: boolean;
-    }
-  | {
-      blockId: string;
-      blockType: "dialogue";
-      dialogue: {
-        turns: DialogueTurn[];
-        onChangeTurn: (index: number, field: DialogField, value: string) => void;
-        onAddTurn: () => void;
-        onRemoveTurn: (index: number) => void;
-      };
-      onCancel: () => void;
-      onSave: () => void;
-      isSaving: boolean;
-    };
+function generateTurnId(): string {
+  const cryptoRef =
+    typeof globalThis !== "undefined"
+      ? (globalThis.crypto as Crypto | undefined)
+      : undefined;
+  if (cryptoRef && "randomUUID" in cryptoRef) {
+    return cryptoRef.randomUUID();
+  }
+  return `local-turn-${Math.random().toString(36).slice(2, 10)}`;
+}
 
 function cloneTurns(turns: DialogueTurn[] | undefined): DialogueTurn[] {
   if (!turns?.length) {
     return [];
   }
   return turns.map((turn) => ({
+    id: turn.id ?? generateTurnId(),
     speakerId: turn.speakerId ?? null,
     speakerName: turn.speakerName ?? "",
     utterance: turn.utterance ?? "",
@@ -57,6 +44,9 @@ function equalTurns(a: DialogueTurn[], b: DialogueTurn[]): boolean {
   for (let index = 0; index < a.length; index += 1) {
     const left = a[index];
     const right = b[index];
+    if ((left.id ?? "") !== (right.id ?? "")) {
+      return false;
+    }
     if ((left.speakerName ?? "") !== (right.speakerName ?? "")) {
       return false;
     }
@@ -64,6 +54,12 @@ function equalTurns(a: DialogueTurn[], b: DialogueTurn[]): boolean {
       return false;
     }
     if ((left.stageDirection ?? "") !== (right.stageDirection ?? "")) {
+      return false;
+    }
+    if ((left.speakerId ?? "") !== (right.speakerId ?? "")) {
+      return false;
+    }
+    if ((left.tone ?? "") !== (right.tone ?? "")) {
       return false;
     }
   }
@@ -82,8 +78,9 @@ export function EditorContainer({
   onClose,
 }: EditorContainerProps) {
   const [editingBlockId, setEditingBlockId] = useState<string | null>(null);
-  const [editingBlockType, setEditingBlockType] =
-    useState<ChapterBlock["type"] | null>(null);
+  const [editingBlockType, setEditingBlockType] = useState<
+    ChapterBlock["type"] | null
+  >(null);
   const [draftText, setDraftText] = useState<string>("");
   const [draftTurns, setDraftTurns] = useState<DialogueTurn[]>([]);
 
@@ -212,42 +209,41 @@ export function EditorContainer({
       setDraftText("");
       setDraftTurns([]);
     },
-    [
-      blockUpdatePending,
-      editingBlockId,
-      getBlockById,
-      hasPendingChanges,
-    ],
+    [blockUpdatePending, editingBlockId, getBlockById, hasPendingChanges],
   );
 
-  const handleDraftChange = useCallback((value: string) => {
-    if (editingBlockType !== "paragraph") {
-      return;
-    }
-    setDraftText(value);
-  }, [editingBlockType]);
+  const handleDraftChange = useCallback(
+    (value: string) => {
+      if (editingBlockType !== "paragraph") {
+        return;
+      }
+      setDraftText(value);
+    },
+    [editingBlockType],
+  );
 
   const handleDialogueTurnChange = useCallback(
-    (index: number, field: DialogField, value: string) => {
+    (turnId: string, field: DialogueField, value: string) => {
       if (editingBlockType !== "dialogue") {
         return;
       }
       setDraftTurns((prev) => {
-        if (index < 0 || index >= prev.length) {
-          return prev;
-        }
-        const next = [...prev];
-        const draft = { ...next[index] };
-        if (field === "speakerName") {
-          draft.speakerName = value;
-        }
-        if (field === "utterance") {
-          draft.utterance = value;
-        }
-        if (field === "stageDirection") {
-          draft.stageDirection = value ? value : null;
-        }
-        next[index] = draft;
+        const next = prev.map((turn) => {
+          if (turn.id !== turnId) {
+            return turn;
+          }
+          const draft = { ...turn };
+          if (field === "speakerName") {
+            draft.speakerName = value;
+          }
+          if (field === "utterance") {
+            draft.utterance = value;
+          }
+          if (field === "stageDirection") {
+            draft.stageDirection = value ? value : null;
+          }
+          return draft;
+        });
         return next;
       });
     },
@@ -261,6 +257,7 @@ export function EditorContainer({
     setDraftTurns((prev) => [
       ...prev,
       {
+        id: generateTurnId(),
         speakerId: null,
         speakerName: "",
         utterance: "",
@@ -271,17 +268,12 @@ export function EditorContainer({
   }, [editingBlockType]);
 
   const handleRemoveDialogueTurn = useCallback(
-    (index: number) => {
+    (turnId: string) => {
       if (editingBlockType !== "dialogue") {
         return;
       }
       setDraftTurns((prev) => {
-        if (index < 0 || index >= prev.length) {
-          return prev;
-        }
-        const next = [...prev];
-        next.splice(index, 1);
-        return next;
+        return prev.filter((turn) => turn.id !== turnId);
       });
     },
     [editingBlockType],
@@ -293,9 +285,7 @@ export function EditorContainer({
     }
 
     if (hasPendingChanges()) {
-      const confirmCancel = window.confirm(
-        "¿Deseas descartar los cambios?",
-      );
+      const confirmCancel = window.confirm("¿Deseas descartar los cambios?");
       if (!confirmCancel) {
         return;
       }
@@ -308,7 +298,12 @@ export function EditorContainer({
   }, [editingBlockId, editingBlockType, hasPendingChanges]);
 
   const handleSaveEdit = useCallback(async () => {
-    if (!editingBlockId || !chapter || blockUpdatePending || !editingBlockType) {
+    if (
+      !editingBlockId ||
+      !chapter ||
+      blockUpdatePending ||
+      !editingBlockType
+    ) {
       return;
     }
 

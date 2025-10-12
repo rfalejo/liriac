@@ -68,9 +68,7 @@ export function ParagraphBlock({
     onDraftChange(editorRef.current.textContent ?? "");
   };
 
-  const handleKeyDown: React.KeyboardEventHandler<HTMLDivElement> = (
-    event,
-  ) => {
+  const handleKeyDown: React.KeyboardEventHandler<HTMLDivElement> = (event) => {
     if (!isEditing) {
       return;
     }
@@ -99,7 +97,7 @@ export function ParagraphBlock({
         aria-label="Guardar cambios"
         sx={{
           backgroundColor: "rgba(76, 175, 80, 0.16)",
-          '&:hover': {
+          "&:hover": {
             backgroundColor: "rgba(76, 175, 80, 0.25)",
           },
         }}
@@ -120,7 +118,7 @@ export function ParagraphBlock({
         aria-label="Cancelar edición"
         sx={{
           backgroundColor: "rgba(244, 67, 54, 0.16)",
-          '&:hover': {
+          "&:hover": {
             backgroundColor: "rgba(244, 67, 54, 0.25)",
           },
         }}

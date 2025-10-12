@@ -116,11 +116,7 @@ export function MetadataBlock({ block, onEdit }: MetadataBlockProps) {
   }
 
   return (
-    <EditorBlockFrame
-      blockId={block.id}
-      blockType={block.type}
-      onEdit={onEdit}
-    >
+    <EditorBlockFrame blockId={block.id} blockType={block.type} onEdit={onEdit}>
       <Typography variant="body2" color={editorThemeConstants.mutedColor}>
         (Bloque de metadatos sin representación especializada)
       </Typography>

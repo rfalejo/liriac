@@ -85,9 +85,9 @@ export function LibraryDataContextProvider({
       selectedBook,
       selectedBookId,
       selectBook,
-  editorState,
-  openEditor,
-  closeEditor,
+      editorState,
+      openEditor,
+      closeEditor,
     ],
   );
 
