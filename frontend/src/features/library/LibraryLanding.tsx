@@ -1,30 +1,12 @@
-import {
-  Box,
-  Button,
-  CircularProgress,
-  Container,
-  Divider,
-  List,
-  ListItem,
-  ListItemButton,
-  ListItemText,
-  Paper,
-  Stack,
-  Typography,
-} from "@mui/material";
+import { Box, Button, Container, Stack, Typography } from "@mui/material";
 import { useCallback, useEffect, useMemo, useState } from "react";
-import type { ContextItem } from "../../api/library";
 import { useLibraryBooks } from "./useLibraryBooks";
 import { useLibrarySections } from "./useLibrarySections";
 import { PreviewContainer } from "../preview/PreviewContainer";
-
-function getItemPrimaryText(item: ContextItem) {
-  return item.title ?? item.name ?? "Untitled";
-}
-
-function getItemSecondaryText(item: ContextItem) {
-  return item.summary ?? item.description ?? item.facts ?? undefined;
-}
+import { LibraryBooksPanel } from "./LibraryBooksPanel";
+import { LibraryChaptersPanel } from "./LibraryChaptersPanel";
+import { LibraryContextPanel } from "./LibraryContextPanel";
+import { useLibraryPreview } from "./useLibraryPreview";
 
 export function LibraryLanding() {
   const {
@@ -40,10 +22,7 @@ export function LibraryLanding() {
     reload: reloadBooks,
   } = useLibraryBooks();
   const [selectedBookId, setSelectedBookId] = useState<string | null>(null);
-  const [previewState, setPreviewState] = useState<{
-    open: boolean;
-    chapterId: string | null;
-  }>({ open: false, chapterId: null });
+  const { previewState, openPreview, closePreview } = useLibraryPreview();
 
   useEffect(() => {
     if (books.length === 0) {
@@ -69,14 +48,6 @@ export function LibraryLanding() {
     reloadSections();
   }, [reloadBooks, reloadSections]);
 
-  const handleOpenPreview = useCallback((chapterId: string) => {
-    setPreviewState({ open: true, chapterId });
-  }, []);
-
-  const handleClosePreview = useCallback(() => {
-    setPreviewState((current) => ({ ...current, open: false }));
-  }, []);
-
   return (
     <Box
       component="main"
@@ -93,14 +64,14 @@ export function LibraryLanding() {
             justifyContent="space-between"
             alignItems="center"
           >
-            <Typography variant="h6">Library</Typography>
+            <Typography variant="h6">Biblioteca</Typography>
             <Button
               variant="outlined"
               size="small"
               onClick={handleRefresh}
               disabled={booksLoading || sectionsLoading}
             >
-              Refresh
+              Actualizar
             </Button>
           </Stack>
 
@@ -109,283 +80,36 @@ export function LibraryLanding() {
             spacing={3}
             alignItems="stretch"
           >
-            <Paper
-              elevation={0}
-              variant="outlined"
-              sx={{ flexBasis: { md: "32%" }, flexGrow: 1, p: 3 }}
-            >
-              <Typography
-                variant="subtitle2"
-                color="text.secondary"
-                gutterBottom
-              >
-                Books
-              </Typography>
-              {booksLoading && (
-                <Stack
-                  spacing={2}
-                  alignItems="center"
-                  justifyContent="center"
-                  sx={{ py: 4 }}
-                >
-                  <CircularProgress size={20} />
-                  <Typography variant="body2" color="text.secondary">
-                    Loading books
-                  </Typography>
-                </Stack>
-              )}
-              {!booksLoading && booksError && (
-                <Stack
-                  spacing={2}
-                  alignItems="center"
-                  textAlign="center"
-                  sx={{ py: 4 }}
-                >
-                  <Typography variant="body2">Unable to load books.</Typography>
-                  <Button
-                    variant="contained"
-                    size="small"
-                    onClick={reloadBooks}
-                  >
-                    Retry
-                  </Button>
-                </Stack>
-              )}
-              {!booksLoading && !booksError && books.length === 0 && (
-                <Stack spacing={1} sx={{ py: 4 }}>
-                  <Typography variant="body2" color="text.secondary">
-                    No books available yet.
-                  </Typography>
-                </Stack>
-              )}
-              {!booksLoading && !booksError && books.length > 0 && (
-                <List disablePadding>
-                  {books.map((book) => (
-                    <ListItemButton
-                      key={book.id}
-                      selected={book.id === selectedBookId}
-                      onClick={() => setSelectedBookId(book.id)}
-                      sx={{
-                        borderRadius: 2,
-                        mb: 1,
-                        alignItems: "flex-start",
-                        "&.Mui-selected": {
-                          backgroundColor: "action.selected",
-                        },
-                        "&.Mui-selected:hover": {
-                          backgroundColor: "action.selected",
-                        },
-                      }}
-                    >
-                      <ListItemText
-                        primary={book.title}
-                        secondary={book.author ?? undefined}
-                        slotProps={{
-                          primary: { variant: "body2", fontWeight: 600 },
-                          secondary: {
-                            variant: "caption",
-                            color: "text.secondary",
-                          },
-                        }}
-                      />
-                    </ListItemButton>
-                  ))}
-                </List>
-              )}
-            </Paper>
+            <LibraryBooksPanel
+              books={books}
+              loading={booksLoading}
+              error={booksError}
+              selectedBookId={selectedBookId}
+              onSelectBook={setSelectedBookId}
+              onReload={reloadBooks}
+            />
 
-            <Paper
-              elevation={0}
-              variant="outlined"
-              sx={{ flexBasis: { md: "68%" }, flexGrow: 1, p: 3 }}
-            >
-              <Typography
-                variant="subtitle2"
-                color="text.secondary"
-                gutterBottom
-              >
-                Chapters
-              </Typography>
-              {booksLoading && (
-                <Stack
-                  spacing={2}
-                  alignItems="center"
-                  justifyContent="center"
-                  sx={{ py: 4 }}
-                >
-                  <CircularProgress size={20} />
-                  <Typography variant="body2" color="text.secondary">
-                    Loading chapters
-                  </Typography>
-                </Stack>
-              )}
-              {!booksLoading && booksError && (
-                <Stack
-                  spacing={2}
-                  alignItems="center"
-                  textAlign="center"
-                  sx={{ py: 4 }}
-                >
-                  <Typography variant="body2">
-                    Cannot show chapters without book data.
-                  </Typography>
-                </Stack>
-              )}
-              {!booksLoading && !booksError && !selectedBook && (
-                <Stack spacing={1} sx={{ py: 4 }}>
-                  <Typography variant="body2" color="text.secondary">
-                    Select a book to preview its chapters.
-                  </Typography>
-                </Stack>
-              )}
-              {!booksLoading && !booksError && selectedBook && (
-                <Stack spacing={1}>
-                  <Typography variant="body1" fontWeight={600}>
-                    {selectedBook.title}
-                  </Typography>
-                  {selectedBook.synopsis && (
-                    <Typography variant="body2" color="text.secondary">
-                      {selectedBook.synopsis}
-                    </Typography>
-                  )}
-                  <Divider sx={{ my: 2 }} />
-                  {selectedBook.chapters.length === 0 && (
-                    <Typography variant="body2" color="text.secondary">
-                      This book does not have chapters yet.
-                    </Typography>
-                  )}
-                  {selectedBook.chapters.length > 0 && (
-                    <List disablePadding>
-                      {selectedBook.chapters.map((chapter) => (
-                        <ListItemButton
-                          key={chapter.id}
-                          onClick={() => handleOpenPreview(chapter.id)}
-                          sx={{
-                            flexDirection: "column",
-                            alignItems: "flex-start",
-                            gap: 0.5,
-                            px: 2,
-                            py: 1.5,
-                            borderRadius: 2,
-                            mb: 1,
-                            textAlign: "left",
-                            backgroundColor: "transparent",
-                            "&:last-of-type": {
-                              mb: 0,
-                            },
-                            "&:hover": {
-                              backgroundColor: "action.hover",
-                            },
-                          }}
-                        >
-                          <ListItemText
-                            primary={chapter.title}
-                            secondary={chapter.summary ?? undefined}
-                            slotProps={{
-                              primary: { variant: "body2", fontWeight: 500 },
-                              secondary: {
-                                variant: "caption",
-                                color: "text.secondary",
-                              },
-                            }}
-                          />
-                        </ListItemButton>
-                      ))}
-                    </List>
-                  )}
-                </Stack>
-              )}
-            </Paper>
+            <LibraryChaptersPanel
+              book={selectedBook}
+              loading={booksLoading}
+              error={booksError}
+              onOpenChapter={openPreview}
+            />
           </Stack>
 
-          <Paper elevation={0} variant="outlined" sx={{ p: 3 }}>
-            <Typography variant="subtitle2" color="text.secondary" gutterBottom>
-              Context
-            </Typography>
-            {sectionsLoading && (
-              <Stack
-                spacing={2}
-                alignItems="center"
-                justifyContent="center"
-                sx={{ py: 4 }}
-              >
-                <CircularProgress size={20} />
-                <Typography variant="body2" color="text.secondary">
-                  Loading context
-                </Typography>
-              </Stack>
-            )}
-            {!sectionsLoading && sectionsError && (
-              <Stack
-                spacing={2}
-                alignItems="center"
-                textAlign="center"
-                sx={{ py: 4 }}
-              >
-                <Typography variant="body2">
-                  Unable to reach context data.
-                </Typography>
-                <Button
-                  variant="contained"
-                  size="small"
-                  onClick={reloadSections}
-                >
-                  Retry
-                </Button>
-              </Stack>
-            )}
-            {!sectionsLoading && !sectionsError && sections.length === 0 && (
-              <Typography variant="body2" color="text.secondary">
-                No context items yet.
-              </Typography>
-            )}
-            {!sectionsLoading && !sectionsError && sections.length > 0 && (
-              <Stack spacing={3}>
-                {sections.map((section) => (
-                  <Stack key={section.id} spacing={1.5}>
-                    <Typography variant="body2" fontWeight={600}>
-                      {section.title}
-                    </Typography>
-                    <List disablePadding>
-                      {section.items.map((item) => (
-                        <ListItem
-                          key={item.id}
-                          disableGutters
-                          sx={{
-                            py: 1,
-                            borderBottom: "1px solid",
-                            borderColor: "divider",
-                            "&:last-of-type": {
-                              borderBottom: "none",
-                            },
-                          }}
-                        >
-                          <ListItemText
-                            primary={getItemPrimaryText(item)}
-                            secondary={getItemSecondaryText(item)}
-                            slotProps={{
-                              primary: { variant: "body2" },
-                              secondary: {
-                                variant: "caption",
-                                color: "text.secondary",
-                              },
-                            }}
-                          />
-                        </ListItem>
-                      ))}
-                    </List>
-                  </Stack>
-                ))}
-              </Stack>
-            )}
-          </Paper>
+          <LibraryContextPanel
+            sections={sections}
+            loading={sectionsLoading}
+            error={sectionsError}
+            onReload={reloadSections}
+          />
         </Stack>
       </Container>
       {previewState.chapterId && (
         <PreviewContainer
           open={previewState.open}
           chapterId={previewState.chapterId}
-          onClose={handleClosePreview}
+          onClose={closePreview}
         />
       )}
     </Box>
