@@ -1,24 +1,16 @@
-import { useCallback, useEffect, useMemo, useState } from "react";
-import type { ChapterBlockUpdatePayload } from "../../../api/chapters";
+import { useCallback } from "react";
 import type { ChapterBlock } from "../types";
+import {
+  createBlockEditingState,
+  type BlockEditingParams,
+  type BlockEditingSideEffects,
+} from "./editing/createBlockEditingState";
 
-export type ParagraphEditingSideEffects = {
-  notifyUpdateFailure: (error: unknown) => void;
-};
+export type ParagraphEditingSideEffects = BlockEditingSideEffects;
 
 type ParagraphBlock = ChapterBlock & { type: "paragraph" };
 
-type UseParagraphEditingStateParams = {
-  block: ParagraphBlock | null;
-  isActive: boolean;
-  isSaving: boolean;
-  updateBlock: (args: {
-    blockId: string;
-    payload: ChapterBlockUpdatePayload;
-  }) => Promise<unknown>;
-  onComplete: () => void;
-  sideEffects: ParagraphEditingSideEffects;
-};
+type UseParagraphEditingStateParams = BlockEditingParams<ParagraphBlock>;
 
 type ParagraphEditingHandlers = {
   draftText: string;
@@ -27,89 +19,34 @@ type ParagraphEditingHandlers = {
   save: () => Promise<boolean>;
 };
 
-export function useParagraphEditingState({
-  block,
-  isActive,
-  isSaving,
-  updateBlock,
-  onComplete,
-  sideEffects,
-}: UseParagraphEditingStateParams): ParagraphEditingHandlers {
-  const [draftText, setDraftText] = useState<string>("");
-  const [syncedBlockId, setSyncedBlockId] = useState<string | null>(null);
+const useParagraphBlockEditingState = createBlockEditingState<
+  ParagraphBlock,
+  string
+>({
+  deriveDraft: (block) => block?.text ?? "",
+  hasChanges: ({ block, draft }) => draft !== (block.text ?? ""),
+  buildPayload: (draft) => ({ text: draft }),
+});
 
-  useEffect(() => {
-    if (isActive && block) {
-      setDraftText(block.text ?? "");
-      setSyncedBlockId(block.id);
-    }
-  }, [block?.id, isActive]);
-
-  useEffect(() => {
-    if (!isActive) {
-      setDraftText("");
-      setSyncedBlockId(null);
-    }
-  }, [isActive]);
-
-  const effectiveDraftText = useMemo(() => {
-    if (isActive && block && block.id !== syncedBlockId) {
-      return block.text ?? "";
-    }
-    return draftText;
-  }, [block, draftText, isActive, syncedBlockId]);
-
-  const hasPendingChanges = useMemo(() => {
-    if (!isActive || !block) {
-      return false;
-    }
-    return effectiveDraftText !== (block.text ?? "");
-  }, [block, effectiveDraftText, isActive]);
+export function useParagraphEditingState(
+  params: UseParagraphEditingStateParams,
+): ParagraphEditingHandlers {
+  const { draft, setDraft, hasPendingChanges, save } =
+    useParagraphBlockEditingState(params);
+  const { isActive } = params;
 
   const onChangeDraft = useCallback(
     (value: string) => {
       if (!isActive) {
         return;
       }
-      setDraftText(value);
+      setDraft(value);
     },
-    [isActive],
+    [isActive, setDraft],
   );
 
-  const save = useCallback(async () => {
-    if (!isActive || !block || isSaving) {
-      return false;
-    }
-
-    if (!hasPendingChanges) {
-      onComplete();
-      return true;
-    }
-
-    try {
-      await updateBlock({
-        blockId: block.id,
-        payload: { text: effectiveDraftText },
-      });
-      onComplete();
-      return true;
-    } catch (error) {
-      sideEffects.notifyUpdateFailure(error);
-      return false;
-    }
-  }, [
-    block,
-    effectiveDraftText,
-    hasPendingChanges,
-    isActive,
-    isSaving,
-    onComplete,
-    sideEffects,
-    updateBlock,
-  ]);
-
   return {
-    draftText: effectiveDraftText,
+    draftText: draft,
     hasPendingChanges,
     onChangeDraft,
     save,

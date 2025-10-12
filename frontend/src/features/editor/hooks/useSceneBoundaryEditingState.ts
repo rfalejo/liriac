@@ -1,28 +1,20 @@
-import { useCallback, useEffect, useMemo, useState } from "react";
-import type { ChapterBlockUpdatePayload } from "../../../api/chapters";
+import { useCallback } from "react";
 import type {
   ChapterBlock,
   SceneBoundaryDraft,
   SceneBoundaryEditableField,
 } from "../types";
+import {
+  createBlockEditingState,
+  type BlockEditingParams,
+  type BlockEditingSideEffects,
+} from "./editing/createBlockEditingState";
 
-export type SceneBoundaryEditingSideEffects = {
-  notifyUpdateFailure: (error: unknown) => void;
-};
+export type SceneBoundaryEditingSideEffects = BlockEditingSideEffects;
 
 type SceneBoundaryBlock = ChapterBlock & { type: "scene_boundary" };
 
-type UseSceneBoundaryEditingStateParams = {
-  block: SceneBoundaryBlock | null;
-  isActive: boolean;
-  isSaving: boolean;
-  updateBlock: (args: {
-    blockId: string;
-    payload: ChapterBlockUpdatePayload;
-  }) => Promise<unknown>;
-  onComplete: () => void;
-  sideEffects: SceneBoundaryEditingSideEffects;
-};
+type UseSceneBoundaryEditingStateParams = BlockEditingParams<SceneBoundaryBlock>;
 
 type SceneBoundaryEditingHandlers = {
   draft: SceneBoundaryDraft;
@@ -31,67 +23,34 @@ type SceneBoundaryEditingHandlers = {
   save: () => Promise<boolean>;
 };
 
-const EMPTY_DRAFT: SceneBoundaryDraft = {
-  label: "",
-  summary: "",
-};
-
-function toDraft(block: SceneBoundaryBlock | null): SceneBoundaryDraft {
-  if (!block) {
-    return EMPTY_DRAFT;
-  }
-  return {
-    label: block.label ?? "",
-    summary: block.summary ?? "",
-  };
-}
-
 function toNullable(value: string): string | null {
   const trimmed = value.trim();
   return trimmed.length > 0 ? trimmed : null;
 }
 
-export function useSceneBoundaryEditingState({
-  block,
-  isActive,
-  isSaving,
-  updateBlock,
-  onComplete,
-  sideEffects,
-}: UseSceneBoundaryEditingStateParams): SceneBoundaryEditingHandlers {
-  const [draft, setDraft] = useState<SceneBoundaryDraft>(EMPTY_DRAFT);
-  const [syncedBlockId, setSyncedBlockId] = useState<string | null>(null);
+const useSceneBoundaryBlockEditingState = createBlockEditingState<
+  SceneBoundaryBlock,
+  SceneBoundaryDraft
+>({
+  deriveDraft: (block) => ({
+    label: block?.label ?? "",
+    summary: block?.summary ?? "",
+  }),
+  hasChanges: ({ block, draft }) =>
+    (draft.label ?? "") !== (block.label ?? "") ||
+    (draft.summary ?? "") !== (block.summary ?? ""),
+  buildPayload: (draft) => ({
+    label: toNullable(draft.label),
+    summary: toNullable(draft.summary),
+  }),
+});
 
-  useEffect(() => {
-    if (isActive && block) {
-      setDraft(toDraft(block));
-      setSyncedBlockId(block.id);
-    }
-  }, [block?.id, isActive]);
-
-  useEffect(() => {
-    if (!isActive) {
-      setDraft(EMPTY_DRAFT);
-      setSyncedBlockId(null);
-    }
-  }, [isActive]);
-
-  const effectiveDraft = useMemo(() => {
-    if (isActive && block && block.id !== syncedBlockId) {
-      return toDraft(block);
-    }
-    return draft;
-  }, [block, draft, isActive, syncedBlockId]);
-
-  const hasPendingChanges = useMemo(() => {
-    if (!isActive || !block) {
-      return false;
-    }
-    return (
-      (effectiveDraft.label ?? "") !== (block.label ?? "") ||
-      (effectiveDraft.summary ?? "") !== (block.summary ?? "")
-    );
-  }, [block, effectiveDraft, isActive]);
+export function useSceneBoundaryEditingState(
+  params: UseSceneBoundaryEditingStateParams,
+): SceneBoundaryEditingHandlers {
+  const { draft, setDraft, hasPendingChanges, save } =
+    useSceneBoundaryBlockEditingState(params);
+  const { isActive } = params;
 
   const onChangeField = useCallback(
     (field: SceneBoundaryEditableField, value: string) => {
@@ -103,47 +62,11 @@ export function useSceneBoundaryEditingState({
         [field]: value,
       }));
     },
-    [isActive],
+    [isActive, setDraft],
   );
 
-  const save = useCallback(async () => {
-    if (!isActive || !block || isSaving) {
-      return false;
-    }
-
-    if (!hasPendingChanges) {
-      onComplete();
-      return true;
-    }
-
-    try {
-      await updateBlock({
-        blockId: block.id,
-        payload: {
-          label: toNullable(effectiveDraft.label),
-          summary: toNullable(effectiveDraft.summary),
-        },
-      });
-      onComplete();
-      return true;
-    } catch (error) {
-      sideEffects.notifyUpdateFailure(error);
-      return false;
-    }
-  }, [
-    block,
-    effectiveDraft.label,
-    effectiveDraft.summary,
-    hasPendingChanges,
-    isActive,
-    isSaving,
-    onComplete,
-    sideEffects,
-    updateBlock,
-  ]);
-
   return {
-    draft: effectiveDraft,
+    draft,
     hasPendingChanges,
     onChangeField,
     save,

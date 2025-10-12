@@ -6,6 +6,7 @@ import { useSidebarHover } from "./hooks/useSidebarHover";
 import { EditorShell } from "./EditorShell";
 import { useUpdateChapterBlock } from "./hooks/useUpdateChapterBlock";
 import { useEditorEditingState } from "./hooks/useEditorEditingState";
+import { showBlockUpdateErrorToast } from "./utils/showBlockUpdateErrorToast";
 import type { EditingDiscardContext } from "./hooks/editing/types";
 
 type EditorContainerProps = {
@@ -53,8 +54,8 @@ export function EditorContainer({
     [],
   );
 
-  const notifyUpdateFailure = useCallback(() => {
-    window.alert("No se pudieron guardar los cambios. Intenta de nuevo.");
+  const notifyUpdateFailure = useCallback((error: unknown) => {
+    showBlockUpdateErrorToast(error);
   }, []);
 
   const { editingState, handleEditBlock } = useEditorEditingState({
