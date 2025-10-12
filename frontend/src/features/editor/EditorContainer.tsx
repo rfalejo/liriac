@@ -5,10 +5,8 @@ import { useEditorChapterNavigation } from "./hooks/useEditorChapterNavigation";
 import { useSidebarHover } from "./hooks/useSidebarHover";
 import { EditorShell } from "./EditorShell";
 import { useUpdateChapterBlock } from "./hooks/useUpdateChapterBlock";
-import {
-  type EditingDiscardContext,
-  useEditorEditingState,
-} from "./hooks/useEditorEditingState";
+import { useEditorEditingState } from "./hooks/useEditorEditingState";
+import type { EditingDiscardContext } from "./hooks/editing/types";
 
 type EditorContainerProps = {
   chapterId: string;
