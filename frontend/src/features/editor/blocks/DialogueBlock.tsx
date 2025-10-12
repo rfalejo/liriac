@@ -1,13 +1,5 @@
-import {
-  Box,
-  CircularProgress,
-  IconButton,
-  Stack,
-  Typography,
-} from "@mui/material";
+import { Box, IconButton, Stack, Typography } from "@mui/material";
 import type { KeyboardEvent } from "react";
-import CheckRoundedIcon from "@mui/icons-material/CheckRounded";
-import CloseRoundedIcon from "@mui/icons-material/CloseRounded";
 import AddCircleOutlineRoundedIcon from "@mui/icons-material/AddCircleOutlineRounded";
 import DeleteOutlineRoundedIcon from "@mui/icons-material/DeleteOutlineRounded";
 import {
@@ -18,6 +10,7 @@ import {
 import { EditorBlockFrame } from "./EditorBlockFrame";
 import type { ChapterBlock, DialogueField, DialogueTurn } from "../types";
 import { EditableDialogueTurn } from "./components/EditableDialogueTurn";
+import { BlockEditControls } from "./components/BlockEditControls";
 
 type DialogueBlockProps = {
   block: ChapterBlock;
@@ -64,36 +57,11 @@ export function DialogueBlock({
   };
 
   const controls = isEditing ? (
-    <Stack direction="row" spacing={0.5} alignItems="center">
-      <IconButton
-        size="small"
-        color="success"
-        onClick={() => {
-          void onSaveEdit?.();
-        }}
-        disabled={disabled}
-        aria-label="Guardar cambios"
-        sx={editorBlockTheme.controls.confirmButton}
-      >
-        {disabled ? (
-          <CircularProgress size={16} thickness={5} color="inherit" />
-        ) : (
-          <CheckRoundedIcon sx={{ fontSize: "1.1rem" }} />
-        )}
-      </IconButton>
-      <IconButton
-        size="small"
-        color="error"
-        onClick={() => {
-          onCancelEdit?.();
-        }}
-        disabled={disabled}
-        aria-label="Cancelar edición"
-        sx={editorBlockTheme.controls.cancelButton}
-      >
-        <CloseRoundedIcon sx={{ fontSize: "1.1rem" }} />
-      </IconButton>
-    </Stack>
+    <BlockEditControls
+      onConfirm={onSaveEdit}
+      onCancel={onCancelEdit}
+      disabled={disabled}
+    />
   ) : undefined;
 
   return (

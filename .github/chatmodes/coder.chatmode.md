@@ -147,6 +147,7 @@ frontend/
 |   |   |-- editor/
 |   |   |   |-- blocks/
 |   |   |   |   |-- components/
+|   |   |   |   |   |-- BlockEditControls.tsx
 |   |   |   |   |   |-- DialogueEditableField.tsx
 |   |   |   |   |   \-- EditableDialogueTurn.tsx
 |   |   |   |   |-- BlockInsertMenu.tsx
@@ -155,6 +156,7 @@ frontend/
 |   |   |   |   |-- MetadataBlock.tsx
 |   |   |   |   |-- ParagraphBlock.tsx
 |   |   |   |   |-- SceneBoundaryBlock.tsx
+|   |   |   |   |-- blockRegistry.tsx
 |   |   |   |   \-- index.ts
 |   |   |   |-- hooks/
 |   |   |   |   |-- useEditorChapterNavigation.ts

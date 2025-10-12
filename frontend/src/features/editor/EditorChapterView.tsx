@@ -1,20 +1,8 @@
 import { Fragment, useMemo } from "react";
 import type { ReactNode } from "react";
-import {
-  Box,
-  Button,
-  CircularProgress,
-  Stack,
-  Typography,
-} from "@mui/material";
+import { Button, CircularProgress, Stack, Typography } from "@mui/material";
 import type { ChapterDetail } from "../../api/chapters";
 import type { components } from "../../api/schema";
-import {
-  DialogueBlock,
-  MetadataBlock,
-  ParagraphBlock,
-  SceneBoundaryBlock,
-} from "./blocks";
 import {
   editorBodyTypographySx,
   editorFontFamily,
@@ -25,9 +13,12 @@ import {
   BlockInsertMenu,
   type BlockInsertPosition,
 } from "./blocks/BlockInsertMenu";
-import type { ChapterBlock, EditingState } from "./types";
+import type { EditingState } from "./types";
+import { renderEditorBlock } from "./blocks/blockRegistry";
 
 type ChapterBlockType = components["schemas"]["ChapterBlockTypeEnum"];
+
+type BlockEntry = { id: string; node: ReactNode };
 
 type EditorChapterViewProps = {
   loading: boolean;
@@ -42,24 +33,6 @@ type EditorChapterViewProps = {
   editingState?: EditingState;
 };
 
-function renderFallbackBlock(block: ChapterBlock) {
-  return (
-    <Box
-      key={block.id}
-      sx={{
-        ...editorBodyTypographySx,
-        border: "1px dashed rgba(27, 27, 27, 0.25)",
-        borderRadius: 1,
-        p: { xs: 2, sm: 3 },
-        fontStyle: "italic",
-        color: editorThemeConstants.mutedColor,
-      }}
-    >
-      Bloque "{block.type}" pendiente de diseño.
-    </Box>
-  );
-}
-
 export function EditorChapterView({
   loading,
   error,
@@ -69,104 +42,25 @@ export function EditorChapterView({
   onInsertBlock,
   editingState,
 }: EditorChapterViewProps) {
-  const paragraphEditing =
-    editingState?.blockType === "paragraph" ? editingState : undefined;
-  const dialogueEditing =
-    editingState?.blockType === "dialogue" ? editingState : undefined;
-
   const blockSequence = useMemo(() => {
     if (!chapter) {
-      return [] as Array<{ id: string; node: ReactNode }>;
+      return [] as BlockEntry[];
     }
 
-    const entries: Array<{ id: string; node: ReactNode }> = [];
+    return chapter.blocks.reduce<BlockEntry[]>((entries, block) => {
+      const rendered = renderEditorBlock({
+        block,
+        editingState,
+        onEditBlock,
+      });
 
-    chapter.blocks.forEach((block) => {
-      if (block.type === "paragraph") {
-        const isEditing = paragraphEditing?.blockId === block.id;
-        const paragraphDraft = paragraphEditing?.paragraph;
-        entries.push({
-          id: block.id,
-          node: (
-            <ParagraphBlock
-              block={block}
-              onEdit={onEditBlock}
-              isEditing={isEditing}
-              draftText={isEditing ? (paragraphDraft?.draftText ?? "") : ""}
-              onDraftChange={
-                isEditing ? paragraphDraft?.onChangeDraft : undefined
-              }
-              onCancelEdit={isEditing ? paragraphEditing?.onCancel : undefined}
-              onSaveEdit={isEditing ? paragraphEditing?.onSave : undefined}
-              disabled={editingState?.isSaving ?? false}
-            />
-          ),
-        });
-        return;
+      if (rendered) {
+        entries.push({ id: block.id, node: rendered });
       }
 
-      if (block.type === "dialogue") {
-        const isEditing = dialogueEditing?.blockId === block.id;
-        const dialogueDraft = dialogueEditing?.dialogue;
-        entries.push({
-          id: block.id,
-          node: (
-            <DialogueBlock
-              block={block}
-              onEdit={onEditBlock}
-              isEditing={isEditing}
-              draftTurns={
-                isEditing ? (dialogueDraft?.turns ?? []) : (block.turns ?? [])
-              }
-              onChangeTurn={isEditing ? dialogueDraft?.onChangeTurn : undefined}
-              onAddTurn={isEditing ? dialogueDraft?.onAddTurn : undefined}
-              onRemoveTurn={isEditing ? dialogueDraft?.onRemoveTurn : undefined}
-              onCancelEdit={isEditing ? dialogueEditing?.onCancel : undefined}
-              onSaveEdit={isEditing ? dialogueEditing?.onSave : undefined}
-              disabled={editingState?.isSaving ?? false}
-            />
-          ),
-        });
-        return;
-      }
-
-      if (block.type === "scene_boundary") {
-        entries.push({
-          id: block.id,
-          node: <SceneBoundaryBlock block={block} onEdit={onEditBlock} />,
-        });
-        return;
-      }
-
-      if (block.type === "metadata") {
-        const node = <MetadataBlock block={block} onEdit={onEditBlock} />;
-        if (node) {
-          entries.push({ id: block.id, node });
-        }
-        return;
-      }
-
-      entries.push({ id: block.id, node: renderFallbackBlock(block) });
-    });
-
-    return entries;
-  }, [
-    chapter,
-    onEditBlock,
-    editingState?.isSaving,
-    paragraphEditing?.blockId,
-    paragraphEditing?.paragraph?.draftText,
-    paragraphEditing?.paragraph?.onChangeDraft,
-    paragraphEditing?.onCancel,
-    paragraphEditing?.onSave,
-    dialogueEditing?.blockId,
-    dialogueEditing?.dialogue?.turns,
-    dialogueEditing?.dialogue?.onChangeTurn,
-    dialogueEditing?.dialogue?.onAddTurn,
-    dialogueEditing?.dialogue?.onRemoveTurn,
-    dialogueEditing?.onCancel,
-    dialogueEditing?.onSave,
-  ]);
+      return entries;
+    }, []);
+  }, [chapter, editingState, onEditBlock]);
 
   if (loading) {
     return (
