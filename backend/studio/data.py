@@ -13,7 +13,6 @@ from .models import (
     join_paragraphs,
 )
 
-
 LIBRARY_SECTIONS: List[ContextSection] = [
     {
         "id": "chapters",
@@ -494,9 +493,7 @@ def build_editor_state(source: ChapterDetail) -> EditorPayload:
     }
 
 
-EDITOR_STATE: EditorPayload = build_editor_state(
-    CHAPTER_DETAILS[DEFAULT_EDITOR_CHAPTER_ID]
-)
+EDITOR_STATE: EditorPayload = build_editor_state(CHAPTER_DETAILS[DEFAULT_EDITOR_CHAPTER_ID])
 
 
 def get_chapter_detail(chapter_id: str) -> Optional[ChapterDetail]:
@@ -579,4 +576,3 @@ def update_chapter_block(
     updated_detail = rebuild_chapter_detail(chapter_id)
     refresh_editor_state(chapter_id, updated_detail)
     return updated_detail
-

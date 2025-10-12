@@ -1,11 +1,10 @@
 from __future__ import annotations
 
+from django.http import Http404
+from drf_spectacular.utils import extend_schema
 from rest_framework.exceptions import ValidationError
 from rest_framework.response import Response
 from rest_framework.views import APIView
-from drf_spectacular.utils import extend_schema
-
-from django.http import Http404
 
 from .data import (
     EDITOR_STATE,
@@ -15,11 +14,11 @@ from .data import (
     update_chapter_block,
 )
 from .serializers import (
+    ChapterBlockUpdateSerializer,
     ChapterDetailSerializer,
     EditorStateSerializer,
     LibraryBooksResponseSerializer,
     LibraryResponseSerializer,
-    ChapterBlockUpdateSerializer,
 )
 
 
@@ -78,9 +77,7 @@ class ChapterBlockUpdateView(APIView):
             raise Http404("Chapter not found")
 
         try:
-            existing_block = next(
-                block for block in chapter["blocks"] if block["id"] == block_id
-            )
+            existing_block = next(block for block in chapter["blocks"] if block["id"] == block_id)
         except StopIteration as exc:
             raise Http404("Block not found") from exc
 
@@ -92,9 +89,7 @@ class ChapterBlockUpdateView(APIView):
             raise ValidationError("No se enviaron cambios para actualizar.")
 
         if "id" in payload and payload["id"] != block_id:
-            raise ValidationError(
-                {"id": "El identificador del bloque no coincide con la ruta."}
-            )
+            raise ValidationError({"id": "El identificador del bloque no coincide con la ruta."})
 
         if "type" in payload and payload["type"] != existing_block["type"]:
             raise ValidationError(
