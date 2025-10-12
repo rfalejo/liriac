@@ -1,5 +1,4 @@
 import {
-  CircularProgress,
   Divider,
   List,
   ListItemButton,
@@ -9,6 +8,7 @@ import {
   Typography,
 } from "@mui/material";
 import type { LibraryBook } from "../../api/library";
+import { LibraryPanelStatus } from "./components/LibraryPanelStatus";
 
 type LibraryChaptersPanelProps = {
   book: LibraryBook | null;
@@ -33,36 +33,24 @@ export function LibraryChaptersPanel({
         Capítulos
       </Typography>
       {loading && (
-        <Stack
-          spacing={2}
-          alignItems="center"
-          justifyContent="center"
-          sx={{ py: 4 }}
-        >
-          <CircularProgress size={20} />
-          <Typography variant="body2" color="text.secondary">
-            Cargando capítulos
-          </Typography>
-        </Stack>
+        <LibraryPanelStatus
+          state="loading"
+          message="Cargando capítulos"
+          centered
+        />
       )}
       {!loading && error && (
-        <Stack
-          spacing={2}
-          alignItems="center"
-          textAlign="center"
-          sx={{ py: 4 }}
-        >
-          <Typography variant="body2">
-            No es posible mostrar capítulos sin datos de libros.
-          </Typography>
-        </Stack>
+        <LibraryPanelStatus
+          state="error"
+          message="No es posible mostrar capítulos sin datos de libros."
+          centered
+        />
       )}
       {!loading && !error && !book && (
-        <Stack spacing={1} sx={{ py: 4 }}>
-          <Typography variant="body2" color="text.secondary">
-            Selecciona un libro para previsualizar sus capítulos.
-          </Typography>
-        </Stack>
+        <LibraryPanelStatus
+          state="empty"
+          message="Selecciona un libro para previsualizar sus capítulos."
+        />
       )}
       {!loading && !error && book && (
         <Stack spacing={1}>

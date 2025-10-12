@@ -139,6 +139,8 @@ frontend/
 |   |   \-- schema.ts
 |   |-- features/
 |   |   |-- library/
+|   |   |   |-- components/
+|   |   |   |   \-- LibraryPanelStatus.tsx
 |   |   |   |-- LibraryBooksPanel.tsx
 |   |   |   |-- LibraryChaptersPanel.tsx
 |   |   |   |-- LibraryContextPanel.tsx
@@ -148,7 +150,8 @@ frontend/
 |   |   |   |-- useChapterDetail.ts
 |   |   |   |-- useLibraryBooks.ts
 |   |   |   |-- useLibraryPreview.ts
-|   |   |   \-- useLibrarySections.ts
+|   |   |   |-- useLibrarySections.ts
+|   |   |   \-- useLibrarySelection.ts
 |   |   \-- preview/
 |   |       |-- blocks/
 |   |       |   |-- DialogueBlock.tsx
@@ -159,6 +162,7 @@ frontend/
 |   |       |   \-- index.ts
 |   |       |-- PreviewChapterView.tsx
 |   |       |-- PreviewContainer.tsx
+|   |       |-- PreviewModal.tsx
 |   |       |-- PreviewSidebar.tsx
 |   |       |-- readingTheme.ts
 |   |       |-- usePreviewChapterNavigation.ts

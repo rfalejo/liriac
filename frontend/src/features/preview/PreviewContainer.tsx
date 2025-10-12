@@ -1,11 +1,8 @@
 import { useCallback } from "react";
-import { Box, Fade, Modal } from "@mui/material";
-import { readingTheme } from "./readingTheme";
-import { PreviewChapterView } from "./PreviewChapterView";
 import { usePreviewScrollbar } from "./usePreviewScrollbar";
 import { usePreviewChapterNavigation } from "./usePreviewChapterNavigation";
 import { useSidebarHover } from "./useSidebarHover";
-import { PreviewSidebar } from "./PreviewSidebar";
+import { PreviewModal } from "./PreviewModal";
 
 type PreviewContainerProps = {
   chapterId: string;
@@ -46,52 +43,31 @@ export function PreviewContainer({
   const selectedChapterId = chapter?.id ?? activeChapterId;
 
   return (
-    <Modal
+    <PreviewModal
       open={open}
       onClose={onClose}
-      closeAfterTransition
-      aria-labelledby="preview-container-heading"
-    >
-      <Fade in={open}>
-        <Box sx={readingTheme.shell}>
-          <PreviewSidebar
-            activeChapterId={selectedChapterId}
-            bookTitle={bookTitle}
-            chapters={chapterOptions}
-            error={booksError}
-            loading={booksLoading}
-            onClose={onClose}
-            onEnter={handleSidebarEnter}
-            onLeave={handleSidebarLeave}
-            onSelectChapter={handleSelectChapter}
-            visible={sidebarVisible}
-          />
-          <Box
-            ref={scrollAreaRef}
-            sx={readingTheme.page}
-            className={scrollbarClassName}
-            {...handlers}
-          >
-            <Box
-              sx={{
-                ...readingTheme.blockStack,
-                fontFamily: readingTheme.typography.fontFamily,
-                lineHeight: readingTheme.typography.lineHeight,
-                fontSize: readingTheme.typography.fontSize,
-                letterSpacing: readingTheme.typography.letterSpacing,
-              }}
-            >
-              <PreviewChapterView
-                loading={loading}
-                error={error}
-                chapter={chapter}
-                onRetry={reload}
-                onEditBlock={handleEditBlock}
-              />
-            </Box>
-          </Box>
-        </Box>
-      </Fade>
-    </Modal>
+      sidebarProps={{
+        activeChapterId: selectedChapterId,
+        bookTitle,
+        chapters: chapterOptions,
+        error: booksError,
+        loading: booksLoading,
+        onClose,
+        onEnter: handleSidebarEnter,
+        onLeave: handleSidebarLeave,
+        onSelectChapter: handleSelectChapter,
+        visible: sidebarVisible,
+      }}
+      chapterViewProps={{
+        loading,
+        error,
+        chapter,
+        onRetry: reload,
+        onEditBlock: handleEditBlock,
+      }}
+      scrollAreaRef={scrollAreaRef}
+      scrollHandlers={handlers}
+      scrollbarClassName={scrollbarClassName}
+    />
   );
 }

@@ -1,14 +1,12 @@
 import {
-  Button,
-  CircularProgress,
   List,
   ListItemText,
   ListItemButton,
   Paper,
-  Stack,
   Typography,
 } from "@mui/material";
 import type { LibraryBook } from "../../api/library";
+import { LibraryPanelStatus } from "./components/LibraryPanelStatus";
 
 type LibraryBooksPanelProps = {
   books: LibraryBook[];
@@ -27,6 +25,8 @@ export function LibraryBooksPanel({
   onSelectBook,
   onReload,
 }: LibraryBooksPanelProps) {
+  const showList = !loading && !error && books.length > 0;
+
   return (
     <Paper
       elevation={0}
@@ -37,41 +37,28 @@ export function LibraryBooksPanel({
         Libros
       </Typography>
       {loading && (
-        <Stack
-          spacing={2}
-          alignItems="center"
-          justifyContent="center"
-          sx={{ py: 4 }}
-        >
-          <CircularProgress size={20} />
-          <Typography variant="body2" color="text.secondary">
-            Cargando libros
-          </Typography>
-        </Stack>
+        <LibraryPanelStatus
+          state="loading"
+          message="Cargando libros"
+          centered
+        />
       )}
       {!loading && error && (
-        <Stack
-          spacing={2}
-          alignItems="center"
-          textAlign="center"
-          sx={{ py: 4 }}
-        >
-          <Typography variant="body2">
-            No se pudieron cargar los libros.
-          </Typography>
-          <Button variant="contained" size="small" onClick={onReload}>
-            Reintentar
-          </Button>
-        </Stack>
+        <LibraryPanelStatus
+          state="error"
+          message="No se pudieron cargar los libros."
+          actionLabel="Reintentar"
+          onAction={onReload}
+          centered
+        />
       )}
       {!loading && !error && books.length === 0 && (
-        <Stack spacing={1} sx={{ py: 4 }}>
-          <Typography variant="body2" color="text.secondary">
-            Aún no hay libros disponibles.
-          </Typography>
-        </Stack>
+        <LibraryPanelStatus
+          state="empty"
+          message="Aún no hay libros disponibles."
+        />
       )}
-      {!loading && !error && books.length > 0 && (
+      {showList && (
         <List disablePadding>
           {books.map((book) => (
             <ListItemButton

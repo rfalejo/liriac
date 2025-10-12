@@ -1,5 +1,4 @@
 import { Box, Button, Container, Stack, Typography } from "@mui/material";
-import { useCallback, useEffect, useMemo, useState } from "react";
 import { useLibraryBooks } from "./useLibraryBooks";
 import { useLibrarySections } from "./useLibrarySections";
 import { PreviewContainer } from "../preview/PreviewContainer";
@@ -7,6 +6,7 @@ import { LibraryBooksPanel } from "./LibraryBooksPanel";
 import { LibraryChaptersPanel } from "./LibraryChaptersPanel";
 import { LibraryContextPanel } from "./LibraryContextPanel";
 import { useLibraryPreview } from "./useLibraryPreview";
+import { useLibrarySelection } from "./useLibrarySelection";
 
 export function LibraryLanding() {
   const {
@@ -21,32 +21,14 @@ export function LibraryLanding() {
     error: booksError,
     reload: reloadBooks,
   } = useLibraryBooks();
-  const [selectedBookId, setSelectedBookId] = useState<string | null>(null);
   const { previewState, openPreview, closePreview } = useLibraryPreview();
 
-  useEffect(() => {
-    if (books.length === 0) {
-      setSelectedBookId(null);
-      return;
-    }
-
-    setSelectedBookId((current) => {
-      if (current && books.some((book) => book.id === current)) {
-        return current;
-      }
-      return books[0].id;
+  const { refreshLibrary, selectBook, selectedBook, selectedBookId } =
+    useLibrarySelection({
+      books,
+      reloadBooks,
+      reloadSections,
     });
-  }, [books]);
-
-  const selectedBook = useMemo(
-    () => books.find((book) => book.id === selectedBookId) ?? null,
-    [books, selectedBookId],
-  );
-
-  const handleRefresh = useCallback(() => {
-    reloadBooks();
-    reloadSections();
-  }, [reloadBooks, reloadSections]);
 
   return (
     <Box
@@ -68,7 +50,7 @@ export function LibraryLanding() {
             <Button
               variant="outlined"
               size="small"
-              onClick={handleRefresh}
+              onClick={refreshLibrary}
               disabled={booksLoading || sectionsLoading}
             >
               Actualizar
@@ -85,7 +67,7 @@ export function LibraryLanding() {
               loading={booksLoading}
               error={booksError}
               selectedBookId={selectedBookId}
-              onSelectBook={setSelectedBookId}
+              onSelectBook={selectBook}
               onReload={reloadBooks}
             />
 
