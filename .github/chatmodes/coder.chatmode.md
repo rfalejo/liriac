@@ -146,6 +146,9 @@ frontend/
 |   |-- features/
 |   |   |-- editor/
 |   |   |   |-- blocks/
+|   |   |   |   |-- components/
+|   |   |   |   |   |-- DialogueEditableField.tsx
+|   |   |   |   |   \-- EditableDialogueTurn.tsx
 |   |   |   |   |-- BlockInsertMenu.tsx
 |   |   |   |   |-- DialogueBlock.tsx
 |   |   |   |   |-- EditorBlockFrame.tsx
@@ -153,30 +156,34 @@ frontend/
 |   |   |   |   |-- ParagraphBlock.tsx
 |   |   |   |   |-- SceneBoundaryBlock.tsx
 |   |   |   |   \-- index.ts
+|   |   |   |-- hooks/
+|   |   |   |   |-- useEditorChapterNavigation.ts
+|   |   |   |   |-- useEditorScrollbar.ts
+|   |   |   |   |-- useSidebarHover.ts
+|   |   |   |   \-- useUpdateChapterBlock.ts
 |   |   |   |-- EditorChapterView.tsx
 |   |   |   |-- EditorContainer.tsx
 |   |   |   |-- EditorShell.tsx
 |   |   |   |-- EditorSidebar.tsx
 |   |   |   |-- editorTheme.ts
-|   |   |   |-- useEditorChapterNavigation.ts
-|   |   |   |-- useEditorScrollbar.ts
-|   |   |   \-- useSidebarHover.ts
+|   |   |   \-- types.ts
 |   |   \-- library/
 |   |       |-- components/
 |   |       |   \-- LibraryPanelStatus.tsx
+|   |       |-- hooks/
+|   |       |   |-- useChapterDetail.ts
+|   |       |   |-- useLibraryBooks.ts
+|   |       |   |-- useLibraryEditor.ts
+|   |       |   |-- useLibraryResource.ts
+|   |       |   |-- useLibrarySections.ts
+|   |       |   \-- useLibrarySelection.ts
 |   |       |-- LibraryBooksPanel.tsx
 |   |       |-- LibraryChaptersPanel.tsx
 |   |       |-- LibraryContextPanel.tsx
 |   |       |-- LibraryDataContext.tsx
 |   |       |-- LibraryDataProvider.tsx
 |   |       |-- LibraryLanding.tsx
-|   |       |-- libraryQueryKeys.ts
-|   |       |-- useChapterDetail.ts
-|   |       |-- useLibraryBooks.ts
-|   |       |-- useLibraryEditor.ts
-|   |       |-- useLibraryResource.ts
-|   |       |-- useLibrarySections.ts
-|   |       \-- useLibrarySelection.ts
+|   |       \-- libraryQueryKeys.ts
 |   |-- App.tsx
 |   |-- index.css
 |   |-- main.tsx
