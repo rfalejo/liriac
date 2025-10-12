@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from typing import Any, Dict, List, Optional, TypedDict
+from uuid import uuid4
 
 from .models import (
     ChapterBlock,
@@ -212,6 +213,7 @@ CHAPTER_01_BLOCKS: List[ChapterBlock] = [
         "context": "Iván desafía la calma de Aliosha.",
         "turns": [
             {
+                "id": "dialog-ch1-001-turn-01",
                 "speakerId": "char-ivan",
                 "speakerName": "Iván",
                 "utterance": (
@@ -222,6 +224,7 @@ CHAPTER_01_BLOCKS: List[ChapterBlock] = [
                 "tone": "narration",
             },
             {
+                "id": "dialog-ch1-001-turn-02",
                 "speakerId": "char-ivan",
                 "speakerName": "Iván",
                 "utterance": (
@@ -232,6 +235,7 @@ CHAPTER_01_BLOCKS: List[ChapterBlock] = [
                 "tone": "narration",
             },
             {
+                "id": "dialog-ch1-001-turn-03",
                 "speakerId": "char-alyosha",
                 "speakerName": "Aliosha",
                 "utterance": "—En lo de esa mujer te equivocas. Dmitri… la desprecia",
@@ -239,6 +243,7 @@ CHAPTER_01_BLOCKS: List[ChapterBlock] = [
                 "tone": "narration",
             },
             {
+                "id": "dialog-ch1-001-turn-04",
                 "speakerId": "char-ivan",
                 "speakerName": "Iván",
                 "utterance": (
@@ -248,6 +253,7 @@ CHAPTER_01_BLOCKS: List[ChapterBlock] = [
                 "tone": "narration",
             },
             {
+                "id": "dialog-ch1-001-turn-05",
                 "speakerId": "char-ivan",
                 "speakerName": "Iván",
                 "utterance": (
@@ -258,6 +264,7 @@ CHAPTER_01_BLOCKS: List[ChapterBlock] = [
                 "tone": "narration",
             },
             {
+                "id": "dialog-ch1-001-turn-06",
                 "speakerId": "char-alyosha",
                 "speakerName": "Aliosha",
                 "utterance": "—Eso yo lo comprendo",
@@ -345,16 +352,19 @@ CHAPTER_02_BLOCKS: List[ChapterBlock] = [
         "position": 30,
         "turns": [
             {
+                "id": "dialog-ch2-001-turn-01",
                 "speakerId": "char-dmitri",
                 "speakerName": "Dmitri",
                 "utterance": "—Padre Zósima, vengo a confesarte mi rabia.",
             },
             {
+                "id": "dialog-ch2-001-turn-02",
                 "speakerId": "char-ivan",
                 "speakerName": "Iván",
                 "utterance": "—Yo solo quiero escuchar lo que diga el anciano.",
             },
             {
+                "id": "dialog-ch2-001-turn-03",
                 "speakerId": "char-alyosha",
                 "speakerName": "Aliosha",
                 "utterance": "—Lo que digamos aquí nos marca para siempre",
@@ -525,6 +535,22 @@ def refresh_editor_state(
     )
 
 
+def ensure_turn_identifiers(block_id: str, turns: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
+    normalized: List[Dict[str, Any]] = []
+    seen: set[str] = set()
+    for index, turn in enumerate(turns):
+        copy = dict(turn)
+        candidate = copy.get("id")
+        if not candidate:
+            candidate = f"{block_id}-turn-{index + 1:02d}"
+        while candidate in seen:
+            candidate = f"{block_id}-turn-{uuid4().hex[:8]}"
+        copy["id"] = candidate
+        seen.add(candidate)
+        normalized.append(copy)
+    return normalized
+
+
 def update_chapter_block(
     chapter_id: str,
     block_id: str,
@@ -545,10 +571,10 @@ def update_chapter_block(
     for field, value in changes.items():
         if field == "id":
             continue
-        if value is None:
-            target_block[field] = value
-        else:
-            target_block[field] = value
+        if field == "turns" and isinstance(value, list):
+            target_block[field] = ensure_turn_identifiers(block_id, value)
+            continue
+        target_block[field] = value
 
     updated_detail = rebuild_chapter_detail(chapter_id)
     refresh_editor_state(chapter_id, updated_detail)

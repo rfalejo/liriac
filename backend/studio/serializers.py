@@ -4,6 +4,7 @@ from rest_framework import serializers
 
 
 class DialogueTurnSerializer(serializers.Serializer):
+    id = serializers.CharField()
     speakerId = serializers.CharField(required=False, allow_blank=True, allow_null=True)
     speakerName = serializers.CharField(required=False, allow_blank=True, allow_null=True)
     utterance = serializers.CharField()

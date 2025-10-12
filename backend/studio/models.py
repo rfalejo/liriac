@@ -13,6 +13,7 @@ def join_paragraphs(paragraphs: List[str]) -> str:
 
 
 class DialogueTurn(TypedDict, total=False):
+	id: str
 	speakerId: str
 	speakerName: str
 	utterance: str

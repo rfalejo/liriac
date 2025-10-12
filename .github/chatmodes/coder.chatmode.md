@@ -1,6 +1,6 @@
 ---
 description: 'liriac - AI agent quickstart'
-tools: ['runCommands', 'edit', 'search', 'web-search-prime/*', 'context7/*', 'usages', 'problems', 'changes', 'fetch', 'todos']
+tools: ['runCommands', 'edit', 'search', 'context7/*', 'todos', 'usages', 'problems', 'changes', 'fetch']
 model: GPT-5-Codex (Preview) (copilot)
 ---
 # Liriac – AI agent quickstart
@@ -98,7 +98,11 @@ feat(library): add book listing endpoint
 
 ## Tools
 When planning a big change, you can use the following tools:
-- `todos`: to create a list of tasks to be done.
+- `todos`: to create a list of tasks to be done. If your agentic flow involves code changes, you must make sure to ALWAYS include these tasks at the end of your todos list:
+  - Run linter and typechecker
+  - Run formatter
+  - Generate a conventional commit message
+- You can safely skip the previous tasks if your agentic flow does not involve code changes.
 - `context7/*`: get up-to-date information about any library or framework.
 
 

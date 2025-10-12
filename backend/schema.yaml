@@ -316,6 +316,8 @@ components:
     DialogueTurn:
       type: object
       properties:
+        id:
+          type: string
         speakerId:
           type: string
           nullable: true
@@ -331,7 +333,8 @@ components:
           type: string
           nullable: true
       required:
-      - utterance
+        - id
+        - utterance
     EditorState:
       type: object
       properties:
