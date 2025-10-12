@@ -5,7 +5,10 @@ import { useEditorChapterNavigation } from "./hooks/useEditorChapterNavigation";
 import { useSidebarHover } from "./hooks/useSidebarHover";
 import { EditorShell } from "./EditorShell";
 import { useUpdateChapterBlock } from "./hooks/useUpdateChapterBlock";
-import { useEditorEditingState } from "./hooks/useEditorEditingState";
+import {
+  type EditingDiscardContext,
+  useEditorEditingState,
+} from "./hooks/useEditorEditingState";
 
 type EditorContainerProps = {
   chapterId: string;
@@ -41,10 +44,26 @@ export function EditorContainer({
     chapterId: chapter?.id,
   });
 
+  const confirmDiscardChanges = useCallback((context: EditingDiscardContext) => {
+    const message =
+      context === "cancel"
+        ? "¿Deseas descartar los cambios?"
+        : "¿Quieres descartar los cambios pendientes?";
+    return window.confirm(message);
+  }, []);
+
+  const notifyUpdateFailure = useCallback(() => {
+    window.alert("No se pudieron guardar los cambios. Intenta de nuevo.");
+  }, []);
+
   const { editingState, handleEditBlock } = useEditorEditingState({
     chapter,
     updateBlock,
     blockUpdatePending,
+    sideEffects: {
+      confirmDiscardChanges,
+      notifyUpdateFailure,
+    },
   });
 
   const handleInsertBlock = useCallback(

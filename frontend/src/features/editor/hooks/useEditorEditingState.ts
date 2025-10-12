@@ -3,22 +3,24 @@ import type {
   ChapterBlockUpdatePayload,
   ChapterDetail,
 } from "../../../api/chapters";
-import type {
-  ChapterBlock,
-  DialogueField,
-  DialogueTurn,
-  EditingState,
-} from "../types";
-import {
-  cloneTurns,
-  createEmptyTurn,
-  equalTurns,
-} from "../utils/dialogueTurns";
+import type { ChapterBlock, EditingState } from "../types";
+import { useChapterBlockSelectors } from "./useChapterBlockSelectors";
+import { useDialogueEditingState } from "./useDialogueEditingState";
+import { useParagraphEditingState } from "./useParagraphEditingState";
 
-const EDITABLE_BLOCK_TYPES: Array<ChapterBlock["type"]> = [
+const EDITABLE_BLOCK_TYPES: ReadonlyArray<ChapterBlock["type"]> = [
   "paragraph",
   "dialogue",
 ];
+
+export type EditingDiscardContext = "cancel" | "switch";
+
+export type EditorEditingSideEffects = {
+  confirmDiscardChanges: (
+    context: EditingDiscardContext,
+  ) => Promise<boolean> | boolean;
+  notifyUpdateFailure: (error: unknown) => void;
+};
 
 type UseEditorEditingStateParams = {
   chapter: ChapterDetail | null;
@@ -27,6 +29,7 @@ type UseEditorEditingStateParams = {
     payload: ChapterBlockUpdatePayload;
   }) => Promise<ChapterDetail>;
   blockUpdatePending: boolean;
+  sideEffects: EditorEditingSideEffects;
 };
 
 type UseEditorEditingStateResult = {
@@ -34,211 +37,145 @@ type UseEditorEditingStateResult = {
   handleEditBlock: (blockId: string) => void;
 };
 
+type ParagraphBlock = ChapterBlock & { type: "paragraph" };
+type DialogueBlock = ChapterBlock & { type: "dialogue" };
+
+async function resolveDiscardDecision(
+  confirm: EditorEditingSideEffects["confirmDiscardChanges"],
+  context: EditingDiscardContext,
+): Promise<boolean> {
+  const result = confirm(context);
+  return typeof result === "boolean" ? result : await result;
+}
+
 export function useEditorEditingState({
   chapter,
   updateBlock,
   blockUpdatePending,
+  sideEffects,
 }: UseEditorEditingStateParams): UseEditorEditingStateResult {
   const [editingBlockId, setEditingBlockId] = useState<string | null>(null);
-  const [editingBlockType, setEditingBlockType] = useState<
-    ChapterBlock["type"] | null
-  >(null);
-  const [draftText, setDraftText] = useState<string>("");
-  const [draftTurns, setDraftTurns] = useState<DialogueTurn[]>([]);
+  const { getBlockById } = useChapterBlockSelectors(chapter);
 
   useEffect(() => {
     setEditingBlockId(null);
-    setEditingBlockType(null);
-    setDraftText("");
-    setDraftTurns([]);
   }, [chapter?.id]);
 
-  const resetDrafts = useCallback(() => {
-    setEditingBlockId(null);
-    setEditingBlockType(null);
-    setDraftText("");
-    setDraftTurns([]);
-  }, []);
-
-  const getBlockById = useCallback(
-    (targetId: string) => {
-      if (!chapter) {
-        return null;
-      }
-      return chapter.blocks.find((item) => item.id === targetId) ?? null;
-    },
-    [chapter],
-  );
-
-  const getParagraphBlock = useCallback(
-    (targetId: string) => {
-      const block = getBlockById(targetId);
-      return block?.type === "paragraph" ? block : null;
-    },
-    [getBlockById],
-  );
-
-  const getDialogueBlock = useCallback(
-    (targetId: string) => {
-      const block = getBlockById(targetId);
-      return block?.type === "dialogue" ? block : null;
-    },
-    [getBlockById],
-  );
-
-  const hasPendingChanges = useCallback(() => {
-    if (!editingBlockId || !editingBlockType) {
-      return false;
+  const activeBlock = useMemo(() => {
+    if (!editingBlockId) {
+      return null;
     }
+    return getBlockById(editingBlockId);
+  }, [editingBlockId, getBlockById]);
 
-    if (editingBlockType === "paragraph") {
-      const current = getParagraphBlock(editingBlockId);
-      const original = current?.text ?? "";
-      return draftText !== original;
+  const activeParagraphBlock =
+    activeBlock?.type === "paragraph"
+      ? (activeBlock as ParagraphBlock)
+      : null;
+  const activeDialogueBlock =
+    activeBlock?.type === "dialogue" ? (activeBlock as DialogueBlock) : null;
+
+  const paragraphEditing = useParagraphEditingState({
+    block: activeParagraphBlock,
+    isActive: Boolean(activeParagraphBlock),
+    isSaving: blockUpdatePending,
+    updateBlock,
+    onComplete: () => {
+      setEditingBlockId(null);
+    },
+    sideEffects: {
+      notifyUpdateFailure: sideEffects.notifyUpdateFailure,
+    },
+  });
+
+  const dialogueEditing = useDialogueEditingState({
+    block: activeDialogueBlock,
+    isActive: Boolean(activeDialogueBlock),
+    isSaving: blockUpdatePending,
+    updateBlock,
+    onComplete: () => {
+      setEditingBlockId(null);
+    },
+    sideEffects: {
+      notifyUpdateFailure: sideEffects.notifyUpdateFailure,
+    },
+  });
+
+  const {
+    draftText: paragraphDraftText,
+    hasPendingChanges: paragraphHasPendingChanges,
+    onChangeDraft: handleParagraphDraftChange,
+    save: saveParagraph,
+  } = paragraphEditing;
+
+  const {
+    hasPendingChanges: dialogueHasPendingChanges,
+    onAddTurn: handleDialogueAddTurn,
+    onChangeTurn: handleDialogueTurnChange,
+    onRemoveTurn: handleDialogueRemoveTurn,
+    save: saveDialogue,
+    turns: dialogueTurns,
+  } = dialogueEditing;
+
+  const hasPendingChanges = useMemo(() => {
+    if (activeParagraphBlock) {
+      return paragraphHasPendingChanges;
     }
-
-    if (editingBlockType === "dialogue") {
-      const current = getDialogueBlock(editingBlockId);
-      const originalTurns = cloneTurns(current?.turns);
-      return !equalTurns(draftTurns, originalTurns);
+    if (activeDialogueBlock) {
+      return dialogueHasPendingChanges;
     }
-
     return false;
   }, [
-    draftText,
-    draftTurns,
-    editingBlockId,
-    editingBlockType,
-    getDialogueBlock,
-    getParagraphBlock,
+    activeDialogueBlock,
+    activeParagraphBlock,
+    dialogueHasPendingChanges,
+    paragraphHasPendingChanges,
   ]);
 
-  const handleDraftChange = useCallback(
-    (value: string) => {
-      if (editingBlockType !== "paragraph") {
-        return;
-      }
-      setDraftText(value);
-    },
-    [editingBlockType],
-  );
-
-  const handleDialogueTurnChange = useCallback(
-    (turnId: string, field: DialogueField, value: string) => {
-      if (editingBlockType !== "dialogue") {
-        return;
-      }
-
-      setDraftTurns((prev) =>
-        prev.map((turn) => {
-          if (turn.id !== turnId) {
-            return turn;
-          }
-
-          const draft = { ...turn };
-          if (field === "speakerName") {
-            draft.speakerName = value;
-          }
-          if (field === "utterance") {
-            draft.utterance = value;
-          }
-          if (field === "stageDirection") {
-            draft.stageDirection = value ? value : null;
-          }
-          return draft;
-        }),
-      );
-    },
-    [editingBlockType],
-  );
-
-  const handleAddDialogueTurn = useCallback(() => {
-    if (editingBlockType !== "dialogue") {
-      return;
-    }
-    setDraftTurns((prev) => [...prev, createEmptyTurn()]);
-  }, [editingBlockType]);
-
-  const handleRemoveDialogueTurn = useCallback(
-    (turnId: string) => {
-      if (editingBlockType !== "dialogue") {
-        return;
-      }
-      setDraftTurns((prev) => prev.filter((turn) => turn.id !== turnId));
-    },
-    [editingBlockType],
-  );
-
   const handleCancelEdit = useCallback(() => {
-    if (!editingBlockId || !editingBlockType) {
+    if (!editingBlockId) {
       return;
     }
 
-    if (hasPendingChanges()) {
-      const confirmCancel = window.confirm("¿Deseas descartar los cambios?");
-      if (!confirmCancel) {
-        return;
+    const cancel = async () => {
+      if (hasPendingChanges) {
+        const confirmed = await resolveDiscardDecision(
+          sideEffects.confirmDiscardChanges,
+          "cancel",
+        );
+        if (!confirmed) {
+          return;
+        }
       }
-    }
+      setEditingBlockId(null);
+    };
 
-    resetDrafts();
-  }, [editingBlockId, editingBlockType, hasPendingChanges, resetDrafts]);
+    void cancel();
+  }, [editingBlockId, hasPendingChanges, sideEffects.confirmDiscardChanges]);
 
-  const handleSaveEdit = useCallback(async () => {
-    if (
-      !editingBlockId ||
-      !chapter ||
-      blockUpdatePending ||
-      !editingBlockType
-    ) {
+  const saveActiveBlock = useCallback(() => {
+    if (!editingBlockId || blockUpdatePending) {
       return;
     }
 
-    try {
-      if (editingBlockType === "paragraph") {
-        const current = getParagraphBlock(editingBlockId);
-        const originalText = current?.text ?? "";
-        if (draftText === originalText) {
-          resetDrafts();
-          return;
-        }
-
-        await updateBlock({
-          blockId: editingBlockId,
-          payload: { text: draftText },
-        });
-      } else if (editingBlockType === "dialogue") {
-        const current = getDialogueBlock(editingBlockId);
-        const originalTurns = cloneTurns(current?.turns);
-        if (equalTurns(draftTurns, originalTurns)) {
-          resetDrafts();
-          return;
-        }
-
-        await updateBlock({
-          blockId: editingBlockId,
-          payload: { turns: draftTurns },
-        });
-      } else {
+    const save = async () => {
+      if (activeParagraphBlock) {
+        await saveParagraph();
         return;
       }
+      if (activeDialogueBlock) {
+        await saveDialogue();
+      }
+    };
 
-      resetDrafts();
-    } catch (error) {
-      console.error("Failed to update block", error);
-      window.alert("No se pudieron guardar los cambios. Intenta de nuevo.");
-    }
+    void save();
   }, [
+    activeDialogueBlock,
+    activeParagraphBlock,
     blockUpdatePending,
-    chapter,
-    draftText,
-    draftTurns,
     editingBlockId,
-    editingBlockType,
-    getDialogueBlock,
-    getParagraphBlock,
-    resetDrafts,
-    updateBlock,
+    saveDialogue,
+    saveParagraph,
   ]);
 
   const handleEditBlock = useCallback(
@@ -252,67 +189,61 @@ export function useEditorEditingState({
         return;
       }
 
-      if (editingBlockId && editingBlockId !== blockId && hasPendingChanges()) {
-        const confirmSwitch = window.confirm(
-          "¿Quieres descartar los cambios pendientes?",
-        );
-        if (!confirmSwitch) {
-          return;
+      const startEditing = async () => {
+        if (editingBlockId && editingBlockId !== blockId && hasPendingChanges) {
+          const confirmed = await resolveDiscardDecision(
+            sideEffects.confirmDiscardChanges,
+            "switch",
+          );
+          if (!confirmed) {
+            return;
+          }
         }
-      }
 
-      setEditingBlockId(blockId);
-      setEditingBlockType(target.type);
+        setEditingBlockId(blockId);
+      };
 
-      if (target.type === "paragraph") {
-        setDraftText(target.text ?? "");
-        setDraftTurns([]);
-        return;
-      }
-
-      if (target.type === "dialogue") {
-        setDraftText("");
-        setDraftTurns(cloneTurns(target.turns));
-        return;
-      }
+      void startEditing();
     },
-    [blockUpdatePending, editingBlockId, getBlockById, hasPendingChanges],
+    [
+      blockUpdatePending,
+      editingBlockId,
+      getBlockById,
+      hasPendingChanges,
+      sideEffects.confirmDiscardChanges,
+    ],
   );
 
   const editingState = useMemo<EditingState | undefined>(() => {
-    if (!editingBlockId || !editingBlockType) {
-      return undefined;
-    }
-
-    if (editingBlockType === "paragraph") {
+    if (activeParagraphBlock) {
       return {
-        blockId: editingBlockId,
+        blockId: activeParagraphBlock.id,
         blockType: "paragraph",
         paragraph: {
-          draftText,
-          onChangeDraft: handleDraftChange,
+          draftText: paragraphDraftText,
+          onChangeDraft: handleParagraphDraftChange,
         },
         onCancel: handleCancelEdit,
         onSave: () => {
-          void handleSaveEdit();
+          saveActiveBlock();
         },
         isSaving: blockUpdatePending,
       };
     }
 
-    if (editingBlockType === "dialogue") {
+    if (activeDialogueBlock) {
       return {
-        blockId: editingBlockId,
+        blockId: activeDialogueBlock.id,
         blockType: "dialogue",
         dialogue: {
-          turns: draftTurns,
+          turns: dialogueTurns,
           onChangeTurn: handleDialogueTurnChange,
-          onAddTurn: handleAddDialogueTurn,
-          onRemoveTurn: handleRemoveDialogueTurn,
+          onAddTurn: handleDialogueAddTurn,
+          onRemoveTurn: handleDialogueRemoveTurn,
         },
         onCancel: handleCancelEdit,
         onSave: () => {
-          void handleSaveEdit();
+          saveActiveBlock();
         },
         isSaving: blockUpdatePending,
       };
@@ -320,17 +251,17 @@ export function useEditorEditingState({
 
     return undefined;
   }, [
+    activeDialogueBlock,
+    activeParagraphBlock,
     blockUpdatePending,
-    draftText,
-    draftTurns,
-    editingBlockId,
-    editingBlockType,
-    handleAddDialogueTurn,
-    handleCancelEdit,
+    dialogueTurns,
+    handleDialogueAddTurn,
+    handleDialogueRemoveTurn,
     handleDialogueTurnChange,
-    handleDraftChange,
-    handleRemoveDialogueTurn,
-    handleSaveEdit,
+    handleCancelEdit,
+    handleParagraphDraftChange,
+    paragraphDraftText,
+    saveActiveBlock,
   ]);
 
   return {

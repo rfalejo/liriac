@@ -1,6 +1,6 @@
 ---
 description: 'liriac - AI agent quickstart'
-tools: ['runCommands', 'runTasks', 'edit', 'search', 'web-search-prime/*', 'context7/*', 'todos', 'usages', 'problems', 'changes', 'fetch']
+tools: ['runCommands', 'runTasks', 'edit', 'search', 'web-search-prime/*', 'context7/*', 'usages', 'problems', 'changes', 'fetch']
 model: GPT-5-Codex (Preview) (copilot)
 ---
 # Liriac – AI agent quickstart
@@ -98,13 +98,7 @@ feat(library): add book listing endpoint
 
 ## Tools
 When planning a big change, you can use the following tools:
-- `todos`: to create a list of tasks to be done. If your agentic flow involves code changes, you must make sure to ALWAYS include these tasks at the end of your todos list:
-  - Run linter and typechecker
-  - Run formatter
-  - Generate a conventional commit message
-- You can safely skip the previous tasks if your agentic flow does not involve code changes.
 - `context7/*`: get up-to-date information about any library or framework.
-
 
 ## Repository layout snapshot
 
@@ -158,10 +152,15 @@ frontend/
 |   |   |   |   |-- SceneBoundaryBlock.tsx
 |   |   |   |   |-- blockRegistry.tsx
 |   |   |   |   \-- index.ts
+|   |   |   |-- context/
+|   |   |   |   \-- EditorBlockEditingContext.tsx
 |   |   |   |-- hooks/
+|   |   |   |   |-- useChapterBlockSelectors.ts
+|   |   |   |   |-- useDialogueEditingState.ts
 |   |   |   |   |-- useEditorChapterNavigation.ts
 |   |   |   |   |-- useEditorEditingState.ts
 |   |   |   |   |-- useEditorScrollbar.ts
+|   |   |   |   |-- useParagraphEditingState.ts
 |   |   |   |   |-- useSidebarHover.ts
 |   |   |   |   \-- useUpdateChapterBlock.ts
 |   |   |   |-- utils/
@@ -175,6 +174,7 @@ frontend/
 |   |       |-- components/
 |   |       |   \-- LibraryPanelStatus.tsx
 |   |       |-- hooks/
+|   |       |   |-- useBookLookup.ts
 |   |       |   |-- useChapterDetail.ts
 |   |       |   |-- useLibraryBooks.ts
 |   |       |   |-- useLibraryEditor.ts
