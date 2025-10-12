@@ -1,9 +1,0 @@
-- Investigate backend dialogue turn schema for stable identifiers
-- Add missing dialogue turn identifier if absent
-- Refactor frontend editing state types into shared module
-- Replace contentEditable fields with MUI inputs for dialogue editing
-- Use stable keys for dialogue turns in React rendering
-- Ensure dialogue editing flows still function after refactor
-- Run linter and typechecker
-- Run formatter
-- Generate a conventional commit message
