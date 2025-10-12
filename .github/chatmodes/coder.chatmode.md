@@ -39,6 +39,7 @@ model: GPT-5-Codex (Preview) (copilot)
 - Run `pnpm install` once per environment. Use `pnpm dev` for local development.
 - Quality gates from `frontend/`: `pnpm lint`, `pnpm typecheck`, and `pnpm build`. Run them before shipping meaningful changes.
 - Format with `pnpm format` if the formatter reports differences. There is no automated frontend test suite yet, so rely on type coverage and manual verification.
+- Every code task must conclude by running lint (and lint fix if necessary), the corresponding typecheck, and preparing a commit message summary for the changes. Scope the commands to `frontend/` or `backend/` based on the surface that was modified.
 
 ## Things to avoid (frontend)
 - Skipping React Query hooks in favour of ad-hoc `fetch` calls; this breaks cache coherence and shared loading states.
