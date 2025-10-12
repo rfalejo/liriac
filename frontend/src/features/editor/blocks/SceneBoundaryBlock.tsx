@@ -1,8 +1,10 @@
-import { Divider, Stack, TextField, Typography } from "@mui/material";
+import { Divider, Stack, Typography } from "@mui/material";
 import type { Theme } from "@mui/material/styles";
 import type { components } from "../../../api/schema";
 import type { SceneBoundaryEditingState } from "../types";
 import { EditableBlock } from "./components/EditableBlock";
+import { EditableContentField } from "./components/EditableContentField";
+import { handleEditingKeyDown } from "../utils/editingShortcuts";
 
 type ChapterBlock = components["schemas"]["ChapterBlock"];
 
@@ -79,24 +81,59 @@ function SceneBoundaryEditView({ editingState }: SceneBoundaryEditViewProps) {
           borderColor: theme.palette.editor.blockDivider,
         })}
       />
-      <TextField
-        label="Etiqueta"
+      <EditableContentField
         value={draft.label}
-        onChange={(event) => onChangeField("label", event.target.value)}
+        onChange={(value) => onChangeField("label", value)}
+        ariaLabel="Etiqueta de la escena"
+        placeholder="Agrega una etiqueta"
         disabled={disabled}
-        size="small"
-        fullWidth
-        inputProps={{ style: { textTransform: "uppercase", letterSpacing: "0.08em" } }}
+        sx={(theme: Theme) => ({
+          ...theme.typography.editorBody,
+          color: theme.palette.editor.blockMuted,
+          letterSpacing: "0.08em",
+          textTransform: "uppercase",
+          borderRadius: theme.editor.blockRadius,
+          padding: theme.spacing(1, 1.5),
+          boxShadow: `inset 0 0 0 1px ${theme.palette.editor.blockHoverOutline}`,
+          transition: theme.editor.blockTransition,
+          backgroundColor: theme.palette.editor.blockActiveBg,
+          "&:focus": {
+            boxShadow: `inset 0 0 0 1px ${theme.palette.editor.blockActiveOutline}`,
+          },
+        })}
+        onKeyDown={(event) => {
+          handleEditingKeyDown(event, {
+            onConfirm: editingState.onSave,
+            onCancel: editingState.onCancel,
+          });
+        }}
       />
-      <TextField
-        label="Resumen"
+      <EditableContentField
         value={draft.summary}
-        onChange={(event) => onChangeField("summary", event.target.value)}
-        disabled={disabled}
-        size="small"
-        fullWidth
+        onChange={(value) => onChangeField("summary", value)}
+        ariaLabel="Resumen del límite de escena"
+        placeholder="Describe brevemente la transición"
         multiline
-        minRows={2}
+        disabled={disabled}
+        sx={(theme: Theme) => ({
+          ...theme.typography.editorBody,
+          color: theme.palette.editor.blockMuted,
+          borderRadius: theme.editor.blockRadius,
+          padding: theme.spacing(1, 1.5),
+          boxShadow: `inset 0 0 0 1px ${theme.palette.editor.blockHoverOutline}`,
+          transition: theme.editor.blockTransition,
+          backgroundColor: theme.palette.editor.blockActiveBg,
+          textAlign: "left",
+          "&:focus": {
+            boxShadow: `inset 0 0 0 1px ${theme.palette.editor.blockActiveOutline}`,
+          },
+        })}
+        onKeyDown={(event) => {
+          handleEditingKeyDown(event, {
+            onConfirm: editingState.onSave,
+            onCancel: editingState.onCancel,
+          });
+        }}
       />
     </Stack>
   );

@@ -1,8 +1,10 @@
-import { Stack, TextField, Typography } from "@mui/material";
+import { Stack, Typography } from "@mui/material";
 import type { Theme } from "@mui/material/styles";
 import type { components } from "../../../api/schema";
 import type { MetadataEditingState } from "../types";
 import { EditableBlock } from "./components/EditableBlock";
+import { EditableContentField } from "./components/EditableContentField";
+import { handleEditingKeyDown } from "../utils/editingShortcuts";
 
 type ChapterBlock = components["schemas"]["ChapterBlock"];
 
@@ -11,6 +13,10 @@ type MetadataBlockProps = {
 };
 
 export function MetadataBlock({ block }: MetadataBlockProps) {
+  if ((block.kind ?? "metadata") === "editorial") {
+    return null;
+  }
+
   return (
     <EditableBlock<MetadataEditingState>
       block={block}
@@ -173,37 +179,111 @@ function MetadataEditView({ block, editingState }: MetadataEditViewProps) {
             Capítulo {block.ordinal + 1}
           </Typography>
         )}
-        <TextField
-          label="Título"
+        <EditableContentField
           value={draft.title}
-          onChange={(event) => onChangeField("title", event.target.value)}
+          onChange={(value) => onChangeField("title", value)}
+          ariaLabel="Título del capítulo"
+          placeholder="Escribe el título"
           disabled={isSaving}
-          fullWidth
+          sx={(theme: Theme) => ({
+            ...theme.typography.editorBody,
+            fontSize: theme.typography.h4.fontSize,
+            fontWeight: theme.typography.h4.fontWeight,
+            color: theme.palette.editor.blockHeading,
+            textAlign: "center",
+            borderRadius: theme.editor.blockRadius,
+            padding: theme.spacing(1, 1.5),
+            backgroundColor: theme.palette.editor.blockActiveBg,
+            boxShadow: `inset 0 0 0 1px ${theme.palette.editor.blockHoverOutline}`,
+            "&:focus": {
+              boxShadow: `inset 0 0 0 1px ${theme.palette.editor.blockActiveOutline}`,
+            },
+          })}
+          onKeyDown={(event) => {
+            handleEditingKeyDown(event, {
+              onConfirm: editingState.onSave,
+              onCancel: editingState.onCancel,
+            });
+          }}
         />
-        <TextField
-          label="Subtítulo"
+        <EditableContentField
           value={draft.subtitle}
-          onChange={(event) => onChangeField("subtitle", event.target.value)}
+          onChange={(value) => onChangeField("subtitle", value)}
+          ariaLabel="Subtítulo del capítulo"
+          placeholder="Agrega un subtítulo"
           disabled={isSaving}
-          fullWidth
+          sx={(theme: Theme) => ({
+            ...theme.typography.editorBody,
+            color: theme.palette.editor.blockMuted,
+            fontWeight: 500,
+            letterSpacing: "0.04em",
+            textAlign: "center",
+            borderRadius: theme.editor.blockRadius,
+            padding: theme.spacing(0.75, 1.5),
+            backgroundColor: theme.palette.editor.blockActiveBg,
+            boxShadow: `inset 0 0 0 1px ${theme.palette.editor.blockHoverOutline}`,
+            "&:focus": {
+              boxShadow: `inset 0 0 0 1px ${theme.palette.editor.blockActiveOutline}`,
+            },
+          })}
+          onKeyDown={(event) => {
+            handleEditingKeyDown(event, {
+              onConfirm: editingState.onSave,
+              onCancel: editingState.onCancel,
+            });
+          }}
         />
-        <TextField
-          label="Epígrafe"
+        <EditableContentField
           value={draft.epigraph}
-          onChange={(event) => onChangeField("epigraph", event.target.value)}
+          onChange={(value) => onChangeField("epigraph", value)}
+          ariaLabel="Epígrafe"
+          placeholder="Añade un epígrafe"
           disabled={isSaving}
-          fullWidth
           multiline
-          minRows={2}
+          sx={(theme: Theme) => ({
+            ...theme.typography.editorBody,
+            fontStyle: "italic",
+            marginTop: theme.spacing(1.25),
+            borderRadius: theme.editor.blockRadius,
+            padding: theme.spacing(1, 1.5),
+            backgroundColor: theme.palette.editor.blockActiveBg,
+            boxShadow: `inset 0 0 0 1px ${theme.palette.editor.blockHoverOutline}`,
+            "&:focus": {
+              boxShadow: `inset 0 0 0 1px ${theme.palette.editor.blockActiveOutline}`,
+            },
+          })}
+          onKeyDown={(event) => {
+            handleEditingKeyDown(event, {
+              onConfirm: editingState.onSave,
+              onCancel: editingState.onCancel,
+            });
+          }}
         />
-        <TextField
-          label="Atribución"
+        <EditableContentField
           value={draft.epigraphAttribution}
-          onChange={(event) =>
-            onChangeField("epigraphAttribution", event.target.value)
-          }
+          onChange={(value) => onChangeField("epigraphAttribution", value)}
+          ariaLabel="Atribución del epígrafe"
+          placeholder="Autor o fuente"
           disabled={isSaving}
-          fullWidth
+          sx={(theme: Theme) => ({
+            ...theme.typography.editorBody,
+            fontSize: theme.typography.caption.fontSize,
+            color: theme.palette.editor.blockMuted,
+            textAlign: "center",
+            borderRadius: theme.editor.blockRadius,
+            padding: theme.spacing(0.5, 1.25),
+            backgroundColor: theme.palette.editor.blockActiveBg,
+            boxShadow: `inset 0 0 0 1px ${theme.palette.editor.blockHoverOutline}`,
+            "&:focus": {
+              boxShadow: `inset 0 0 0 1px ${theme.palette.editor.blockActiveOutline}`,
+            },
+          })}
+          onKeyDown={(event) => {
+            handleEditingKeyDown(event, {
+              onConfirm: editingState.onSave,
+              onCancel: editingState.onCancel,
+            });
+          }}
         />
       </Stack>
     );
@@ -211,27 +291,60 @@ function MetadataEditView({ block, editingState }: MetadataEditViewProps) {
 
   if (kind === "context") {
     return (
-      <TextField
-        label="Contexto"
+      <EditableContentField
         value={draft.context}
-        onChange={(event) => onChangeField("context", event.target.value)}
+        onChange={(value) => onChangeField("context", value)}
+        ariaLabel="Contexto"
+        placeholder="Añade notas de contexto"
         disabled={isSaving}
-        fullWidth
         multiline
-        minRows={3}
+        sx={(theme: Theme) => ({
+          ...theme.typography.editorBody,
+          fontStyle: "italic",
+          color: theme.palette.editor.blockMuted,
+          borderRadius: theme.editor.blockRadius,
+          padding: theme.spacing(1, 1.5),
+          backgroundColor: theme.palette.editor.blockActiveBg,
+          boxShadow: `inset 0 0 0 1px ${theme.palette.editor.blockHoverOutline}`,
+          "&:focus": {
+            boxShadow: `inset 0 0 0 1px ${theme.palette.editor.blockActiveOutline}`,
+          },
+        })}
+        onKeyDown={(event) => {
+          handleEditingKeyDown(event, {
+            onConfirm: editingState.onSave,
+            onCancel: editingState.onCancel,
+          });
+        }}
       />
     );
   }
 
   return (
-    <TextField
-      label="Contenido"
+    <EditableContentField
       value={draft.text}
-      onChange={(event) => onChangeField("text", event.target.value)}
+      onChange={(value) => onChangeField("text", value)}
+      ariaLabel="Contenido de metadatos"
+      placeholder="Escribe el contenido"
       disabled={isSaving}
-      fullWidth
       multiline
-      minRows={3}
+      sx={(theme: Theme) => ({
+        ...theme.typography.editorBody,
+        color: theme.palette.editor.blockMuted,
+        borderRadius: theme.editor.blockRadius,
+        padding: theme.spacing(1, 1.5),
+        backgroundColor: theme.palette.editor.blockActiveBg,
+        boxShadow: `inset 0 0 0 1px ${theme.palette.editor.blockHoverOutline}`,
+        "&:focus": {
+          boxShadow: `inset 0 0 0 1px ${theme.palette.editor.blockActiveOutline}`,
+        },
+      })}
+      onKeyDown={(event) => {
+        handleEditingKeyDown(event, {
+          onConfirm: editingState.onSave,
+          onCancel: editingState.onCancel,
+        });
+      }}
     />
   );
 }
