@@ -25,6 +25,7 @@ Liriac is a workspace for exploring and editing narrative content. It ships a Vi
 cd backend
 uv sync --python 3.11
 uv run python manage.py migrate
+uv run python manage.py test studio
 uv run python manage.py runserver
 ```
 

@@ -50,7 +50,7 @@ model: GPT-5-Codex (Preview) (copilot)
 
 ## Backend reference
 - Django 5.2 lives under `backend/` with the `config` project and `studio` app. Manage dependencies via `uv sync --python 3.11`; the virtual environment is stored in `backend/.venv`.
-- Common commands run through `uv run`: `python manage.py migrate`, `python manage.py runserver`, `python manage.py test`, and `python manage.py spectacular --file schema.yaml`.
+- Common commands run through `uv run`: `python manage.py migrate`, `python manage.py test studio`, `python manage.py runserver`, and `python manage.py spectacular --file schema.yaml`.
 - Never edit `backend/schema.yaml` or `frontend/src/api/schema.ts` by hand-regenerate them with `uv run python manage.py spectacular --file schema.yaml` and `pnpm generate:types`.
 - Add backend dependencies using `uv add <package>` (or `uv add --dev <package>` for development-only needs). Avoid editing `pyproject.toml` by hand so lockfiles stay consistent.
 - Keep Python style aligned with `ruff` and `black`. Use `uv run ruff check .` to lint and `uv run black .` (or `--check`) to format before shipping backend changes.

@@ -1,228 +1,219 @@
-"""Typed data models for the studio fixtures."""
-
 from __future__ import annotations
 
-from typing import List, Literal, Optional, TypedDict
+from typing import Any, Dict
+
+from django.core.serializers.json import DjangoJSONEncoder
+from django.db import models
+
+from .payloads import (
+    ChapterBlockPayload,
+    ChapterDetailPayload,
+    ChapterSummaryPayload,
+    ContextItemPayload,
+    ContextSectionPayload,
+    LibraryBookPayload,
+    chapter_detail_from_blocks,
+)
 
 
-def join_paragraphs(paragraphs: List[str]) -> str:
-    """Combine paragraph strings into a single chapter body."""
-    if not paragraphs:
-        return ""
-    return "\n\n".join(segment.strip("\n") for segment in paragraphs)
+class TimeStampedModel(models.Model):
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        abstract = True
 
 
-class DialogueTurn(TypedDict, total=False):
-    id: str
-    speakerId: str
-    speakerName: str
-    utterance: str
-    stageDirection: str
-    tone: Literal["whisper", "shout", "thought", "narration"]
+class LibrarySection(TimeStampedModel):
+    id = models.CharField(primary_key=True, max_length=64)
+    title = models.CharField(max_length=255)
+    default_open = models.BooleanField(default=False)
+    order = models.PositiveIntegerField(default=0)
+
+    class Meta:
+        ordering = ["order", "id"]
+
+    def __str__(self) -> str:
+        return self.title
+
+    def to_payload(self) -> ContextSectionPayload:
+        items = [item.to_payload() for item in self.items.all()]
+        return {
+            "id": self.id,
+            "title": self.title,
+            "defaultOpen": self.default_open,
+            "items": items,
+        }
 
 
-class ChapterBlockBase(TypedDict):
-    id: str
-    type: Literal["paragraph", "dialogue", "scene_boundary", "metadata"]
-    position: int
+class ContextItemType(models.TextChoices):
+    CHARACTER = "character", "Character"
+    WORLD = "world", "World"
+    STYLE_TONE = "styleTone", "Style & Tone"
+    CHAPTER = "chapter", "Chapter"
 
 
-class ParagraphBlock(ChapterBlockBase, total=False):
-    type: Literal["paragraph"]
-    text: str
-    style: Literal["narration", "poem", "aside", "letter"]
-    tags: List[str]
+class LibraryContextItem(TimeStampedModel):
+    section = models.ForeignKey(
+        LibrarySection,
+        related_name="items",
+        on_delete=models.CASCADE,
+    )
+    item_id = models.CharField(max_length=64)
+    item_type = models.CharField(
+        max_length=32,
+        choices=ContextItemType.choices,
+    )
+    name = models.CharField(max_length=255, blank=True)
+    role = models.CharField(max_length=255, blank=True)
+    summary = models.TextField(blank=True)
+    title = models.CharField(max_length=255, blank=True)
+    description = models.TextField(blank=True)
+    facts = models.TextField(blank=True)
+    tokens = models.PositiveIntegerField(null=True, blank=True)
+    checked = models.BooleanField(default=False)
+    disabled = models.BooleanField(default=False)
+    order = models.PositiveIntegerField(default=0)
+
+    class Meta:
+        ordering = ["section", "order", "item_id"]
+        unique_together = ("section", "item_id")
+
+    def __str__(self) -> str:
+        return f"{self.item_type}:{self.item_id}"
+
+    def to_payload(self) -> ContextItemPayload:
+        payload: ContextItemPayload = {
+            "id": self.item_id,
+            "type": self.item_type,
+            "checked": self.checked,
+            "disabled": self.disabled,
+        }
+        if self.name:
+            payload["name"] = self.name
+        if self.role:
+            payload["role"] = self.role
+        if self.summary:
+            payload["summary"] = self.summary
+        if self.title:
+            payload["title"] = self.title
+        if self.description:
+            payload["description"] = self.description
+        if self.facts:
+            payload["facts"] = self.facts
+        if self.tokens is not None:
+            payload["tokens"] = int(self.tokens)
+        return payload
 
 
-class DialogueBlock(ChapterBlockBase, total=False):
-    type: Literal["dialogue"]
-    turns: List[DialogueTurn]
-    context: Optional[str]
+class Book(TimeStampedModel):
+    id = models.CharField(primary_key=True, max_length=64)
+    title = models.CharField(max_length=255)
+    author = models.CharField(max_length=255, blank=True)
+    synopsis = models.TextField(blank=True)
+    order = models.PositiveIntegerField(default=0)
+
+    class Meta:
+        ordering = ["order", "title"]
+
+    def __str__(self) -> str:
+        return self.title
+
+    def to_payload(self) -> LibraryBookPayload:
+        chapters = [chapter.to_summary_payload() for chapter in self.chapters.all()]
+        payload: LibraryBookPayload = {
+            "id": self.id,
+            "title": self.title,
+            "chapters": chapters,
+        }
+        if self.author:
+            payload["author"] = self.author
+        if self.synopsis:
+            payload["synopsis"] = self.synopsis
+        return payload
 
 
-class SceneBoundaryBlock(ChapterBlockBase, total=False):
-    type: Literal["scene_boundary"]
-    label: Optional[str]
-    summary: Optional[str]
-    locationId: Optional[str]
-    locationName: Optional[str]
-    timestamp: Optional[str]
-    mood: Optional[str]
+class Chapter(TimeStampedModel):
+    id = models.CharField(primary_key=True, max_length=64)
+    book = models.ForeignKey(
+        Book,
+        related_name="chapters",
+        on_delete=models.CASCADE,
+    )
+    title = models.CharField(max_length=255)
+    summary = models.TextField(blank=True)
+    ordinal = models.PositiveIntegerField(default=0)
+    tokens = models.PositiveIntegerField(null=True, blank=True)
+    word_count = models.PositiveIntegerField(null=True, blank=True)
+
+    class Meta:
+        ordering = ["book", "ordinal", "id"]
+
+    def __str__(self) -> str:
+        return self.title
+
+    def to_summary_payload(self) -> ChapterSummaryPayload:
+        payload: ChapterSummaryPayload = {
+            "id": self.id,
+            "title": self.title,
+            "ordinal": int(self.ordinal),
+        }
+        if self.summary:
+            payload["summary"] = self.summary
+        if self.tokens is not None:
+            payload["tokens"] = int(self.tokens)
+        if self.word_count is not None:
+            payload["wordCount"] = int(self.word_count)
+        return payload
+
+    def to_detail_payload(self) -> ChapterDetailPayload:
+        blocks = [block.to_payload() for block in self.blocks.all()]
+        return chapter_detail_from_blocks(
+            chapter_id=self.id,
+            title=self.title,
+            summary=self.summary or None,
+            ordinal=int(self.ordinal),
+            tokens=int(self.tokens) if self.tokens is not None else None,
+            word_count=int(self.word_count) if self.word_count is not None else None,
+            blocks=blocks,
+            book_id=self.book_id,
+            book_title=self.book.title if self.book else None,
+        )
 
 
-class MetadataBlock(ChapterBlockBase, total=False):
-    type: Literal["metadata"]
-    kind: Literal["chapter_header", "context", "editorial"]
-    title: str
-    subtitle: Optional[str]
-    ordinal: Optional[int]
-    epigraph: Optional[str]
-    epigraphAttribution: Optional[str]
-    povCharacterId: Optional[str]
-    povCharacterName: Optional[str]
-    timelineMarker: Optional[str]
-    locationId: Optional[str]
-    locationName: Optional[str]
-    themeTags: List[str]
-    status: Literal["draft", "review", "final"]
-    owner: Optional[str]
-    lastUpdated: Optional[str]
+class ChapterBlockType(models.TextChoices):
+    PARAGRAPH = "paragraph", "Paragraph"
+    DIALOGUE = "dialogue", "Dialogue"
+    SCENE_BOUNDARY = "scene_boundary", "Scene boundary"
+    METADATA = "metadata", "Metadata"
 
 
-ChapterBlock = ParagraphBlock | DialogueBlock | SceneBoundaryBlock | MetadataBlock
+class ChapterBlock(TimeStampedModel):
+    id = models.CharField(primary_key=True, max_length=64)
+    chapter = models.ForeignKey(
+        Chapter,
+        related_name="blocks",
+        on_delete=models.CASCADE,
+    )
+    type = models.CharField(
+        max_length=32,
+        choices=ChapterBlockType.choices,
+    )
+    position = models.IntegerField()
+    payload = models.JSONField(default=dict, encoder=DjangoJSONEncoder)
 
+    class Meta:
+        ordering = ["chapter", "position", "id"]
 
-class CharacterItem(TypedDict, total=False):
-    id: str
-    type: Literal["character"]
-    name: str
-    role: Optional[str]
-    summary: Optional[str]
-    tokens: Optional[int]
-    checked: bool
-    disabled: bool
+    def __str__(self) -> str:
+        return f"{self.type}:{self.id}"
 
-
-class WorldItem(TypedDict, total=False):
-    id: str
-    type: Literal["world"]
-    title: str
-    summary: Optional[str]
-    facts: Optional[str]
-    tokens: Optional[int]
-    checked: bool
-    disabled: bool
-
-
-class StyleToneItem(TypedDict, total=False):
-    id: str
-    type: Literal["styleTone"]
-    description: str
-    tokens: Optional[int]
-    checked: bool
-    disabled: bool
-
-
-class ChapterItem(TypedDict, total=False):
-    id: str
-    type: Literal["chapter"]
-    title: str
-    tokens: Optional[int]
-    checked: bool
-    disabled: bool
-
-
-ContextItem = CharacterItem | WorldItem | StyleToneItem | ChapterItem
-
-
-class ContextSection(TypedDict, total=False):
-    id: str
-    title: str
-    items: List[ContextItem]
-    defaultOpen: bool
-
-
-class LibraryPayload(TypedDict):
-    sections: List[ContextSection]
-
-
-class EditorPayload(TypedDict):
-    content: str
-    paragraphs: List[str]
-    blocks: List[ChapterBlock]
-    tokens: int
-    cursor: Optional[int]
-    bookId: Optional[str]
-    bookTitle: Optional[str]
-    chapterId: Optional[str]
-    chapterTitle: Optional[str]
-
-
-class ChapterSummary(TypedDict, total=False):
-    id: str
-    title: str
-    summary: Optional[str]
-    ordinal: int
-    tokens: Optional[int]
-    wordCount: Optional[int]
-
-
-class ChapterDetail(ChapterSummary, total=False):
-    content: str
-    paragraphs: List[str]
-    blocks: List[ChapterBlock]
-    bookId: Optional[str]
-    bookTitle: Optional[str]
-
-
-class LibraryBook(TypedDict, total=False):
-    id: str
-    title: str
-    author: Optional[str]
-    synopsis: Optional[str]
-    chapters: List[ChapterSummary]
-
-
-def block_to_text(block: ChapterBlock) -> List[str]:
-    """Convert a block payload into zero or more plain-text paragraphs."""
-    block_type = block["type"]
-
-    if block_type == "paragraph":
-        text = block.get("text", "")
-        return [text] if text else []
-
-    if block_type == "dialogue":
-        lines: List[str] = []
-        for turn in block.get("turns", []) or []:
-            utterance = turn.get("utterance", "").strip()
-            if not utterance:
-                continue
-            attachment = turn.get("stageDirection")
-            if attachment:
-                lines.append(f"{utterance} {attachment}".strip())
-            else:
-                lines.append(utterance)
-        if lines:
-            return ["\n".join(lines)]
-        return []
-
-    if block_type == "scene_boundary":
-        label = block.get("label")
-        summary = block.get("summary")
-        if label or summary:
-            pieces = [piece for piece in [label, summary] if piece]
-            return ["[Escena] " + " — ".join(pieces)]
-        return []
-
-    if block_type == "metadata":
-        kind = block.get("kind")
-        if kind == "chapter_header":
-            lines = [
-                element
-                for element in [
-                    block.get("title"),
-                    block.get("subtitle"),
-                    block.get("epigraph"),
-                ]
-                if element
-            ]
-            if lines:
-                return ["\n".join(lines)]
-        if kind == "context":
-            pov = block.get("povCharacterName")
-            marker = block.get("timelineMarker")
-            location = block.get("locationName")
-            pieces = [piece for piece in [pov, location, marker] if piece]
-            if pieces:
-                return ["[Contexto] " + " — ".join(pieces)]
-        # Editorial metadata is operational and not part of the prose by default.
-        return []
-
-    return []
-
-
-def blocks_to_paragraphs(blocks: List[ChapterBlock]) -> List[str]:
-    paragraphs: List[str] = []
-    for block in sorted(blocks, key=lambda b: b.get("position", 0)):
-        paragraphs.extend(block_to_text(block))
-    return paragraphs
+    def to_payload(self) -> ChapterBlockPayload:
+        data: ChapterBlockPayload = {
+            "id": self.id,
+            "type": self.type,
+            "position": int(self.position),
+        }
+        extras: Dict[str, Any] = dict(self.payload or {})
+        data.update(extras)
+        return data

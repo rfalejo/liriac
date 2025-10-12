@@ -1,535 +1,34 @@
 from __future__ import annotations
 
-from typing import Any, Dict, List, Optional, TypedDict
+from copy import deepcopy
+from typing import Any, Dict, List, Optional, cast
 from uuid import uuid4
 
+from django.db import transaction
+
 from .models import (
+    Book,
+    Chapter,
     ChapterBlock,
-    ChapterDetail,
-    ContextSection,
-    EditorPayload,
-    LibraryBook,
-    blocks_to_paragraphs,
-    join_paragraphs,
+    LibraryContextItem,
+    LibrarySection,
 )
-
-LIBRARY_SECTIONS: List[ContextSection] = [
-    {
-        "id": "chapters",
-        "title": "Capítulos",
-        "defaultOpen": True,
-        "items": [
-            {
-                "id": "bk-karamazov-ch-01",
-                "type": "chapter",
-                "title": "I — Fyodor Pavlovich Karamázov",
-                "tokens": 880,
-                "checked": True,
-            },
-            {
-                "id": "bk-karamazov-ch-02",
-                "type": "chapter",
-                "title": "II — En casa del padre",
-                "tokens": 910,
-                "checked": False,
-            },
-        ],
-    },
-    {
-        "id": "characters",
-        "title": "Personajes",
-        "defaultOpen": False,
-        "items": [
-            {
-                "id": "char-ivan",
-                "type": "character",
-                "name": "Iván Karamázov",
-                "role": "Hermano mayor",
-                "summary": "Intelectual escéptico, afilado y retorcido.",
-                "tokens": 210,
-                "checked": True,
-            },
-            {
-                "id": "char-alyosha",
-                "type": "character",
-                "name": "Aliosha Karamázov",
-                "role": "Hermano menor",
-                "summary": "Alumno del monasterio, corazón compasivo.",
-                "tokens": 180,
-                "checked": True,
-            },
-            {
-                "id": "char-dmitri",
-                "type": "character",
-                "name": "Dmitri (Mitia) Karamázov",
-                "role": "Hermano del medio",
-                "summary": "Apasionado, impulsivo y celoso.",
-                "tokens": 195,
-                "checked": False,
-            },
-        ],
-    },
-    {
-        "id": "world",
-        "title": "Mundo",
-        "defaultOpen": False,
-        "items": [
-            {
-                "id": "world-skotoprigonievski",
-                "type": "world",
-                "title": "Skotoprigonievski",
-                "summary": "Pueblo ruso cubierto de barro y rumores, escenario principal.",
-                "tokens": 160,
-                "checked": True,
-            },
-            {
-                "id": "world-casa-karamazov",
-                "type": "world",
-                "title": "Casa de Fyodor Pavlovich",
-                "summary": "Salones en ruina, olor a aguardiente y velas consumidas.",
-                "tokens": 120,
-                "checked": False,
-            },
-        ],
-    },
-    {
-        "id": "styleTone",
-        "title": "Estilo y tono",
-        "defaultOpen": False,
-        "items": [
-            {
-                "id": "tone-russo-gotico",
-                "type": "styleTone",
-                "description": "Narrador omnisciente con ironía contenida.",
-                "tokens": 45,
-                "checked": True,
-            },
-            {
-                "id": "tone-confesional",
-                "type": "styleTone",
-                "description": "Confesiones febriles al borde de la tragedia.",
-                "tokens": 30,
-                "checked": False,
-            },
-        ],
-    },
-]
-
-
-LIBRARY_BOOKS: List[LibraryBook] = [
-    {
-        "id": "bk-karamazov",
-        "title": "Los hermanos Karamázov",
-        "author": "Fiódor Dostoyevski",
-        "synopsis": (
-            "Los hijos de Fyodor Pavlovich se debaten entre la fe, la razón y la pasión "
-            "mientras una muerte anunciada se insinúa en cada conversación."
-        ),
-        "chapters": [
-            {
-                "id": "bk-karamazov-ch-01",
-                "title": "Libro I — Capítulo I: Fyodor Pavlovich Karamázov",
-                "summary": "Presentación del patriarca y de su casa en ruinas.",
-                "ordinal": 1,
-                "tokens": 880,
-                "wordCount": 2450,
-            },
-            {
-                "id": "bk-karamazov-ch-02",
-                "title": "Libro I — Capítulo II: Los tres hermanos",
-                "summary": "Reencuentro incómodo de Iván, Dmitri y Aliosha.",
-                "ordinal": 2,
-                "tokens": 910,
-                "wordCount": 2600,
-            },
-        ],
-    }
-]
-
-
-CHAPTER_01_BLOCKS: List[ChapterBlock] = [
-    {
-        "id": "meta-ch1-header",
-        "type": "metadata",
-        "position": 0,
-        "kind": "chapter_header",
-        "title": "Libro I — Los hermanos Karamázov",
-        "subtitle": "Capítulo I: Fyodor Pavlovich Karamázov",
-        "ordinal": 1,
-        "epigraph": "La lujuria es nuestro fuego y nuestra vergüenza.",
-        "epigraphAttribution": "Monje Zósima",
-    },
-    {
-        "id": "meta-ch1-context",
-        "type": "metadata",
-        "position": 5,
-        "kind": "context",
-        "povCharacterName": "Narrador omnisciente",
-        "timelineMarker": "Tarde húmeda de otoño",
-        "locationName": "Casa de los Karamázov",
-        "themeTags": ["familia", "fe", "pasión"],
-    },
-    {
-        "id": "scene-ch1-salon",
-        "type": "scene_boundary",
-        "position": 10,
-        "label": "Salón en penumbra",
-        "summary": "Fyodor espera a sus hijos entre copas y sarcasmos.",
-        "locationName": "Casa de Fyodor Pavlovich",
-        "timestamp": "Después del anochecer",
-        "mood": "asfixiante",
-    },
-    {
-        "id": "para-ch1-001",
-        "type": "paragraph",
-        "position": 20,
-        "text": (
-            "Fyodor Pavlovich Karamázov estaba convencido de que la desgracia "
-            "resultaba más sabrosa si podía saborearla frente a un público. Esa noche "
-            "esperaba con un vaso de vodka en la mano y una sonrisa torcida la llegada "
-            "de sus tres hijos."
-        ),
-        "style": "narration",
-        "tags": ["introduccion"],
-    },
-    {
-        "id": "para-ch1-002",
-        "type": "paragraph",
-        "position": 30,
-        "text": (
-            "Los criados se movían como sombras, entre candelabros derretidos y "
-            "tapices húmedos. Iván repasaba mentalmente un argumento ateo, Dmitri "
-            "subía la escalera de dos en dos y Aliosha acariciaba su rosario con manos "
-            "temblorosas."
-        ),
-        "style": "narration",
-        "tags": ["descripcion"],
-    },
-    {
-        "id": "dialog-ch1-001",
-        "type": "dialogue",
-        "position": 40,
-        "context": "Iván desafía la calma de Aliosha.",
-        "turns": [
-            {
-                "id": "dialog-ch1-001-turn-01",
-                "speakerId": "char-ivan",
-                "speakerName": "Iván",
-                "utterance": (
-                    "—Entonces, ¿por qué estás temblando de pies a cabeza? ¿Acaso no "
-                    "conoces el percal? Por muy honrado que sea, Mítenka (que es tonto, "
-                    "pero honrado) es un hombre lujurioso."
-                ),
-                "tone": "narration",
-            },
-            {
-                "id": "dialog-ch1-001-turn-02",
-                "speakerId": "char-ivan",
-                "speakerName": "Iván",
-                "utterance": (
-                    "Ésa es su definición, en eso reside toda su esencia. Ha sido el padre "
-                    "quien le ha transmitido toda su abyecta lujuria. El único que me "
-                    "tiene asombrado eres tú, Aliosha: ¿cómo puedes conservarte virgen?"
-                ),
-                "tone": "narration",
-            },
-            {
-                "id": "dialog-ch1-001-turn-03",
-                "speakerId": "char-alyosha",
-                "speakerName": "Aliosha",
-                "utterance": "—En lo de esa mujer te equivocas. Dmitri… la desprecia",
-                "stageDirection": "dijo Aliosha con un estremecimiento",
-                "tone": "narration",
-            },
-            {
-                "id": "dialog-ch1-001-turn-04",
-                "speakerId": "char-ivan",
-                "speakerName": "Iván",
-                "utterance": (
-                    "—¿A Grúshenka? No, hermano, no la desprecia. Si ha dejado por ella a "
-                    "su prometida a la vista de todo el mundo, eso es que no la desprecia."
-                ),
-                "tone": "narration",
-            },
-            {
-                "id": "dialog-ch1-001-turn-05",
-                "speakerId": "char-ivan",
-                "speakerName": "Iván",
-                "utterance": (
-                    "Si un hombre se enamora de una belleza determinada es capaz de dar "
-                    "por ella a sus propios hijos, de vender a su padre y a su madre, aunque "
-                    "sea honrado, robará; aunque sea pacífico, degollará."
-                ),
-                "tone": "narration",
-            },
-            {
-                "id": "dialog-ch1-001-turn-06",
-                "speakerId": "char-alyosha",
-                "speakerName": "Aliosha",
-                "utterance": "—Eso yo lo comprendo",
-                "stageDirection": "se le escapó de pronto a Aliosha",
-                "tone": "narration",
-            },
-        ],
-    },
-    {
-        "id": "para-ch1-003",
-        "type": "paragraph",
-        "position": 50,
-        "text": (
-            "Un chirrido de puerta anunció la llegada de Dmitri. La tensión se volvió "
-            "palpable, como si cada palabra pronunciada incendiara el aire cargado de "
-            "iconos y resaca."
-        ),
-        "style": "narration",
-        "tags": ["transicion"],
-    },
-    {
-        "id": "scene-ch1-escalera",
-        "type": "scene_boundary",
-        "position": 60,
-        "label": "Escalera principal",
-        "summary": "Dmitri irrumpe, cargado de celos y aguardiente.",
-        "locationName": "Casa de Fyodor Pavlovich",
-        "timestamp": "Instantes después",
-        "mood": "explosivo",
-    },
-    {
-        "id": "meta-ch1-editorial",
-        "type": "metadata",
-        "position": 70,
-        "kind": "editorial",
-        "status": "draft",
-        "owner": "equipo-local",
-        "lastUpdated": "2025-10-10T22:17:00Z",
-    },
-]
-
-
-CHAPTER_02_BLOCKS: List[ChapterBlock] = [
-    {
-        "id": "meta-ch2-header",
-        "type": "metadata",
-        "position": 0,
-        "kind": "chapter_header",
-        "title": "Libro I — Los hermanos Karamázov",
-        "subtitle": "Capítulo II: Los tres hermanos",
-        "ordinal": 2,
-    },
-    {
-        "id": "meta-ch2-context",
-        "type": "metadata",
-        "position": 5,
-        "kind": "context",
-        "povCharacterName": "Aliosha",
-        "timelineMarker": "Medianoche",
-        "locationName": "Celda del starets",
-        "themeTags": ["fe", "culpa"],
-    },
-    {
-        "id": "scene-ch2-monasterio",
-        "type": "scene_boundary",
-        "position": 10,
-        "label": "Monasterio",
-        "summary": "Los hermanos aguardan la palabra del starets.",
-        "locationName": "Monasterio de Optina",
-    },
-    {
-        "id": "para-ch2-001",
-        "type": "paragraph",
-        "position": 20,
-        "text": (
-            "El aire dentro de la celda olía a pan negro y a incienso. Iván permanecía "
-            "en silencio, Dmitri apretaba los puños y Aliosha esperaba con fervor una "
-            "gota de claridad."
-        ),
-        "style": "narration",
-    },
-    {
-        "id": "dialog-ch2-001",
-        "type": "dialogue",
-        "position": 30,
-        "turns": [
-            {
-                "id": "dialog-ch2-001-turn-01",
-                "speakerId": "char-dmitri",
-                "speakerName": "Dmitri",
-                "utterance": "—Padre Zósima, vengo a confesarte mi rabia.",
-            },
-            {
-                "id": "dialog-ch2-001-turn-02",
-                "speakerId": "char-ivan",
-                "speakerName": "Iván",
-                "utterance": "—Yo solo quiero escuchar lo que diga el anciano.",
-            },
-            {
-                "id": "dialog-ch2-001-turn-03",
-                "speakerId": "char-alyosha",
-                "speakerName": "Aliosha",
-                "utterance": "—Lo que digamos aquí nos marca para siempre",
-            },
-        ],
-    },
-    {
-        "id": "para-ch2-002",
-        "type": "paragraph",
-        "position": 40,
-        "text": (
-            "El starets cerró los ojos, como si escuchara un rumor lejano, y los "
-            "hermanos contuvieron la respiración al mismo tiempo."
-        ),
-        "style": "narration",
-    },
-]
-
-
-CHAPTER_STORE: Dict[str, "ChapterStoreEntry"] = {
-    "bk-karamazov-ch-01": {
-        "metadata": {
-            "title": "Libro I — Capítulo I: Fyodor Pavlovich Karamázov",
-            "summary": "Fyodor aguarda a sus hijos y el aire se vuelve irrespirable.",
-            "ordinal": 1,
-            "tokens": 880,
-            "word_count": 2450,
-            "book_id": "bk-karamazov",
-            "book_title": "Los hermanos Karamázov",
-        },
-        "blocks": CHAPTER_01_BLOCKS,
-    },
-    "bk-karamazov-ch-02": {
-        "metadata": {
-            "title": "Libro I — Capítulo II: Los tres hermanos",
-            "summary": "Los hermanos se reúnen ante el starets para buscar juicio.",
-            "ordinal": 2,
-            "tokens": 910,
-            "word_count": 2600,
-            "book_id": "bk-karamazov",
-            "book_title": "Los hermanos Karamázov",
-        },
-        "blocks": CHAPTER_02_BLOCKS,
-    },
-}
-
-
-class ChapterMetadata(TypedDict, total=False):
-    title: str
-    summary: Optional[str]
-    ordinal: int
-    tokens: int
-    word_count: int
-    book_id: Optional[str]
-    book_title: Optional[str]
-
-
-class ChapterStoreEntry(TypedDict):
-    metadata: ChapterMetadata
-    blocks: List[ChapterBlock]
-
-
-def chapter_detail_from_blocks(
-    *,
-    chapter_id: str,
-    title: str,
-    ordinal: int,
-    summary: Optional[str],
-    tokens: int,
-    word_count: int,
-    blocks: List[ChapterBlock],
-    book_id: Optional[str],
-    book_title: Optional[str],
-) -> ChapterDetail:
-    paragraphs = blocks_to_paragraphs(blocks)
-    return {
-        "id": chapter_id,
-        "title": title,
-        "summary": summary,
-        "ordinal": ordinal,
-        "tokens": tokens,
-        "wordCount": word_count,
-        "paragraphs": paragraphs,
-        "content": join_paragraphs(paragraphs),
-        "blocks": blocks,
-        "bookId": book_id,
-        "bookTitle": book_title,
-    }
-
-
-def build_chapter_detail(chapter_id: str, entry: ChapterStoreEntry) -> ChapterDetail:
-    metadata = entry["metadata"]
-    return chapter_detail_from_blocks(
-        chapter_id=chapter_id,
-        title=metadata.get("title", ""),
-        summary=metadata.get("summary"),
-        ordinal=metadata.get("ordinal", 0),
-        tokens=metadata.get("tokens", 0),
-        word_count=metadata.get("word_count", 0),
-        blocks=entry["blocks"],
-        book_id=metadata.get("book_id"),
-        book_title=metadata.get("book_title"),
-    )
-
-
-CHAPTER_DETAILS: Dict[str, ChapterDetail] = {
-    chapter_id: build_chapter_detail(chapter_id, entry)
-    for chapter_id, entry in CHAPTER_STORE.items()
-}
-
-
-DEFAULT_EDITOR_CHAPTER_ID = "bk-karamazov-ch-01"
-DEFAULT_EDITOR_TOKEN_BUDGET = 1620
-
-
-def build_editor_state(source: ChapterDetail) -> EditorPayload:
-    return {
-        "paragraphs": source["paragraphs"],
-        "content": source["content"],
-        "blocks": source["blocks"],
-        "tokens": DEFAULT_EDITOR_TOKEN_BUDGET,
-        "cursor": None,
-        "bookId": source.get("bookId"),
-        "bookTitle": source.get("bookTitle"),
-        "chapterId": source["id"],
-        "chapterTitle": source["title"],
-    }
-
-
-EDITOR_STATE: EditorPayload = build_editor_state(CHAPTER_DETAILS[DEFAULT_EDITOR_CHAPTER_ID])
-
-
-def get_chapter_detail(chapter_id: str) -> Optional[ChapterDetail]:
-    return CHAPTER_DETAILS.get(chapter_id)
-
-
-def rebuild_chapter_detail(chapter_id: str) -> ChapterDetail:
-    entry = CHAPTER_STORE.get(chapter_id)
-    if entry is None:
-        raise KeyError(f"Unknown chapter: {chapter_id}")
-    detail = build_chapter_detail(chapter_id, entry)
-    CHAPTER_DETAILS[chapter_id] = detail
-    return detail
-
-
-def refresh_editor_state(
-    chapter_id: str,
-    detail: Optional[ChapterDetail] = None,
-) -> None:
-    global EDITOR_STATE
-    if EDITOR_STATE.get("chapterId") != chapter_id:
-        return
-    source = detail if detail is not None else CHAPTER_DETAILS[chapter_id]
-    EDITOR_STATE.update(
-        {
-            "paragraphs": source["paragraphs"],
-            "content": source["content"],
-            "blocks": source["blocks"],
-            "tokens": DEFAULT_EDITOR_TOKEN_BUDGET,
-            "cursor": None,
-            "bookId": source.get("bookId"),
-            "bookTitle": source.get("bookTitle"),
-            "chapterId": source["id"],
-            "chapterTitle": source["title"],
-        }
-    )
+from .payloads import (
+    ChapterDetailPayload,
+    ContextSectionPayload,
+    EditorPayload,
+    LibraryBookPayload,
+    build_editor_state,
+    chapter_detail_from_blocks,
+)
+from .sample_data import (
+    DEFAULT_EDITOR_CHAPTER_ID,
+    DEFAULT_EDITOR_TOKEN_BUDGET,
+    SAMPLE_CHAPTER_BLOCKS,
+    SAMPLE_CHAPTER_METADATA,
+    SAMPLE_LIBRARY_BOOKS,
+    SAMPLE_LIBRARY_SECTIONS,
+)
 
 
 def ensure_turn_identifiers(block_id: str, turns: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
@@ -537,9 +36,7 @@ def ensure_turn_identifiers(block_id: str, turns: List[Dict[str, Any]]) -> List[
     seen: set[str] = set()
     for index, turn in enumerate(turns):
         copy = dict(turn)
-        candidate = copy.get("id")
-        if not candidate:
-            candidate = f"{block_id}-turn-{index + 1:02d}"
+        candidate = copy.get("id") or f"{block_id}-turn-{index + 1:02d}"
         while candidate in seen:
             candidate = f"{block_id}-turn-{uuid4().hex[:8]}"
         copy["id"] = candidate
@@ -548,31 +45,220 @@ def ensure_turn_identifiers(block_id: str, turns: List[Dict[str, Any]]) -> List[
     return normalized
 
 
+def get_library_sections() -> List[ContextSectionPayload]:
+    sections = LibrarySection.objects.prefetch_related("items").order_by("order", "id").all()
+    if not sections:
+        return cast(List[ContextSectionPayload], deepcopy(SAMPLE_LIBRARY_SECTIONS))
+    return [section.to_payload() for section in sections]
+
+
+def get_library_books() -> List[LibraryBookPayload]:
+    books = Book.objects.prefetch_related("chapters").order_by("order", "title")
+    if not books:
+        return cast(List[LibraryBookPayload], deepcopy(SAMPLE_LIBRARY_BOOKS))
+    return [book.to_payload() for book in books]
+
+
+def _build_sample_chapter_detail(chapter_id: str) -> Optional[ChapterDetailPayload]:
+    metadata = SAMPLE_CHAPTER_METADATA.get(chapter_id)
+    if metadata is None:
+        return None
+    blocks = deepcopy(SAMPLE_CHAPTER_BLOCKS.get(chapter_id, []))
+    return chapter_detail_from_blocks(
+        chapter_id=chapter_id,
+        title=str(metadata.get("title", "")),
+        summary=metadata.get("summary"),
+        ordinal=int(metadata.get("ordinal", 0)),
+        tokens=metadata.get("tokens"),
+        word_count=metadata.get("word_count"),
+        blocks=blocks,
+        book_id=metadata.get("book_id"),
+        book_title=metadata.get("book_title"),
+    )
+
+
+def get_chapter_detail(chapter_id: str) -> Optional[ChapterDetailPayload]:
+    try:
+        chapter = (
+            Chapter.objects.select_related("book").prefetch_related("blocks").get(pk=chapter_id)
+        )
+    except Chapter.DoesNotExist:
+        return _build_sample_chapter_detail(chapter_id)
+    return chapter.to_detail_payload()
+
+
+def get_editor_state(chapter_id: Optional[str] = None) -> EditorPayload:
+    target_id = chapter_id or DEFAULT_EDITOR_CHAPTER_ID
+    detail = get_chapter_detail(target_id)
+    if detail is None:
+        raise KeyError(f"Unknown chapter: {target_id}")
+    return build_editor_state(source=detail, token_budget=DEFAULT_EDITOR_TOKEN_BUDGET)
+
+
 def update_chapter_block(
     chapter_id: str,
     block_id: str,
     changes: Dict[str, Any],
-) -> ChapterDetail:
-    entry = CHAPTER_STORE.get(chapter_id)
-    if entry is None:
-        raise KeyError(f"Unknown chapter: {chapter_id}")
+) -> ChapterDetailPayload:
+    with transaction.atomic():
+        try:
+            block = (
+                ChapterBlock.objects.select_for_update()
+                .select_related("chapter", "chapter__book")
+                .get(chapter_id=chapter_id, pk=block_id)
+            )
+        except ChapterBlock.DoesNotExist as exc:
+            raise KeyError(f"Unknown block: {block_id}") from exc
 
-    for block in entry["blocks"]:
-        if block["id"] == block_id:
-            target_block = block
-            break
-    else:
-        raise KeyError(f"Unknown block: {block_id}")
+        if "type" in changes and changes["type"] != block.type:
+            raise ValueError("El tipo de bloque no puede cambiarse en esta operación.")
 
-    # Apply field-level updates so future persistence can inspect the store.
-    for field, value in changes.items():
-        if field == "id":
-            continue
-        if field == "turns" and isinstance(value, list):
-            target_block[field] = ensure_turn_identifiers(block_id, value)
-            continue
-        target_block[field] = value
+        if "position" in changes:
+            block.position = int(changes["position"])
 
-    updated_detail = rebuild_chapter_detail(chapter_id)
-    refresh_editor_state(chapter_id, updated_detail)
-    return updated_detail
+        payload_updates: Dict[str, Any] = {
+            key: value for key, value in changes.items() if key not in {"id", "type", "position"}
+        }
+        if "turns" in payload_updates and isinstance(payload_updates["turns"], list):
+            payload_updates["turns"] = ensure_turn_identifiers(block_id, payload_updates["turns"])
+
+        merged_payload = dict(block.payload or {})
+        merged_payload.update(payload_updates)
+        block.payload = merged_payload
+        block.save(update_fields=["position", "payload", "updated_at"])
+
+        chapter = block.chapter
+    return chapter.to_detail_payload()
+
+
+def bootstrap_sample_data(*, force: bool = False, apps=None) -> None:
+    BookModel = Book if apps is None else apps.get_model("studio", "Book")
+    ChapterModel = Chapter if apps is None else apps.get_model("studio", "Chapter")
+    ChapterBlockModel = ChapterBlock if apps is None else apps.get_model("studio", "ChapterBlock")
+    LibrarySectionModel = (
+        LibrarySection if apps is None else apps.get_model("studio", "LibrarySection")
+    )
+    LibraryContextItemModel = (
+        LibraryContextItem if apps is None else apps.get_model("studio", "LibraryContextItem")
+    )
+
+    with transaction.atomic():
+        if not force and LibrarySectionModel.objects.exists():
+            return
+
+        if force:
+            LibraryContextItemModel.objects.all().delete()
+            LibrarySectionModel.objects.all().delete()
+            ChapterBlockModel.objects.all().delete()
+            ChapterModel.objects.all().delete()
+            BookModel.objects.all().delete()
+
+        for order, section in enumerate(SAMPLE_LIBRARY_SECTIONS):
+            section_obj, _ = LibrarySectionModel.objects.update_or_create(
+                id=section["id"],
+                defaults={
+                    "title": section.get("title", ""),
+                    "default_open": bool(section.get("defaultOpen", False)),
+                    "order": order,
+                },
+            )
+            items = section.get("items", [])
+            for item_order, item in enumerate(items):
+                defaults: Dict[str, Any] = {
+                    "item_type": item.get("type", "chapter"),
+                    "name": item.get("name", ""),
+                    "role": item.get("role", ""),
+                    "summary": item.get("summary", ""),
+                    "title": item.get("title", ""),
+                    "description": item.get("description", ""),
+                    "facts": item.get("facts", ""),
+                    "tokens": item.get("tokens"),
+                    "checked": bool(item.get("checked", False)),
+                    "disabled": bool(item.get("disabled", False)),
+                    "order": item_order,
+                }
+                LibraryContextItemModel.objects.update_or_create(
+                    section=section_obj,
+                    item_id=item.get("id", f"{section_obj.id}-{item_order}"),
+                    defaults=defaults,
+                )
+
+        book_objects: Dict[str, Any] = {}
+        for order, book in enumerate(SAMPLE_LIBRARY_BOOKS):
+            book_obj, _ = BookModel.objects.update_or_create(
+                id=book["id"],
+                defaults={
+                    "title": book.get("title", ""),
+                    "author": book.get("author", ""),
+                    "synopsis": book.get("synopsis", ""),
+                    "order": order,
+                },
+            )
+            book_objects[book_obj.id] = book_obj
+            for chapter in book.get("chapters", []):
+                chapter_obj, _ = ChapterModel.objects.update_or_create(
+                    id=chapter["id"],
+                    defaults={
+                        "book": book_obj,
+                        "title": chapter.get("title", ""),
+                        "summary": chapter.get("summary", ""),
+                        "ordinal": int(chapter.get("ordinal", 0)),
+                        "tokens": chapter.get("tokens"),
+                        "word_count": chapter.get("wordCount"),
+                    },
+                )
+                blocks = SAMPLE_CHAPTER_BLOCKS.get(chapter_obj.id, [])
+                for block in blocks:
+                    payload = {
+                        key: value
+                        for key, value in block.items()
+                        if key not in {"id", "type", "position"}
+                    }
+                    ChapterBlockModel.objects.update_or_create(
+                        id=block["id"],
+                        defaults={
+                            "chapter": chapter_obj,
+                            "type": block.get("type", "paragraph"),
+                            "position": int(block.get("position", 0)),
+                            "payload": payload,
+                        },
+                    )
+
+        # Ensure there is at least one chapter for editor defaults
+        if not ChapterModel.objects.filter(id=DEFAULT_EDITOR_CHAPTER_ID).exists():
+            metadata = SAMPLE_CHAPTER_METADATA.get(DEFAULT_EDITOR_CHAPTER_ID)
+            if metadata:
+                book_obj = book_objects.get(metadata.get("book_id"))
+                if book_obj is None and metadata.get("book_id"):
+                    book_obj, _ = BookModel.objects.get_or_create(
+                        id=metadata["book_id"],
+                        defaults={"title": metadata.get("book_title", metadata["book_id"])},
+                    )
+                    book_objects[book_obj.id] = book_obj
+                chapter_obj, _ = ChapterModel.objects.update_or_create(
+                    id=DEFAULT_EDITOR_CHAPTER_ID,
+                    defaults={
+                        "book": book_obj,
+                        "title": metadata.get("title", ""),
+                        "summary": metadata.get("summary", ""),
+                        "ordinal": int(metadata.get("ordinal", 0)),
+                        "tokens": metadata.get("tokens"),
+                        "word_count": metadata.get("word_count"),
+                    },
+                )
+                blocks = SAMPLE_CHAPTER_BLOCKS.get(DEFAULT_EDITOR_CHAPTER_ID, [])
+                for block in blocks:
+                    payload = {
+                        key: value
+                        for key, value in block.items()
+                        if key not in {"id", "type", "position"}
+                    }
+                    ChapterBlockModel.objects.update_or_create(
+                        id=block["id"],
+                        defaults={
+                            "chapter": chapter_obj,
+                            "type": block.get("type", "paragraph"),
+                            "position": int(block.get("position", 0)),
+                            "payload": payload,
+                        },
+                    )

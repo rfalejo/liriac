@@ -7,10 +7,10 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 
 from .data import (
-    EDITOR_STATE,
-    LIBRARY_BOOKS,
-    LIBRARY_SECTIONS,
     get_chapter_detail,
+    get_editor_state,
+    get_library_books,
+    get_library_sections,
     update_chapter_block,
 )
 from .serializers import (
@@ -30,7 +30,8 @@ class LibraryView(APIView):
 
     @extend_schema(responses=LibraryResponseSerializer)
     def get(self, _request):
-        serializer = LibraryResponseSerializer({"sections": LIBRARY_SECTIONS})
+        sections = get_library_sections()
+        serializer = LibraryResponseSerializer({"sections": sections})
         return Response(serializer.data)
 
 
@@ -42,7 +43,8 @@ class LibraryBooksView(APIView):
 
     @extend_schema(responses=LibraryBooksResponseSerializer)
     def get(self, _request):
-        serializer = LibraryBooksResponseSerializer({"books": LIBRARY_BOOKS})
+        books = get_library_books()
+        serializer = LibraryBooksResponseSerializer({"books": books})
         return Response(serializer.data)
 
 
@@ -100,6 +102,8 @@ class ChapterBlockUpdateView(APIView):
             updated_chapter = update_chapter_block(chapter_id, block_id, payload)
         except KeyError as exc:
             raise Http404(str(exc)) from exc
+        except ValueError as exc:
+            raise ValidationError({"type": str(exc)}) from exc
 
         response_serializer = ChapterDetailSerializer(updated_chapter)
         return Response(response_serializer.data)
@@ -113,5 +117,6 @@ class EditorView(APIView):
 
     @extend_schema(responses=EditorStateSerializer)
     def get(self, _request):
-        serializer = EditorStateSerializer(EDITOR_STATE)
+        editor_state = get_editor_state()
+        serializer = EditorStateSerializer(editor_state)
         return Response(serializer.data)
