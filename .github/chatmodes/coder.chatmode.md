@@ -165,6 +165,7 @@ frontend/
 |   |   |   |-- hooks/
 |   |   |   |   |-- editing/
 |   |   |   |   |   |-- constants.ts
+|   |   |   |   |   |-- createBlockEditingState.ts
 |   |   |   |   |   |-- types.ts
 |   |   |   |   |   |-- useDialogueBlockEditingSession.ts
 |   |   |   |   |   |-- useEditingBlockManager.ts
@@ -188,7 +189,8 @@ frontend/
 |   |   |   |   \-- SidebarShell.tsx
 |   |   |   |-- utils/
 |   |   |   |   |-- dialogueTurns.ts
-|   |   |   |   \-- editingShortcuts.ts
+|   |   |   |   |-- editingShortcuts.ts
+|   |   |   |   \-- showBlockUpdateErrorToast.ts
 |   |   |   |-- EditorChapterView.tsx
 |   |   |   |-- EditorContainer.tsx
 |   |   |   |-- EditorShell.tsx

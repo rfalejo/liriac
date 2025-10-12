@@ -1,10 +1,11 @@
-import { Box, Typography } from "@mui/material";
+import { Typography } from "@mui/material";
 import type { Theme } from "@mui/material/styles";
-import { useEffect, useRef, useState } from "react";
+import type { KeyboardEventHandler } from "react";
 import type { components } from "../../../api/schema";
 import type { ParagraphEditingState } from "../types";
 import { handleEditingKeyDown } from "../utils/editingShortcuts";
 import { EditableBlock } from "./components/EditableBlock";
+import { EditableContentField } from "./components/EditableContentField";
 
 type ChapterBlock = components["schemas"]["ChapterBlock"];
 
@@ -49,39 +50,9 @@ type ParagraphEditViewProps = {
 };
 
 function ParagraphEditView({ blockId, editingState }: ParagraphEditViewProps) {
-  const editorRef = useRef<HTMLDivElement | null>(null);
-  const [hasInitialized, setHasInitialized] = useState(false);
   const draftText = editingState.paragraph.draftText;
 
-  useEffect(() => {
-    if (!editorRef.current) {
-      return;
-    }
-
-    if (!hasInitialized) {
-      editorRef.current.focus();
-      setHasInitialized(true);
-    }
-
-    if (editorRef.current.textContent !== draftText) {
-      editorRef.current.textContent = draftText;
-    }
-  }, [draftText, hasInitialized]);
-
-  useEffect(() => {
-    setHasInitialized(false);
-  }, [blockId]);
-
-  const handleInput = () => {
-    if (!editorRef.current) {
-      return;
-    }
-    editingState.paragraph.onChangeDraft(
-      editorRef.current.textContent ?? "",
-    );
-  };
-
-  const handleKeyDown: React.KeyboardEventHandler<HTMLDivElement> = (event) => {
+  const handleKeyDown: KeyboardEventHandler<HTMLDivElement> = (event) => {
     handleEditingKeyDown(event, {
       onConfirm: editingState.onSave,
       onCancel: editingState.onCancel,
@@ -89,16 +60,17 @@ function ParagraphEditView({ blockId, editingState }: ParagraphEditViewProps) {
   };
 
   return (
-    <Box
-      ref={editorRef}
-      contentEditable
-      suppressContentEditableWarning
-      role="textbox"
-      aria-multiline
-      aria-label="Editor de párrafo"
-      spellCheck
-      onInput={handleInput}
+    <EditableContentField
+      value={draftText}
+      onChange={editingState.paragraph.onChangeDraft}
+      ariaLabel="Editor de párrafo"
+      placeholder="Añade texto para este párrafo"
+      multiline
+      autoFocus
+      focusKey={blockId}
+      selectionBehavior="caret-at-end"
       onKeyDown={handleKeyDown}
+      spellCheck
       sx={(theme: Theme) => theme.typography.editorParagraphEditable}
     />
   );

@@ -2,6 +2,7 @@ import { Box } from "@mui/material";
 import type { SxProps, Theme } from "@mui/material/styles";
 import type {
   ClipboardEvent as ReactClipboardEvent,
+  FocusEventHandler,
   KeyboardEventHandler,
 } from "react";
 import { useCallback, useEffect, useMemo, useRef } from "react";
@@ -10,22 +11,38 @@ type EditableContentFieldProps = {
   value: string;
   onChange: (value: string) => void;
   ariaLabel: string;
+  ariaLabelledBy?: string;
+  ariaDescribedBy?: string;
   placeholder?: string;
   multiline?: boolean;
   sx?: SxProps<Theme>;
   onKeyDown?: KeyboardEventHandler<HTMLDivElement>;
+  onFocus?: FocusEventHandler<HTMLDivElement>;
+  onBlur?: FocusEventHandler<HTMLDivElement>;
   disabled?: boolean;
+  autoFocus?: boolean;
+  focusKey?: string | number;
+  selectionBehavior?: "caret-at-end" | "select-all";
+  spellCheck?: boolean;
 };
 
 export function EditableContentField({
   value,
   onChange,
   ariaLabel,
+  ariaLabelledBy,
+  ariaDescribedBy,
   placeholder,
   multiline = false,
   sx,
   onKeyDown,
+  onFocus,
+  onBlur,
   disabled = false,
+  autoFocus = false,
+  focusKey,
+  selectionBehavior = "caret-at-end",
+  spellCheck = true,
 }: EditableContentFieldProps) {
   const editorRef = useRef<HTMLDivElement | null>(null);
 
@@ -72,15 +89,12 @@ export function EditableContentField({
 
   const handlePaste = useCallback(
     (event: ReactClipboardEvent<HTMLDivElement>) => {
-    const node = editorRef.current;
-    if (!node) {
-      return;
-    }
-      if (disabled) {
+      const node = editorRef.current;
+      if (!node || disabled) {
         return;
       }
 
-    event.preventDefault();
+      event.preventDefault();
       const selection = window.getSelection();
       if (!selection || selection.rangeCount === 0) {
         return;
@@ -95,6 +109,46 @@ export function EditableContentField({
     },
     [disabled, onChange],
   );
+
+  const moveCaret = useCallback(() => {
+    const node = editorRef.current;
+    if (!node) {
+      return;
+    }
+
+    const selection = window.getSelection();
+    if (!selection) {
+      return;
+    }
+
+    const range = document.createRange();
+    range.selectNodeContents(node);
+
+    if (selectionBehavior === "select-all") {
+      selection.removeAllRanges();
+      selection.addRange(range);
+      return;
+    }
+
+    range.collapse(false);
+    selection.removeAllRanges();
+    selection.addRange(range);
+    selection.collapseToEnd();
+  }, [selectionBehavior]);
+
+  useEffect(() => {
+    if (!autoFocus || disabled) {
+      return;
+    }
+
+    const node = editorRef.current;
+    if (!node) {
+      return;
+    }
+
+    node.focus();
+    requestAnimationFrame(moveCaret);
+  }, [autoFocus, disabled, focusKey, moveCaret]);
 
   const baseStyles = useCallback(
     (theme: Theme) => {
@@ -140,14 +194,18 @@ export function EditableContentField({
       role="textbox"
       aria-multiline={multiline}
       aria-label={ariaLabel}
-  aria-disabled={disabled}
-  contentEditable={disabled ? "false" : "true"}
-  tabIndex={disabled ? -1 : 0}
-      spellCheck
+      aria-labelledby={ariaLabelledBy}
+      aria-describedby={ariaDescribedBy}
+      aria-disabled={disabled}
+      contentEditable={disabled ? "false" : "true"}
+      tabIndex={disabled ? -1 : 0}
+      spellCheck={spellCheck}
       data-placeholder={placeholder ?? ""}
       onInput={handleInput}
       onKeyDown={handleKeyDown}
-  onPaste={handlePaste}
+      onPaste={handlePaste}
+      onFocus={onFocus}
+      onBlur={onBlur}
       sx={combinedSx}
     />
   );
