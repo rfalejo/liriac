@@ -170,7 +170,6 @@ frontend/
 |   |   |   |-- EditorContainer.tsx
 |   |   |   |-- EditorShell.tsx
 |   |   |   |-- EditorSidebar.tsx
-|   |   |   |-- editorTheme.ts
 |   |   |   \-- types.ts
 |   |   \-- library/
 |   |       |-- components/
@@ -192,6 +191,8 @@ frontend/
 |   |-- App.tsx
 |   |-- index.css
 |   |-- main.tsx
+|   |-- theme.ts
+|   |-- theme.types.ts
 |   \-- vite-env.d.ts
 |-- .gitignore
 |-- .prettierignore
