@@ -12,11 +12,7 @@ export type EditableDialogueTurnProps = {
   turnKey: string;
   turn: DialogueTurn;
   disabled: boolean;
-  onChangeTurn?: (
-    turnId: string,
-    field: DialogueField,
-    value: string,
-  ) => void;
+  onChangeTurn?: (turnId: string, field: DialogueField, value: string) => void;
   onKeyDown: (event: KeyboardEvent) => void;
 };
 
@@ -34,8 +30,8 @@ const createSharedFieldSx = (overrides?: SxProps<Theme>): SxProps<Theme> => ({
   "&:focus": {
     outline: "none",
   },
-  '&:empty::before': {
-    content: 'attr(data-placeholder)',
+  "&:empty::before": {
+    content: "attr(data-placeholder)",
     color: "rgba(15, 20, 25, 0.45)",
     pointerEvents: "none",
   },

@@ -1,6 +1,6 @@
 ---
 description: 'liriac - AI agent quickstart'
-tools: ['runCommands', 'edit', 'search', 'context7/*', 'todos', 'usages', 'problems', 'changes', 'fetch']
+tools: ['runCommands', 'runTasks', 'edit', 'search', 'web-search-prime/*', 'context7/*', 'todos', 'usages', 'problems', 'changes', 'fetch']
 model: GPT-5-Codex (Preview) (copilot)
 ---
 # Liriac – AI agent quickstart
@@ -158,9 +158,12 @@ frontend/
 |   |   |   |   \-- index.ts
 |   |   |   |-- hooks/
 |   |   |   |   |-- useEditorChapterNavigation.ts
+|   |   |   |   |-- useEditorEditingState.ts
 |   |   |   |   |-- useEditorScrollbar.ts
 |   |   |   |   |-- useSidebarHover.ts
 |   |   |   |   \-- useUpdateChapterBlock.ts
+|   |   |   |-- utils/
+|   |   |   |   \-- dialogueTurns.ts
 |   |   |   |-- EditorChapterView.tsx
 |   |   |   |-- EditorContainer.tsx
 |   |   |   |-- EditorShell.tsx

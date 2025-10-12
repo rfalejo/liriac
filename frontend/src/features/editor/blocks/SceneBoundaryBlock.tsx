@@ -1,9 +1,6 @@
 import { Divider, Stack, Typography } from "@mui/material";
 import type { components } from "../../../api/schema";
-import {
-  editorBodyTypographySx,
-  editorThemeConstants,
-} from "../editorTheme";
+import { editorBodyTypographySx, editorThemeConstants } from "../editorTheme";
 import { EditorBlockFrame } from "./EditorBlockFrame";
 
 type ChapterBlock = components["schemas"]["ChapterBlock"];
