@@ -1,4 +1,4 @@
-import { Typography } from "@mui/material";
+import Typography from "@mui/material/Typography";
 import type { Theme } from "@mui/material/styles";
 import type { components } from "../../../api/schema";
 import type { ParagraphEditingState } from "../types";

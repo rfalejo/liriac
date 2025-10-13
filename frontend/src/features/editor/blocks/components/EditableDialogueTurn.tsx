@@ -1,4 +1,4 @@
-import { Stack } from "@mui/material";
+import Stack from "@mui/material/Stack";
 import type { Theme } from "@mui/material/styles";
 import { useCallback, useMemo, type KeyboardEventHandler } from "react";
 import type { DialogueField, DialogueTurn } from "../../types";

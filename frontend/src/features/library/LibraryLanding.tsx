@@ -1,5 +1,8 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { Box, Container, Stack, Typography } from "@mui/material";
+import Box from "@mui/material/Box";
+import Container from "@mui/material/Container";
+import Stack from "@mui/material/Stack";
+import Typography from "@mui/material/Typography";
 import { EditorContainer } from "../editor/EditorContainer";
 import { LibraryBooksPanel } from "./LibraryBooksPanel";
 import { useLibraryData } from "./LibraryDataContext";

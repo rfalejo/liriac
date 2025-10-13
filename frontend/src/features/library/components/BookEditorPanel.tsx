@@ -1,15 +1,13 @@
 import CloseRoundedIcon from "@mui/icons-material/CloseRounded";
 import DeleteRoundedIcon from "@mui/icons-material/DeleteRounded";
-import {
-  Alert,
-  Button,
-  Divider,
-  IconButton,
-  Stack,
-  Tab,
-  Tabs,
-  Typography,
-} from "@mui/material";
+import Alert from "@mui/material/Alert";
+import Button from "@mui/material/Button";
+import Divider from "@mui/material/Divider";
+import IconButton from "@mui/material/IconButton";
+import Stack from "@mui/material/Stack";
+import Tab from "@mui/material/Tab";
+import Tabs from "@mui/material/Tabs";
+import Typography from "@mui/material/Typography";
 import type { LibraryBook } from "../../../api/library";
 import { LibraryPanel } from "./LibraryPanel";
 import { BookDeleteDialog } from "./BookDeleteDialog";

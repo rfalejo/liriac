@@ -1,5 +1,7 @@
-import { Box, Paper, Stack, Typography } from "@mui/material";
-import type { PaperProps } from "@mui/material";
+import Box from "@mui/material/Box";
+import Paper, { type PaperProps } from "@mui/material/Paper";
+import Stack from "@mui/material/Stack";
+import Typography from "@mui/material/Typography";
 import { alpha } from "@mui/material/styles";
 import type { SxProps, Theme } from "@mui/material/styles";
 import type { ReactNode } from "react";

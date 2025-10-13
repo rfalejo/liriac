@@ -1,4 +1,4 @@
-import { Box } from "@mui/material";
+import Box from "@mui/material/Box";
 import type { SxProps, Theme } from "@mui/material/styles";
 import type { ComponentProps, ReactNode } from "react";
 import { EditorChapterView } from "./EditorChapterView";

@@ -1,4 +1,4 @@
-import { Box } from "@mui/material";
+import Box from "@mui/material/Box";
 import type { ChapterSummary } from "../../api/library";
 import { SidebarChapterList } from "./sidebar/SidebarChapterList";
 import { SidebarHeader } from "./sidebar/SidebarHeader";

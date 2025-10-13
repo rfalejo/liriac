@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import type { ChapterBlockUpdatePayload } from "../../../api/chapters";
 import type { ChapterBlock, DialogueField, DialogueTurn } from "../types";
 import {
@@ -44,18 +44,27 @@ export function useDialogueEditingState({
 }: UseDialogueEditingStateParams): DialogueEditingHandlers {
   const [draftTurns, setDraftTurns] = useState<DialogueTurn[]>([]);
   const [syncedBlockId, setSyncedBlockId] = useState<string | null>(null);
+  const previousBlockIdRef = useRef<string | null>(null);
 
   useEffect(() => {
-    if (isActive && block) {
-      setDraftTurns(cloneTurns(block.turns));
-      setSyncedBlockId(block.id);
+    if (!isActive || !block) {
+      return;
     }
-  }, [block?.id, isActive]);
+
+    if (previousBlockIdRef.current === block.id) {
+      return;
+    }
+
+    previousBlockIdRef.current = block.id;
+    setDraftTurns(cloneTurns(block.turns));
+    setSyncedBlockId(block.id);
+  }, [block, isActive]);
 
   useEffect(() => {
     if (!isActive) {
       setDraftTurns([]);
       setSyncedBlockId(null);
+      previousBlockIdRef.current = null;
     }
   }, [isActive]);
 

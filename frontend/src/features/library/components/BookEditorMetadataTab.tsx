@@ -1,4 +1,5 @@
-import { Stack, TextField } from "@mui/material";
+import Stack from "@mui/material/Stack";
+import TextField from "@mui/material/TextField";
 
 type MetadataFormState = {
   title: string;

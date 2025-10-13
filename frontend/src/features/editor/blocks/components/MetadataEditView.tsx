@@ -1,4 +1,8 @@
-import { FormControl, InputLabel, MenuItem, Stack, Typography } from "@mui/material";
+import FormControl from "@mui/material/FormControl";
+import InputLabel from "@mui/material/InputLabel";
+import MenuItem from "@mui/material/MenuItem";
+import Stack from "@mui/material/Stack";
+import Typography from "@mui/material/Typography";
 import Select, { type SelectChangeEvent } from "@mui/material/Select";
 import type { Theme } from "@mui/material/styles";
 import { useCallback, useMemo } from "react";

@@ -1,9 +1,23 @@
-import { Box, IconButton, Stack, Tooltip, Typography } from "@mui/material";
+import Box from "@mui/material/Box";
+import IconButton from "@mui/material/IconButton";
+import Stack from "@mui/material/Stack";
+import Tooltip from "@mui/material/Tooltip";
+import Typography from "@mui/material/Typography";
+import { keyframes } from "@mui/material/styles";
 import RefreshRoundedIcon from "@mui/icons-material/RefreshRounded";
 import type { LibraryBook } from "../../api/library";
 import { LibraryPanel } from "./components/LibraryPanel";
 import { resolveLibraryPanelStatus } from "./components/panelStatus";
 import { AddBookCoverCard, BookCoverCard } from "./components/BookCoverCard";
+
+const refreshSpin = keyframes`
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+`;
 
 type LibraryBooksPanelProps = {
   books: LibraryBook[];
@@ -72,17 +86,11 @@ export function LibraryBooksPanel({
             >
               <RefreshRoundedIcon
                 fontSize="small"
-                sx={{
-                  ...(refreshDisabled
-                    ? {
-                        animation: "spin 900ms linear infinite",
-                        "@keyframes spin": {
-                          from: { transform: "rotate(0deg)" },
-                          to: { transform: "rotate(360deg)" },
-                        },
-                      }
-                    : {}),
-                }}
+                sx={
+                  refreshDisabled
+                    ? { animation: `${refreshSpin} 900ms linear infinite` }
+                    : undefined
+                }
               />
             </IconButton>
           </span>

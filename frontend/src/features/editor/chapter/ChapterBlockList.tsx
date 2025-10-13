@@ -1,5 +1,5 @@
 import { Fragment } from "react";
-import { Stack } from "@mui/material";
+import Stack from "@mui/material/Stack";
 import type {
   ChapterBlockEntry,
   ChapterBlockType,

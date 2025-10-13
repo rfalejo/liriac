@@ -1,4 +1,4 @@
-import { Box } from "@mui/material";
+import Box from "@mui/material/Box";
 import type { Theme } from "@mui/material/styles";
 import type { ReactNode } from "react";
 import type { components } from "../../../api/schema";

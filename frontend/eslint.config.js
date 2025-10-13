@@ -24,6 +24,18 @@ export default tseslint.config(
     },
     rules: {
       "@typescript-eslint/no-deprecated": "error",
+      "no-restricted-imports": [
+        "error",
+        {
+          patterns: [
+            {
+              regex: "^@mui/[^/]+$",
+              message:
+                "Import from component-specific entry points (e.g. @mui/material/Button) to keep bundles lean.",
+            },
+          ],
+        },
+      ],
     },
   },
 );

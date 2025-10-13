@@ -1,4 +1,6 @@
-import { CircularProgress, IconButton, Stack } from "@mui/material";
+import CircularProgress from "@mui/material/CircularProgress";
+import IconButton from "@mui/material/IconButton";
+import Stack from "@mui/material/Stack";
 import type { Theme } from "@mui/material/styles";
 import CheckRoundedIcon from "@mui/icons-material/CheckRounded";
 import CloseRoundedIcon from "@mui/icons-material/CloseRounded";

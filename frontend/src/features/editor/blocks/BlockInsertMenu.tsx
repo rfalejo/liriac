@@ -1,5 +1,8 @@
 import { useCallback, useMemo, useRef, useState } from "react";
-import { Box, IconButton, Paper, Tooltip } from "@mui/material";
+import Box from "@mui/material/Box";
+import IconButton from "@mui/material/IconButton";
+import Paper from "@mui/material/Paper";
+import Tooltip from "@mui/material/Tooltip";
 import type { Theme } from "@mui/material/styles";
 import MoreHorizRoundedIcon from "@mui/icons-material/MoreHorizRounded";
 import SubjectRoundedIcon from "@mui/icons-material/SubjectRounded";
@@ -94,7 +97,7 @@ export function BlockInsertMenu({
 
   const optionButtons = useMemo(
     () =>
-  BLOCK_INSERT_OPTIONS.map(({ type, label, Icon }) => (
+      BLOCK_INSERT_OPTIONS.map(({ type, label, Icon }) => (
         <Tooltip key={type} title={label} placement="top" arrow>
           <IconButton
             size="small"
@@ -115,7 +118,7 @@ export function BlockInsertMenu({
             <Icon fontSize="small" />
           </IconButton>
         </Tooltip>
-      )),
+  )),
     [onInsertBlock, position],
   );
 

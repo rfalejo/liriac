@@ -157,7 +157,9 @@ frontend/
 |   |   |   |   |   |-- DialogueEditableField.tsx
 |   |   |   |   |   |-- EditableBlock.tsx
 |   |   |   |   |   |-- EditableContentField.tsx
-|   |   |   |   |   \-- EditableDialogueTurn.tsx
+|   |   |   |   |   |-- EditableDialogueTurn.tsx
+|   |   |   |   |   |-- MetadataEditView.tsx
+|   |   |   |   |   \-- MetadataReadView.tsx
 |   |   |   |   |-- utils/
 |   |   |   |   |   \-- blockEditingHelpers.ts
 |   |   |   |   |-- BlockInsertMenu.tsx
@@ -194,6 +196,7 @@ frontend/
 |   |   |   |   |-- useDeleteChapterBlock.ts
 |   |   |   |   |-- useDialogueEditingState.ts
 |   |   |   |   |-- useEditorChapterNavigation.ts
+|   |   |   |   |-- useEditorConfirmDialog.ts
 |   |   |   |   |-- useEditorEditingState.ts
 |   |   |   |   |-- useEditorScrollbar.ts
 |   |   |   |   |-- useMetadataEditingState.ts
@@ -206,6 +209,7 @@ frontend/
 |   |   |   |   |-- SidebarHeader.tsx
 |   |   |   |   \-- SidebarShell.tsx
 |   |   |   |-- utils/
+|   |   |   |   |-- blockCreation.ts
 |   |   |   |   |-- dialogueTurns.ts
 |   |   |   |   |-- editingShortcuts.ts
 |   |   |   |   \-- showBlockUpdateErrorToast.ts
@@ -229,8 +233,11 @@ frontend/
 |   |       |   |-- bookContextHelpers.ts
 |   |       |   \-- panelStatus.ts
 |   |       |-- hooks/
+|   |       |   |-- useBookContextEditor.ts
+|   |       |   |-- useBookDeletionFlow.ts
 |   |       |   |-- useBookEditorPanel.ts
 |   |       |   |-- useBookLookup.ts
+|   |       |   |-- useBookMetadataForm.ts
 |   |       |   |-- useChapterDetail.ts
 |   |       |   |-- useCreateLibraryContextItem.ts
 |   |       |   |-- useDeleteBook.ts

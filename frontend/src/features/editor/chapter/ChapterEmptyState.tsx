@@ -1,4 +1,6 @@
-import { Button, Stack, Typography } from "@mui/material";
+import Button from "@mui/material/Button";
+import Stack from "@mui/material/Stack";
+import Typography from "@mui/material/Typography";
 import type { Theme } from "@mui/material/styles";
 import type { BlockInsertPosition } from "../blocks/BlockInsertMenu";
 import { BLOCK_INSERT_OPTIONS } from "../blocks/BlockInsertMenu";

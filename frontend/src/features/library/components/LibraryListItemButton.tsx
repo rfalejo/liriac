@@ -1,5 +1,6 @@
-import { ListItemButton } from "@mui/material";
-import type { ListItemButtonProps } from "@mui/material";
+import ListItemButton, {
+  type ListItemButtonProps,
+} from "@mui/material/ListItemButton";
 import type { SxProps, Theme } from "@mui/material/styles";
 import { forwardRef } from "react";
 

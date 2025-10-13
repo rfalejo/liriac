@@ -1,4 +1,7 @@
-import { List, ListItemButton, ListItemText, Typography } from "@mui/material";
+import List from "@mui/material/List";
+import ListItemButton from "@mui/material/ListItemButton";
+import ListItemText from "@mui/material/ListItemText";
+import Typography from "@mui/material/Typography";
 import type { Theme } from "@mui/material/styles";
 import type { ChapterSummary } from "../../../api/library";
 
