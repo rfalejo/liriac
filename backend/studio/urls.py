@@ -7,6 +7,7 @@ from .views import (
     LibraryBookChaptersView,
     LibraryBookDetailView,
     LibraryBooksView,
+    LibraryContextItemsView,
     LibraryView,
 )
 
@@ -32,6 +33,11 @@ urlpatterns = [
         "library/chapters/<str:chapter_id>/blocks/<str:block_id>/",
         ChapterBlockUpdateView.as_view(),
         name="library-chapter-block-update",
+    ),
+    path(
+        "library/context/items/",
+        LibraryContextItemsView.as_view(),
+        name="library-context-items",
     ),
     path("editor/", EditorView.as_view(), name="editor"),
 ]

@@ -196,6 +196,24 @@ paths:
               schema:
                 $ref: '#/components/schemas/ChapterDetail'
           description: ''
+  /api/library/context/items/:
+    patch:
+      operationId: library_context_items_partial_update
+      description: Update editable fields for context items.
+      tags:
+      - library
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PatchedContextItemsUpdateRequest'
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LibraryResponse'
+          description: ''
 components:
   schemas:
     BookUpsert:
@@ -439,6 +457,34 @@ components:
         * `world` - world
         * `styleTone` - styleTone
         * `chapter` - chapter
+    ContextItemUpdate:
+      type: object
+      properties:
+        id:
+          type: string
+        sectionId:
+          type: string
+        name:
+          type: string
+          nullable: true
+        role:
+          type: string
+          nullable: true
+        summary:
+          type: string
+          nullable: true
+        title:
+          type: string
+          nullable: true
+        description:
+          type: string
+          nullable: true
+        facts:
+          type: string
+          nullable: true
+      required:
+      - id
+      - sectionId
     ContextSection:
       type: object
       properties:
@@ -670,3 +716,10 @@ components:
           type: integer
           minimum: 0
           nullable: true
+    PatchedContextItemsUpdateRequest:
+      type: object
+      properties:
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/ContextItemUpdate'

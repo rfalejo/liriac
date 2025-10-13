@@ -279,6 +279,50 @@ def update_chapter_block(
     return chapter.to_detail_payload()
 
 
+def update_context_items(updates: List[Dict[str, Any]]) -> List[ContextSectionPayload]:
+    if not updates:
+        return get_library_sections()
+
+    editable_fields = {
+        "name": "name",
+        "role": "role",
+        "summary": "summary",
+        "title": "title",
+        "description": "description",
+        "facts": "facts",
+    }
+
+    with transaction.atomic():
+        for update in updates:
+            section_id = str(update["sectionId"])
+            item_id = str(update["id"])
+
+            try:
+                item = (
+                    LibraryContextItem.objects.select_for_update()
+                    .select_related("section")
+                    .get(section_id=section_id, item_id=item_id)
+                )
+            except LibraryContextItem.DoesNotExist as exc:
+                raise KeyError(f"Unknown context item: {section_id}:{item_id}") from exc
+
+            fields_to_update: List[str] = []
+
+            for field, model_field in editable_fields.items():
+                if field not in update:
+                    continue
+
+                raw_value = update[field]
+                coerced = "" if raw_value in {None, ""} else str(raw_value)
+                setattr(item, model_field, coerced)
+                fields_to_update.append(model_field)
+
+            if fields_to_update:
+                item.save(update_fields=fields_to_update + ["updated_at"])
+
+    return get_library_sections()
+
+
 def bootstrap_sample_data(*, force: bool = False, apps=None) -> None:
     BookModel = Book if apps is None else apps.get_model("studio", "Book")
     ChapterModel = Chapter if apps is None else apps.get_model("studio", "Chapter")

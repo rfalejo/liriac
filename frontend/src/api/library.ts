@@ -4,6 +4,7 @@ import { request } from "./client";
 export type LibraryResponse = components["schemas"]["LibraryResponse"];
 export type ContextSection = components["schemas"]["ContextSection"];
 export type ContextItem = components["schemas"]["ContextItem"];
+export type ContextItemUpdate = components["schemas"]["ContextItemUpdate"];
 export type LibraryBooksResponse =
   components["schemas"]["LibraryBooksResponse"];
 export type LibraryBook = components["schemas"]["LibraryBook"];
@@ -13,6 +14,8 @@ export type PatchedBookUpsert = components["schemas"]["PatchedBookUpsert"];
 export type ChapterUpsert = components["schemas"]["ChapterUpsert"];
 export type PatchedChapterUpsert =
   components["schemas"]["PatchedChapterUpsert"];
+export type PatchedContextItemsUpdateRequest =
+  components["schemas"]["PatchedContextItemsUpdateRequest"];
 
 export async function fetchLibrarySections(): Promise<LibraryResponse> {
   return request<LibraryResponse>("/api/library/");
@@ -63,6 +66,15 @@ export async function updateLibraryChapter(
   payload: PatchedChapterUpsert,
 ): Promise<ChapterSummary> {
   return request<ChapterSummary>(`/api/library/chapters/${chapterId}/`, {
+    method: "PATCH",
+    body: JSON.stringify(payload),
+  });
+}
+
+export async function updateLibraryContextItems(
+  payload: PatchedContextItemsUpdateRequest,
+): Promise<LibraryResponse> {
+  return request<LibraryResponse>("/api/library/context/items/", {
     method: "PATCH",
     body: JSON.stringify(payload),
   });

@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import {
   Alert,
   Button,
@@ -9,9 +9,6 @@ import {
   DialogContent,
   DialogContentText,
   DialogTitle,
-  List,
-  ListItem,
-  ListItemText,
   Stack,
   TextField,
   Typography,
@@ -21,9 +18,11 @@ import type {
   ContextSection,
   LibraryBook,
   LibraryResponse,
+  ContextItemUpdate,
 } from "../../../api/library";
 import { useUpsertBook } from "../hooks/useUpsertBook";
 import { useDeleteBook } from "../hooks/useDeleteBook";
+import { useUpdateLibraryContext } from "../hooks/useUpdateLibraryContext";
 
 const emptyFormState = {
   title: "",
@@ -31,14 +30,119 @@ const emptyFormState = {
   synopsis: "",
 };
 
-const CONTEXT_SECTION_IDS_IN_ORDER = ["characters", "world", "styleTone"] as const;
+const CONTEXT_SECTION_IDS_IN_ORDER = [
+  "characters",
+  "world",
+  "styleTone",
+] as const;
+
+type ContextSectionId = (typeof CONTEXT_SECTION_IDS_IN_ORDER)[number];
+
+type ContextEditableField =
+  | "name"
+  | "role"
+  | "summary"
+  | "title"
+  | "description"
+  | "facts";
+
+type ContextItemFormValue = {
+  id: string;
+  sectionId: string;
+  type: ContextItem["type"];
+} & Partial<Record<ContextEditableField, string>>;
+
+type ContextFieldDescriptor = {
+  field: ContextEditableField;
+  label: string;
+  multiline?: boolean;
+  minRows?: number;
+};
+
+const CONTEXT_FIELDS_BY_SECTION: Record<
+  ContextSectionId,
+  ContextFieldDescriptor[]
+> = {
+  characters: [
+    { field: "name", label: "Nombre" },
+    { field: "role", label: "Rol" },
+    { field: "summary", label: "Resumen", multiline: true, minRows: 3 },
+  ],
+  world: [
+    { field: "title", label: "Título" },
+    { field: "summary", label: "Resumen", multiline: true, minRows: 3 },
+    { field: "facts", label: "Datos clave", multiline: true, minRows: 2 },
+  ],
+  styleTone: [
+    {
+      field: "description",
+      label: "Descripción",
+      multiline: true,
+      minRows: 3,
+    },
+  ],
+};
+
+function makeContextKey(sectionId: string, itemId: string) {
+  return `${sectionId}:${itemId}`;
+}
+
+function buildContextFormValues(
+  sections: ContextSection[],
+): Record<string, ContextItemFormValue> {
+  const result: Record<string, ContextItemFormValue> = {};
+
+  for (const section of sections) {
+    const sectionId = CONTEXT_SECTION_IDS_IN_ORDER.find(
+      (id) => id === section.id,
+    );
+    if (!sectionId) {
+      continue;
+    }
+
+    const fieldDescriptors = CONTEXT_FIELDS_BY_SECTION[sectionId];
+    if (!fieldDescriptors?.length) {
+      continue;
+    }
+
+    for (const item of section.items) {
+      const key = makeContextKey(section.id, item.id);
+      const value: ContextItemFormValue = {
+        id: item.id,
+        sectionId: section.id,
+        type: item.type,
+      };
+
+      for (const descriptor of fieldDescriptors) {
+        const raw = item[descriptor.field as keyof ContextItem];
+        const normalized =
+          typeof raw === "string"
+            ? raw
+            : raw === null || raw === undefined
+              ? ""
+              : String(raw);
+        value[descriptor.field] = normalized;
+      }
+
+      result[key] = value;
+    }
+  }
+
+  return result;
+}
+
+function cloneContextFormValues(
+  values: Record<string, ContextItemFormValue>,
+): Record<string, ContextItemFormValue> {
+  const clone: Record<string, ContextItemFormValue> = {};
+  for (const [key, entry] of Object.entries(values)) {
+    clone[key] = { ...entry };
+  }
+  return clone;
+}
 
 function getItemPrimaryText(item: ContextItem) {
   return item.title ?? item.name ?? "Sin título";
-}
-
-function getItemSecondaryText(item: ContextItem) {
-  return item.summary ?? item.description ?? item.facts ?? undefined;
 }
 
 type BookDialogMode = "create" | "edit";
@@ -68,6 +172,8 @@ export function BookDialog({
 }: BookDialogProps) {
   const { mutateAsync: upsertBook, isPending: isSaving } = useUpsertBook();
   const { mutateAsync: deleteBook, isPending: isDeleting } = useDeleteBook();
+  const { mutateAsync: updateContextItems, isPending: isUpdatingContext } =
+    useUpdateLibraryContext();
   const [formState, setFormState] = useState(emptyFormState);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
@@ -75,6 +181,10 @@ export function BookDialog({
   const [deleteErrorMessage, setDeleteErrorMessage] = useState<string | null>(
     null,
   );
+  const [contextFormValues, setContextFormValues] = useState<
+    Record<string, ContextItemFormValue>
+  >({});
+  const contextInitialRef = useRef<Record<string, ContextItemFormValue>>({});
 
   useEffect(() => {
     if (!open) {
@@ -105,7 +215,7 @@ export function BookDialog({
   );
 
   const submitLabel = mode === "create" ? "Crear" : "Guardar";
-  const isBusy = isSaving || isDeleting;
+  const isBusy = isSaving || isDeleting || isUpdatingContext;
 
   const contextSections = useMemo(() => {
     const sectionsById = new Map<string, ContextSection>();
@@ -117,6 +227,18 @@ export function BookDialog({
     ).filter((section): section is ContextSection => Boolean(section));
   }, [sections]);
 
+  useEffect(() => {
+    if (!open || mode !== "edit") {
+      setContextFormValues({});
+      contextInitialRef.current = {};
+      return;
+    }
+
+    const nextValues = buildContextFormValues(contextSections);
+    setContextFormValues(nextValues);
+    contextInitialRef.current = cloneContextFormValues(nextValues);
+  }, [open, mode, contextSections]);
+
   const showContextArea = mode === "edit";
 
   function handleDialogClose() {
@@ -124,6 +246,84 @@ export function BookDialog({
       return;
     }
     onClose();
+  }
+
+  function handleContextFieldChange(
+    sectionId: string,
+    itemId: string,
+    type: ContextItem["type"],
+    field: ContextEditableField,
+    value: string,
+  ) {
+    const key = makeContextKey(sectionId, itemId);
+
+    setContextFormValues((current) => {
+      const existing = current[key] ?? {
+        id: itemId,
+        sectionId,
+        type,
+      };
+
+      return {
+        ...current,
+        [key]: {
+          ...existing,
+          type: existing.type ?? type,
+          [field]: value,
+        },
+      };
+    });
+  }
+
+  function buildContextUpdates(): ContextItemUpdate[] {
+    const updates: ContextItemUpdate[] = [];
+
+    for (const section of contextSections) {
+      const sectionId = CONTEXT_SECTION_IDS_IN_ORDER.find(
+        (id) => id === section.id,
+      );
+      if (!sectionId) {
+        continue;
+      }
+
+      const descriptors = CONTEXT_FIELDS_BY_SECTION[sectionId];
+      if (!descriptors?.length) {
+        continue;
+      }
+
+      for (const item of section.items) {
+        const key = makeContextKey(section.id, item.id);
+        const current = contextFormValues[key];
+        const initial = contextInitialRef.current[key];
+
+        if (!current || !initial) {
+          continue;
+        }
+
+        const payload: Partial<ContextItemUpdate> = {
+          id: current.id,
+          sectionId: current.sectionId,
+        };
+        let hasChanges = false;
+
+        for (const descriptor of descriptors) {
+          const field = descriptor.field;
+          const currentValue = (current[field] ?? "").trim();
+          const initialValue = (initial[field] ?? "").trim();
+
+          if (currentValue !== initialValue) {
+            payload[field] = currentValue;
+            hasChanges = true;
+          }
+        }
+
+        if (hasChanges) {
+          updates.push(payload as ContextItemUpdate);
+        }
+      }
+    }
+
+    return updates;
   }
 
   async function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
@@ -139,6 +339,7 @@ export function BookDialog({
 
     const authorValue = formState.author.trim();
     const synopsisValue = formState.synopsis.trim();
+    const contextUpdates = mode === "edit" ? buildContextUpdates() : [];
 
     try {
       if (mode === "create") {
@@ -157,11 +358,24 @@ export function BookDialog({
         };
         await upsertBook({ mode: "update", bookId: book.id, payload });
       }
-      onClose();
     } catch (error) {
       console.error("Failed to upsert book", error);
       setErrorMessage("No se pudo guardar el libro. Intenta nuevamente.");
+      return;
     }
+
+    if (contextUpdates.length > 0) {
+      try {
+        await updateContextItems(contextUpdates);
+        contextInitialRef.current = cloneContextFormValues(contextFormValues);
+      } catch (error) {
+        console.error("Failed to update context items", error);
+        setErrorMessage("No se pudo guardar el contexto. Intenta nuevamente.");
+        return;
+      }
+    }
+
+    onClose();
   }
 
   function handleFieldChange<T extends keyof typeof formState>(
@@ -207,7 +421,9 @@ export function BookDialog({
       onClose();
     } catch (error) {
       console.error("Failed to delete book", error);
-      setDeleteErrorMessage("No se pudo eliminar el libro. Intenta nuevamente.");
+      setDeleteErrorMessage(
+        "No se pudo eliminar el libro. Intenta nuevamente.",
+      );
     }
   }
 
@@ -302,59 +518,102 @@ export function BookDialog({
                       </Button>
                     </Stack>
                   ) : null}
-                  {!sectionsLoading && !sectionsError &&
+                  {!sectionsLoading &&
+                  !sectionsError &&
                   contextSections.length === 0 ? (
                     <Typography variant="body2" color="text.secondary">
                       Aún no hay elementos de contexto.
                     </Typography>
                   ) : null}
-                  {!sectionsLoading && !sectionsError &&
+                  {!sectionsLoading &&
+                  !sectionsError &&
                   contextSections.length > 0 ? (
                     <Stack spacing={2.5}>
-                      {contextSections.map((section) => (
-                        <Stack key={section.id} spacing={1.25}>
-                          <Typography variant="subtitle2" fontWeight={600}>
-                            {section.title}
-                          </Typography>
-                          {section.items.length === 0 ? (
-                            <Typography
-                              variant="body2"
-                              color="text.secondary"
-                            >
-                              No hay elementos registrados.
+                      {contextSections.map((section) => {
+                        const sectionId = CONTEXT_SECTION_IDS_IN_ORDER.find(
+                          (id) => id === section.id,
+                        );
+                        if (!sectionId) {
+                          return null;
+                        }
+
+                        const fieldDescriptors =
+                          CONTEXT_FIELDS_BY_SECTION[sectionId];
+                        if (!fieldDescriptors?.length) {
+                          return null;
+                        }
+
+                        return (
+                          <Stack key={section.id} spacing={1.5}>
+                            <Typography variant="subtitle2" fontWeight={600}>
+                              {section.title}
                             </Typography>
-                          ) : (
-                            <List disablePadding>
-                              {section.items.map((item) => (
-                                <ListItem
-                                  key={item.id}
-                                  disableGutters
-                                  sx={{
-                                    py: 0.75,
-                                    borderBottom: "1px solid",
-                                    borderColor: "divider",
-                                    "&:last-of-type": {
-                                      borderBottom: "none",
-                                    },
-                                  }}
-                                >
-                                  <ListItemText
-                                    primary={getItemPrimaryText(item)}
-                                    secondary={getItemSecondaryText(item)}
-                                    slotProps={{
-                                      primary: { variant: "body2" },
-                                      secondary: {
-                                        variant: "caption",
-                                        color: "text.secondary",
-                                      },
-                                    }}
-                                  />
-                                </ListItem>
-                              ))}
-                            </List>
-                          )}
-                        </Stack>
-                      ))}
+                            {section.items.length === 0 ? (
+                              <Typography
+                                variant="body2"
+                                color="text.secondary"
+                              >
+                                No hay elementos registrados.
+                              </Typography>
+                            ) : (
+                              <Stack spacing={2}>
+                                {section.items.map((item) => {
+                                  const key = makeContextKey(
+                                    section.id,
+                                    item.id,
+                                  );
+                                  const formValue = contextFormValues[key];
+                                  const itemLabel = getItemPrimaryText(item);
+
+                                  return (
+                                    <Stack
+                                      key={item.id}
+                                      spacing={1.25}
+                                      sx={{
+                                        border: "1px solid",
+                                        borderColor: "divider",
+                                        borderRadius: 1,
+                                        p: 1.5,
+                                      }}
+                                    >
+                                      <Typography
+                                        variant="body2"
+                                        fontWeight={600}
+                                      >
+                                        {itemLabel}
+                                      </Typography>
+                                      <Stack spacing={1.25}>
+                                        {fieldDescriptors.map((descriptor) => (
+                                          <TextField
+                                            key={`${item.id}-${descriptor.field}`}
+                                            label={descriptor.label}
+                                            value={
+                                              formValue?.[descriptor.field] ??
+                                              ""
+                                            }
+                                            onChange={(event) =>
+                                              handleContextFieldChange(
+                                                section.id,
+                                                item.id,
+                                                item.type,
+                                                descriptor.field,
+                                                event.target.value,
+                                              )
+                                            }
+                                            multiline={descriptor.multiline}
+                                            minRows={descriptor.minRows}
+                                            disabled={isBusy || sectionsLoading}
+                                          />
+                                        ))}
+                                      </Stack>
+                                    </Stack>
+                                  );
+                                })}
+                              </Stack>
+                            )}
+                          </Stack>
+                        );
+                      })}
                     </Stack>
                   ) : null}
                 </Stack>

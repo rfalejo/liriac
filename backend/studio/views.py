@@ -15,6 +15,7 @@ from .data import (
     get_editor_state,
     get_library_books,
     get_library_sections,
+    update_context_items,
     update_book,
     update_chapter,
     update_chapter_block,
@@ -25,6 +26,7 @@ from .serializers import (
     ChapterDetailSerializer,
     ChapterSummarySerializer,
     ChapterUpsertSerializer,
+    ContextItemsUpdateRequestSerializer,
     EditorStateSerializer,
     LibraryBookSerializer,
     LibraryBooksResponseSerializer,
@@ -148,6 +150,30 @@ class LibraryBookChaptersView(APIView):
 
         response_serializer = ChapterSummarySerializer(chapter)
         return Response(response_serializer.data, status=status.HTTP_201_CREATED)
+
+
+class LibraryContextItemsView(APIView):
+    """Update editable fields for context items."""
+
+    authentication_classes: list = []
+    permission_classes: list = []
+
+    @extend_schema(
+        request=ContextItemsUpdateRequestSerializer,
+        responses=LibraryResponseSerializer,
+    )
+    def patch(self, request):
+        serializer = ContextItemsUpdateRequestSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        updates = serializer.validated_data["items"]
+
+        try:
+            sections = update_context_items(updates)
+        except KeyError as exc:
+            raise Http404(str(exc)) from exc
+
+        response_serializer = LibraryResponseSerializer({"sections": sections})
+        return Response(response_serializer.data)
 
 
 class ChapterDetailView(APIView):

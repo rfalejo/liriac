@@ -119,6 +119,21 @@ class LibraryResponseSerializer(serializers.Serializer):
     sections = ContextSectionSerializer(many=True)
 
 
+class ContextItemUpdateSerializer(serializers.Serializer):
+    id = serializers.CharField()
+    sectionId = serializers.CharField()
+    name = serializers.CharField(required=False, allow_blank=True, allow_null=True)
+    role = serializers.CharField(required=False, allow_blank=True, allow_null=True)
+    summary = serializers.CharField(required=False, allow_blank=True, allow_null=True)
+    title = serializers.CharField(required=False, allow_blank=True, allow_null=True)
+    description = serializers.CharField(required=False, allow_blank=True, allow_null=True)
+    facts = serializers.CharField(required=False, allow_blank=True, allow_null=True)
+
+
+class ContextItemsUpdateRequestSerializer(serializers.Serializer):
+    items = ContextItemUpdateSerializer(many=True)
+
+
 class EditorStateSerializer(serializers.Serializer):
     content = serializers.CharField()
     paragraphs = serializers.ListField(child=serializers.CharField())
