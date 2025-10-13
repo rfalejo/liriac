@@ -9,6 +9,7 @@ type BaseEditingState<TType extends ChapterBlock["type"]> = {
   blockType: TType;
   onCancel: () => void;
   onSave: () => void;
+  onDelete?: () => void;
   isSaving: boolean;
   hasPendingChanges: boolean;
 };

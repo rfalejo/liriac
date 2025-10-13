@@ -72,6 +72,9 @@ declare module "@mui/material/styles" {
     controlCancelBg: string;
     controlCancelHoverBg: string;
     controlCancelDisabledBg: string;
+  controlDeleteBg: string;
+  controlDeleteHoverBg: string;
+  controlDeleteDisabledBg: string;
     controlGhostDisabledText: string;
     controlAddColor: string;
     controlAddHoverColor: string;

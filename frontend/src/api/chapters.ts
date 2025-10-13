@@ -56,3 +56,23 @@ export async function createChapterBlock({
     },
   );
 }
+
+type DeleteChapterBlockParams = {
+  chapterId: string;
+  blockId: string;
+};
+
+export async function deleteChapterBlock({
+  chapterId,
+  blockId,
+}: DeleteChapterBlockParams): Promise<ChapterDetail> {
+  const encodedChapter = encodeURIComponent(chapterId);
+  const encodedBlock = encodeURIComponent(blockId);
+
+  return request<ChapterDetail>(
+    `/api/library/chapters/${encodedChapter}/blocks/${encodedBlock}/`,
+    {
+      method: "DELETE",
+    },
+  );
+}

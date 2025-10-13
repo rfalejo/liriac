@@ -37,6 +37,7 @@ export function EditableBlock<TEditingState extends EditingState>({
       onCancel={() => {
         resolvedEditingState.onCancel();
       }}
+      onDelete={resolvedEditingState.onDelete}
       disabled={resolvedEditingState.isSaving}
     />
   ) : undefined;

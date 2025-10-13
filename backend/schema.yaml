@@ -221,6 +221,25 @@ paths:
               schema:
                 $ref: '#/components/schemas/ChapterDetail'
           description: ''
+    delete:
+      operationId: library_chapters_blocks_destroy
+      description: Update a single block within a chapter.
+      parameters:
+      - in: path
+        name: block_id
+        schema:
+          type: string
+        required: true
+      - in: path
+        name: chapter_id
+        schema:
+          type: string
+        required: true
+      tags:
+      - library
+      responses:
+        '204':
+          description: No response body
   /api/library/context/items/:
     patch:
       operationId: library_context_items_partial_update

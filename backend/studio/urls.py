@@ -1,8 +1,8 @@
 from django.urls import path
 
 from .views import (
-    ChapterBlockUpdateView,
     ChapterBlockListView,
+    ChapterBlockUpdateView,
     ChapterDetailView,
     EditorView,
     LibraryBookChaptersView,

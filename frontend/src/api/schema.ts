@@ -136,7 +136,8 @@ export interface paths {
         get?: never;
         put?: never;
         post?: never;
-        delete?: never;
+        /** @description Update a single block within a chapter. */
+        delete: operations["library_chapters_blocks_destroy"];
         options?: never;
         head?: never;
         /** @description Update a single block within a chapter. */
@@ -609,6 +610,27 @@ export interface operations {
                 content: {
                     "application/json": components["schemas"]["ChapterDetail"];
                 };
+            };
+        };
+    };
+    library_chapters_blocks_destroy: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                block_id: string;
+                chapter_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description No response body */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
             };
         };
     };

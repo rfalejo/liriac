@@ -18,7 +18,9 @@ export type UseEditorEditingStateParams = {
     blockId: string;
     payload: ChapterBlockUpdatePayload;
   }) => Promise<ChapterDetail>;
+  deleteBlock: (blockId: string) => Promise<ChapterDetail>;
   blockUpdatePending: boolean;
+  blockDeletePending: boolean;
   sideEffects: EditorEditingSideEffects;
 };
 
@@ -30,7 +32,9 @@ type UseEditorEditingStateResult = {
 export function useEditorEditingState({
   chapter,
   updateBlock,
+  deleteBlock,
   blockUpdatePending,
+  blockDeletePending,
   sideEffects,
 }: UseEditorEditingStateParams): UseEditorEditingStateResult {
   const { getBlockById } = useChapterBlockSelectors(chapter);
@@ -72,10 +76,12 @@ export function useEditorEditingState({
       ? (activeBlock as ChapterBlock & { type: "metadata" })
       : null;
 
+  const blockMutationPending = blockUpdatePending || blockDeletePending;
+
   const paragraphSession = useParagraphBlockEditingSession({
     block: activeParagraphBlock,
     isActive: Boolean(activeParagraphBlock),
-    isSaving: blockUpdatePending,
+    isSaving: blockMutationPending,
     updateBlock,
     onComplete: clearEditing,
     sideEffects: {
@@ -86,7 +92,7 @@ export function useEditorEditingState({
   const dialogueSession = useDialogueBlockEditingSession({
     block: activeDialogueBlock,
     isActive: Boolean(activeDialogueBlock),
-    isSaving: blockUpdatePending,
+    isSaving: blockMutationPending,
     updateBlock,
     onComplete: clearEditing,
     sideEffects: {
@@ -97,7 +103,7 @@ export function useEditorEditingState({
   const sceneBoundarySession = useSceneBoundaryBlockEditingSession({
     block: activeSceneBoundaryBlock,
     isActive: Boolean(activeSceneBoundaryBlock),
-    isSaving: blockUpdatePending,
+    isSaving: blockMutationPending,
     updateBlock,
     onComplete: clearEditing,
     sideEffects: {
@@ -108,13 +114,44 @@ export function useEditorEditingState({
   const metadataSession = useMetadataBlockEditingSession({
     block: activeMetadataBlock,
     isActive: Boolean(activeMetadataBlock),
-    isSaving: blockUpdatePending,
+    isSaving: blockMutationPending,
     updateBlock,
     onComplete: clearEditing,
     sideEffects: {
       notifyUpdateFailure: sideEffects.notifyUpdateFailure,
     },
   });
+
+  const handleDeleteBlock = useCallback(
+    (blockId: string) => {
+      if (blockUpdatePending || blockDeletePending) {
+        return;
+      }
+
+      const performDelete = async () => {
+        const confirmed = await sideEffects.confirmDeleteBlock();
+        if (!confirmed) {
+          return;
+        }
+
+        try {
+          await deleteBlock(blockId);
+          clearEditing();
+        } catch (error) {
+          sideEffects.notifyUpdateFailure(error);
+        }
+      };
+
+      void performDelete();
+    },
+    [
+      blockDeletePending,
+      blockUpdatePending,
+      clearEditing,
+      deleteBlock,
+      sideEffects,
+    ],
+  );
 
   type ActiveSession = {
     hasPendingChanges: boolean;
@@ -136,12 +173,15 @@ export function useEditorEditingState({
             attemptCancelEditing(paragraphSession.hasPendingChanges);
           },
           onSave: () => {
-            if (blockUpdatePending) {
+            if (blockMutationPending) {
               return;
             }
             void paragraphSession.save();
           },
-          isSaving: blockUpdatePending,
+          onDelete: () => {
+            handleDeleteBlock(activeParagraphBlock.id);
+          },
+          isSaving: blockMutationPending,
           hasPendingChanges: paragraphSession.hasPendingChanges,
         },
       };
@@ -163,12 +203,15 @@ export function useEditorEditingState({
             attemptCancelEditing(dialogueSession.hasPendingChanges);
           },
           onSave: () => {
-            if (blockUpdatePending) {
+            if (blockMutationPending) {
               return;
             }
             void dialogueSession.save();
           },
-          isSaving: blockUpdatePending,
+          onDelete: () => {
+            handleDeleteBlock(activeDialogueBlock.id);
+          },
+          isSaving: blockMutationPending,
           hasPendingChanges: dialogueSession.hasPendingChanges,
         },
       };
@@ -188,12 +231,15 @@ export function useEditorEditingState({
             attemptCancelEditing(sceneBoundarySession.hasPendingChanges);
           },
           onSave: () => {
-            if (blockUpdatePending) {
+            if (blockMutationPending) {
               return;
             }
             void sceneBoundarySession.save();
           },
-          isSaving: blockUpdatePending,
+          onDelete: () => {
+            handleDeleteBlock(activeSceneBoundaryBlock.id);
+          },
+          isSaving: blockMutationPending,
           hasPendingChanges: sceneBoundarySession.hasPendingChanges,
         },
       };
@@ -215,12 +261,15 @@ export function useEditorEditingState({
             attemptCancelEditing(metadataSession.hasPendingChanges);
           },
           onSave: () => {
-            if (blockUpdatePending) {
+            if (blockMutationPending) {
               return;
             }
             void metadataSession.save();
           },
-          isSaving: blockUpdatePending,
+          onDelete: () => {
+            handleDeleteBlock(activeMetadataBlock.id);
+          },
+          isSaving: blockMutationPending,
           hasPendingChanges: metadataSession.hasPendingChanges,
         },
       };
@@ -237,12 +286,14 @@ export function useEditorEditingState({
     activeMetadataBlock,
     attemptCancelEditing,
     blockUpdatePending,
+  blockMutationPending,
     dialogueSession.hasPendingChanges,
     dialogueSession.onAddTurn,
     dialogueSession.onChangeTurn,
     dialogueSession.onRemoveTurn,
     dialogueSession.save,
     dialogueSession.turns,
+  handleDeleteBlock,
     metadataSession.draft,
     metadataSession.hasPendingChanges,
   metadataSession.kind,
@@ -261,13 +312,17 @@ export function useEditorEditingState({
 
   const handleEditBlock = useCallback(
     (blockId: string) => {
-      if (blockUpdatePending) {
+      if (blockMutationPending) {
         return;
       }
 
       attemptStartEditing(blockId, activeSession.hasPendingChanges);
     },
-    [activeSession.hasPendingChanges, attemptStartEditing, blockUpdatePending],
+    [
+      activeSession.hasPendingChanges,
+      attemptStartEditing,
+      blockMutationPending,
+    ],
   );
 
   return {

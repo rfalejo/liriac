@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import type { components } from "../../api/schema";
 import { useEditorScrollbar } from "./hooks/useEditorScrollbar";
 import { useEditorChapterNavigation } from "./hooks/useEditorChapterNavigation";
@@ -7,12 +7,28 @@ import { EditorShell } from "./EditorShell";
 import { useUpdateChapterBlock } from "./hooks/useUpdateChapterBlock";
 import { useCreateChapterBlock } from "./hooks/useCreateChapterBlock";
 import { useEditorEditingState } from "./hooks/useEditorEditingState";
+import { useDeleteChapterBlock } from "./hooks/useDeleteChapterBlock";
 import { showBlockUpdateErrorToast } from "./utils/showBlockUpdateErrorToast";
 import { generateTurnId } from "./utils/dialogueTurns";
 import type { EditingDiscardContext } from "./hooks/editing/types";
 import type { ChapterBlockCreatePayload } from "../../api/chapters";
+import { ConfirmationDialog } from "./components/ConfirmationDialog";
 
 type ChapterBlockType = components["schemas"]["ChapterBlockTypeEnum"];
+
+type ConfirmDialogTone = "warning" | "danger";
+
+type ConfirmDialogOptions = {
+  title: string;
+  description: string;
+  confirmLabel: string;
+  cancelLabel: string;
+  tone: ConfirmDialogTone;
+};
+
+type ConfirmDialogState = ConfirmDialogOptions & {
+  resolve: (decision: boolean) => void;
+};
 
 function generateBlockId(): string {
   const cryptoRef =
@@ -166,29 +182,94 @@ export function EditorContainer({
     chapterId: chapter?.id,
   });
 
+  const { deleteBlock, isPending: blockDeletePending } = useDeleteChapterBlock({
+    chapterId: chapter?.id,
+  });
+
+  const [confirmDialog, setConfirmDialog] = useState<ConfirmDialogState | null>(
+    null,
+  );
+
+  const openConfirmDialog = useCallback(
+    (options: ConfirmDialogOptions) =>
+      new Promise<boolean>((resolve) => {
+        setConfirmDialog({
+          ...options,
+          resolve,
+        });
+      }),
+    [],
+  );
+
+  const handleConfirmClose = useCallback((decision: boolean) => {
+    setConfirmDialog((current) => {
+      if (current) {
+        current.resolve(decision);
+      }
+      return null;
+    });
+  }, []);
+
   const confirmDiscardChanges = useCallback(
     (context: EditingDiscardContext) => {
-      const message =
+      const options: ConfirmDialogOptions =
         context === "cancel"
-          ? "¿Deseas descartar los cambios?"
-          : "¿Quieres descartar los cambios pendientes?";
-      return window.confirm(message);
+          ? {
+              title: "Descartar cambios",
+              description:
+                "Tienes cambios sin guardar en este bloque. ¿Quieres descartarlos?",
+              confirmLabel: "Descartar cambios",
+              cancelLabel: "Seguir editando",
+              tone: "warning",
+            }
+          : {
+              title: "Cambiar de bloque",
+              description:
+                "Tienes cambios sin guardar. ¿Quieres descartarlos y cambiar de bloque?",
+              confirmLabel: "Cambiar y descartar",
+              cancelLabel: "Seguir editando",
+              tone: "warning",
+            };
+
+      return openConfirmDialog(options);
     },
-    [],
+    [openConfirmDialog],
+  );
+
+  const confirmDeleteBlock = useCallback(
+    () =>
+      openConfirmDialog({
+        title: "Eliminar bloque",
+        description:
+          "¿Quieres eliminar este bloque? No podrás deshacer esta acción.",
+        confirmLabel: "Eliminar bloque",
+        cancelLabel: "Cancelar",
+        tone: "danger",
+      }),
+    [openConfirmDialog],
   );
 
   const notifyUpdateFailure = useCallback((error: unknown) => {
     showBlockUpdateErrorToast(error);
   }, []);
 
-  const mutationPending = blockUpdatePending || blockCreatePending;
+  const blockMutationPending = blockUpdatePending || blockCreatePending;
+  const mutationPending = blockMutationPending || blockDeletePending;
+
+  const deleteBlockById = useCallback(
+    (blockId: string) => deleteBlock({ blockId }),
+    [deleteBlock],
+  );
 
   const { editingState, handleEditBlock } = useEditorEditingState({
     chapter,
     updateBlock,
-    blockUpdatePending: mutationPending,
+    deleteBlock: deleteBlockById,
+    blockUpdatePending: blockMutationPending,
+    blockDeletePending,
     sideEffects: {
       confirmDiscardChanges,
+      confirmDeleteBlock,
       notifyUpdateFailure,
     },
   });
@@ -262,6 +343,17 @@ export function EditorContainer({
       scrollAreaRef={scrollAreaRef}
       scrollHandlers={handlers}
       scrollbarState={scrollbarState}
-    />
+    >
+      <ConfirmationDialog
+        open={Boolean(confirmDialog)}
+        title={confirmDialog?.title ?? ""}
+        description={confirmDialog?.description ?? ""}
+        confirmLabel={confirmDialog?.confirmLabel ?? ""}
+        cancelLabel={confirmDialog?.cancelLabel ?? ""}
+        tone={confirmDialog?.tone ?? "warning"}
+        confirmDisabled={mutationPending}
+        onClose={handleConfirmClose}
+      />
+    </EditorShell>
   );
 }

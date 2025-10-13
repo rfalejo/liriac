@@ -12,19 +12,20 @@ from .data import (
     create_chapter,
     create_chapter_block,
     delete_book,
+    delete_chapter_block,
     get_chapter_detail,
     get_editor_state,
     get_library_books,
     get_library_sections,
-    update_context_items,
     update_book,
     update_chapter,
     update_chapter_block,
+    update_context_items,
 )
 from .serializers import (
     BookUpsertSerializer,
-    ChapterBlockUpdateSerializer,
     ChapterBlockCreateSerializer,
+    ChapterBlockUpdateSerializer,
     ChapterDetailSerializer,
     ChapterSummarySerializer,
     ChapterUpsertSerializer,
@@ -263,6 +264,16 @@ class ChapterBlockUpdateView(APIView):
             raise Http404(str(exc)) from exc
         except ValueError as exc:
             raise ValidationError({"type": str(exc)}) from exc
+
+        response_serializer = ChapterDetailSerializer(updated_chapter)
+        return Response(response_serializer.data)
+
+    @extend_schema(responses=ChapterDetailSerializer)
+    def delete(self, _request, chapter_id: str, block_id: str):
+        try:
+            updated_chapter = delete_chapter_block(chapter_id, block_id)
+        except KeyError as exc:
+            raise Http404(str(exc)) from exc
 
         response_serializer = ChapterDetailSerializer(updated_chapter)
         return Response(response_serializer.data)

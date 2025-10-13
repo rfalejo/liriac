@@ -2,16 +2,19 @@ import { CircularProgress, IconButton, Stack } from "@mui/material";
 import type { Theme } from "@mui/material/styles";
 import CheckRoundedIcon from "@mui/icons-material/CheckRounded";
 import CloseRoundedIcon from "@mui/icons-material/CloseRounded";
+import DeleteRoundedIcon from "@mui/icons-material/DeleteRounded";
 
 type BlockEditControlsProps = {
   onConfirm?: () => void;
   onCancel?: () => void;
+  onDelete?: () => void;
   disabled?: boolean;
 };
 
 export function BlockEditControls({
   onConfirm,
   onCancel,
+  onDelete,
   disabled = false,
 }: BlockEditControlsProps) {
   return (
@@ -64,6 +67,30 @@ export function BlockEditControls({
       >
         <CloseRoundedIcon sx={{ fontSize: "1.1rem" }} />
       </IconButton>
+      {onDelete ? (
+        <IconButton
+          size="small"
+          color="error"
+          onClick={() => {
+            onDelete();
+          }}
+          disabled={disabled}
+          aria-label="Eliminar bloque"
+          sx={(theme: Theme) => ({
+            backgroundColor: theme.palette.editor.controlDeleteBg,
+            transition: theme.editor.iconButtonTransition,
+            "&:hover": {
+              backgroundColor: theme.palette.editor.controlDeleteHoverBg,
+            },
+            "&.Mui-disabled": {
+              backgroundColor: theme.palette.editor.controlDeleteDisabledBg,
+              color: theme.palette.editor.controlGhostDisabledText,
+            },
+          })}
+        >
+          <DeleteRoundedIcon sx={{ fontSize: "1.1rem" }} />
+        </IconButton>
+      ) : null}
     </Stack>
   );
 }

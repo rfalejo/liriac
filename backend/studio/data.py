@@ -280,6 +280,34 @@ def update_chapter_block(
     return chapter.to_detail_payload()
 
 
+def delete_chapter_block(
+    chapter_id: str,
+    block_id: str,
+) -> ChapterDetailPayload:
+    with transaction.atomic():
+        try:
+            block = (
+                ChapterBlock.objects.select_for_update()
+                .select_related("chapter", "chapter__book")
+                .get(chapter_id=chapter_id, pk=block_id)
+            )
+        except ChapterBlock.DoesNotExist as exc:
+            raise KeyError(f"Unknown block: {block_id}") from exc
+
+        chapter = block.chapter
+        position = block.position
+        block.delete()
+
+        ChapterBlock.objects.filter(
+            chapter=chapter,
+            position__gt=position,
+        ).update(position=F("position") - 1)
+
+    return (
+        Chapter.objects.select_related("book").prefetch_related("blocks").get(pk=chapter_id)
+    ).to_detail_payload()
+
+
 def create_chapter_block(
     chapter_id: str,
     payload: Dict[str, Any],

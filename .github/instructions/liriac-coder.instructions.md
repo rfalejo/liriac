@@ -153,6 +153,8 @@ frontend/
 |   |   |   |   |-- ChapterErrorState.tsx
 |   |   |   |   |-- ChapterHeading.tsx
 |   |   |   |   \-- ChapterLoadingState.tsx
+|   |   |   |-- components/
+|   |   |   |   \-- ConfirmationDialog.tsx
 |   |   |   |-- context/
 |   |   |   |   \-- EditorBlockEditingContext.tsx
 |   |   |   |-- hooks/
@@ -168,6 +170,7 @@ frontend/
 |   |   |   |   |-- useChapterBlockSelectors.ts
 |   |   |   |   |-- useChapterBlocks.ts
 |   |   |   |   |-- useCreateChapterBlock.ts
+|   |   |   |   |-- useDeleteChapterBlock.ts
 |   |   |   |   |-- useDialogueEditingState.ts
 |   |   |   |   |-- useEditorChapterNavigation.ts
 |   |   |   |   |-- useEditorEditingState.ts
