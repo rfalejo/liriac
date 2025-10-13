@@ -24,9 +24,9 @@ export function useUpdateLibraryContext(bookId: string | null) {
       if (!bookId) {
         return;
       }
-      queryClient.setQueryData(
+      queryClient.setQueryData<LibraryResponse>(
         libraryQueryKeys.sections(bookId),
-        response.sections,
+        response,
       );
     },
   });

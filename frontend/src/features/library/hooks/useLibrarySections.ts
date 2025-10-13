@@ -1,4 +1,4 @@
-import { useCallback } from "react";
+import { useCallback, useMemo } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import type { LibraryResponse } from "../../../api/library";
 import { fetchBookContext } from "../../../api/library";
@@ -28,7 +28,12 @@ export function useLibrarySections(bookId: string | null) {
     });
   }, [bookId, queryClient]);
 
-  const sections = bookId ? query.data ?? [] : [];
+  const sections = useMemo<LibraryResponse["sections"]>(() => {
+    if (!bookId) {
+      return [];
+    }
+    return query.data ?? [];
+  }, [bookId, query.data]);
   const loading = bookId ? query.isPending || query.isFetching : false;
   const error = bookId ? query.error ?? null : null;
 
