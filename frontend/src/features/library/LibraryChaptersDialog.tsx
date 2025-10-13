@@ -49,7 +49,7 @@ export function LibraryChaptersDialog({
         paper: {
           elevation: 0,
           sx: (theme) => ({
-            borderRadius: Number(theme.shape.borderRadius) * 1.5,
+            borderRadius: theme.spacing(1.5),
             backgroundColor: alpha(theme.palette.background.paper, 0.98),
             border: `1px solid ${alpha(theme.palette.primary.main, 0.16)}`,
             boxShadow: `0 28px 60px ${alpha(theme.palette.common.black, 0.18)}`,

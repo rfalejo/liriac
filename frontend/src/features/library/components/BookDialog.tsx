@@ -109,7 +109,19 @@ export function BookDialog({
   }
 
   return (
-    <Dialog open={open} onClose={onClose} fullWidth maxWidth="sm">
+    <Dialog
+      open={open}
+      onClose={onClose}
+      fullWidth
+      maxWidth="sm"
+      slotProps={{
+        paper: {
+          sx: (theme) => ({
+            borderRadius: theme.spacing(1.5),
+          }),
+        },
+      }}
+    >
       <form
         onSubmit={(event) => {
           void handleSubmit(event);
