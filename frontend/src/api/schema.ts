@@ -21,23 +21,6 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/api/library/": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** @description Return the available context sections for the local library. */
-        get: operations["library_retrieve"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
     "/api/library/books/": {
         parameters: {
             query?: never;
@@ -89,6 +72,40 @@ export interface paths {
         options?: never;
         head?: never;
         patch?: never;
+        trace?: never;
+    };
+    "/api/library/books/{book_id}/context/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** @description Return the context sections scoped to a specific book (optionally a chapter). */
+        get: operations["library_books_context_retrieve"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/library/books/{book_id}/context/items/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        /** @description Update editable fields for context items belonging to a book. */
+        patch: operations["library_books_context_items_partial_update"];
         trace?: never;
     };
     "/api/library/chapters/{chapter_id}/": {
@@ -159,23 +176,6 @@ export interface paths {
         options?: never;
         head?: never;
         patch?: never;
-        trace?: never;
-    };
-    "/api/library/context/items/": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        /** @description Update editable fields for context items. */
-        patch: operations["library_context_items_partial_update"];
         trace?: never;
     };
 }
@@ -300,6 +300,7 @@ export interface components {
             tokens?: number;
             checked?: boolean;
             disabled?: boolean;
+            chapterId?: string | null;
         };
         /**
          * @description * `character` - character
@@ -311,7 +312,8 @@ export interface components {
         ContextItemTypeEnum: "character" | "world" | "styleTone" | "chapter";
         ContextItemUpdate: {
             id: string;
-            sectionId: string;
+            sectionSlug: string;
+            chapterId?: string | null;
             name?: string | null;
             role?: string | null;
             summary?: string | null;
@@ -455,25 +457,6 @@ export interface operations {
             };
         };
     };
-    library_retrieve: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["LibraryResponse"];
-                };
-            };
-        };
-    };
     library_books_retrieve: {
         parameters: {
             query?: never;
@@ -582,6 +565,52 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["ChapterSummary"];
+                };
+            };
+        };
+    };
+    library_books_context_retrieve: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                book_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["LibraryResponse"];
+                };
+            };
+        };
+    };
+    library_books_context_items_partial_update: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                book_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: {
+            content: {
+                "application/json": components["schemas"]["PatchedContextItemsUpdateRequest"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["LibraryResponse"];
                 };
             };
         };
@@ -725,29 +754,6 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["ParagraphSuggestionResponse"];
-                };
-            };
-        };
-    };
-    library_context_items_partial_update: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: {
-            content: {
-                "application/json": components["schemas"]["PatchedContextItemsUpdateRequest"];
-            };
-        };
-        responses: {
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["LibraryResponse"];
                 };
             };
         };

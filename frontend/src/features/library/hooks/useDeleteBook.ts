@@ -27,8 +27,8 @@ export function useDeleteBook() {
         },
       );
 
-      void queryClient.invalidateQueries({
-        queryKey: libraryQueryKeys.sections(),
+      queryClient.removeQueries({
+        queryKey: libraryQueryKeys.sections(bookId),
       });
       void queryClient.invalidateQueries({
         queryKey: chapterQueryKeys.root,

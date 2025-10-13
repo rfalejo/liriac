@@ -17,12 +17,12 @@ import type {
   ContextItem,
   ContextSection,
   LibraryBook,
-  LibraryResponse,
   ContextItemUpdate,
 } from "../../../api/library";
 import { useUpsertBook } from "../hooks/useUpsertBook";
 import { useDeleteBook } from "../hooks/useDeleteBook";
 import { useUpdateLibraryContext } from "../hooks/useUpdateLibraryContext";
+import { useLibrarySections } from "../hooks/useLibrarySections";
 
 const emptyFormState = {
   title: "",
@@ -48,7 +48,8 @@ type ContextEditableField =
 
 type ContextItemFormValue = {
   id: string;
-  sectionId: string;
+  sectionSlug: string;
+  chapterId: string | null;
   type: ContextItem["type"];
 } & Partial<Record<ContextEditableField, string>>;
 
@@ -83,8 +84,12 @@ const CONTEXT_FIELDS_BY_SECTION: Record<
   ],
 };
 
-function makeContextKey(sectionId: string, itemId: string) {
-  return `${sectionId}:${itemId}`;
+function makeContextKey(
+  sectionSlug: string,
+  itemId: string,
+  chapterId: string | null,
+) {
+  return chapterId ? `${sectionSlug}:${itemId}:${chapterId}` : `${sectionSlug}:${itemId}`;
 }
 
 function buildContextFormValues(
@@ -106,10 +111,11 @@ function buildContextFormValues(
     }
 
     for (const item of section.items) {
-      const key = makeContextKey(section.id, item.id);
+      const key = makeContextKey(section.id, item.id, item.chapterId ?? null);
       const value: ContextItemFormValue = {
         id: item.id,
-        sectionId: section.id,
+        sectionSlug: section.id,
+        chapterId: item.chapterId ?? null,
         type: item.type,
       };
 
@@ -153,10 +159,6 @@ type BookDialogProps = {
   book: LibraryBook | null;
   onClose: () => void;
   onSelectBook: (bookId: string) => void;
-  sections: LibraryResponse["sections"];
-  sectionsLoading: boolean;
-  sectionsError: Error | null;
-  onReloadSections: () => void;
 };
 
 export function BookDialog({
@@ -165,15 +167,18 @@ export function BookDialog({
   book,
   onClose,
   onSelectBook,
-  sections,
-  sectionsLoading,
-  sectionsError,
-  onReloadSections,
 }: BookDialogProps) {
   const { mutateAsync: upsertBook, isPending: isSaving } = useUpsertBook();
   const { mutateAsync: deleteBook, isPending: isDeleting } = useDeleteBook();
+  const contextBookId = open && mode === "edit" && book ? book.id : null;
+  const {
+    sections: contextSectionList,
+    loading: contextSectionsLoading,
+    error: contextSectionsError,
+    reload: reloadContextSections,
+  } = useLibrarySections(contextBookId);
   const { mutateAsync: updateContextItems, isPending: isUpdatingContext } =
-    useUpdateLibraryContext();
+    useUpdateLibraryContext(contextBookId);
   const [formState, setFormState] = useState(emptyFormState);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
@@ -219,13 +224,13 @@ export function BookDialog({
 
   const contextSections = useMemo(() => {
     const sectionsById = new Map<string, ContextSection>();
-    for (const section of sections) {
+    for (const section of contextSectionList) {
       sectionsById.set(section.id, section);
     }
     return CONTEXT_SECTION_IDS_IN_ORDER.map((sectionId) =>
       sectionsById.get(sectionId),
     ).filter((section): section is ContextSection => Boolean(section));
-  }, [sections]);
+  }, [contextSectionList]);
 
   useEffect(() => {
     if (!open || mode !== "edit") {
@@ -239,7 +244,7 @@ export function BookDialog({
     contextInitialRef.current = cloneContextFormValues(nextValues);
   }, [open, mode, contextSections]);
 
-  const showContextArea = mode === "edit";
+  const showContextArea = mode === "edit" && Boolean(book);
 
   function handleDialogClose() {
     if (isBusy) {
@@ -249,18 +254,20 @@ export function BookDialog({
   }
 
   function handleContextFieldChange(
-    sectionId: string,
+    sectionSlug: string,
     itemId: string,
+    chapterId: string | null,
     type: ContextItem["type"],
     field: ContextEditableField,
     value: string,
   ) {
-    const key = makeContextKey(sectionId, itemId);
+    const key = makeContextKey(sectionSlug, itemId, chapterId);
 
     setContextFormValues((current) => {
       const existing = current[key] ?? {
         id: itemId,
-        sectionId,
+        sectionSlug,
+        chapterId,
         type,
       };
 
@@ -269,6 +276,7 @@ export function BookDialog({
         [key]: {
           ...existing,
           type: existing.type ?? type,
+          chapterId: existing.chapterId ?? chapterId,
           [field]: value,
         },
       };
@@ -292,7 +300,7 @@ export function BookDialog({
       }
 
       for (const item of section.items) {
-        const key = makeContextKey(section.id, item.id);
+        const key = makeContextKey(section.id, item.id, item.chapterId ?? null);
         const current = contextFormValues[key];
         const initial = contextInitialRef.current[key];
 
@@ -302,8 +310,13 @@ export function BookDialog({
 
         const payload: Partial<ContextItemUpdate> = {
           id: current.id,
-          sectionId: current.sectionId,
+          sectionSlug: current.sectionSlug,
         };
+        if (current.chapterId) {
+          payload.chapterId = current.chapterId;
+        } else if (initial.chapterId) {
+          payload.chapterId = null;
+        }
         let hasChanges = false;
 
         for (const descriptor of descriptors) {
@@ -365,6 +378,12 @@ export function BookDialog({
     }
 
     if (contextUpdates.length > 0) {
+      if (!contextBookId) {
+        setErrorMessage(
+          "No se pudo guardar el contexto porque falta el identificador del libro.",
+        );
+        return;
+      }
       try {
         await updateContextItems(contextUpdates);
         contextInitialRef.current = cloneContextFormValues(contextFormValues);
@@ -491,7 +510,7 @@ export function BookDialog({
                       Consulta los elementos clave del universo de la historia.
                     </Typography>
                   </Stack>
-                  {sectionsLoading ? (
+                  {contextSectionsLoading ? (
                     <Stack
                       spacing={1.5}
                       alignItems="center"
@@ -504,7 +523,7 @@ export function BookDialog({
                       </Typography>
                     </Stack>
                   ) : null}
-                  {!sectionsLoading && sectionsError ? (
+                  {!contextSectionsLoading && contextSectionsError ? (
                     <Stack spacing={1.5} alignItems="flex-start">
                       <Typography variant="body2" color="text.secondary">
                         No se pudo obtener el contexto.
@@ -512,21 +531,21 @@ export function BookDialog({
                       <Button
                         size="small"
                         variant="contained"
-                        onClick={onReloadSections}
+                        onClick={reloadContextSections}
                       >
                         Reintentar
                       </Button>
                     </Stack>
                   ) : null}
-                  {!sectionsLoading &&
-                  !sectionsError &&
+                  {!contextSectionsLoading &&
+                  !contextSectionsError &&
                   contextSections.length === 0 ? (
                     <Typography variant="body2" color="text.secondary">
                       Aún no hay elementos de contexto.
                     </Typography>
                   ) : null}
-                  {!sectionsLoading &&
-                  !sectionsError &&
+                  {!contextSectionsLoading &&
+                  !contextSectionsError &&
                   contextSections.length > 0 ? (
                     <Stack spacing={2.5}>
                       {contextSections.map((section) => {
@@ -561,6 +580,7 @@ export function BookDialog({
                                   const key = makeContextKey(
                                     section.id,
                                     item.id,
+                                    item.chapterId ?? null,
                                   );
                                   const formValue = contextFormValues[key];
                                   const itemLabel = getItemPrimaryText(item);
@@ -595,6 +615,7 @@ export function BookDialog({
                                               handleContextFieldChange(
                                                 section.id,
                                                 item.id,
+                                                item.chapterId ?? null,
                                                 item.type,
                                                 descriptor.field,
                                                 event.target.value,
@@ -602,7 +623,9 @@ export function BookDialog({
                                             }
                                             multiline={descriptor.multiline}
                                             minRows={descriptor.minRows}
-                                            disabled={isBusy || sectionsLoading}
+                                            disabled={
+                                              isBusy || contextSectionsLoading
+                                            }
                                           />
                                         ))}
                                       </Stack>

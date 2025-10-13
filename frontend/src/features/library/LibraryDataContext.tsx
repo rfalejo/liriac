@@ -2,6 +2,7 @@ import {
   createContext,
   useCallback,
   useContext,
+  useEffect,
   useMemo,
   useState,
   type ReactNode,
@@ -9,7 +10,6 @@ import {
 import type { LibraryBook, LibraryResponse } from "../../api/library";
 import { useLibraryBooks } from "./hooks/useLibraryBooks";
 import { useLibrarySections } from "./hooks/useLibrarySections";
-import { useLibrarySelection } from "./hooks/useLibrarySelection";
 import { useLibraryEditor } from "./hooks/useLibraryEditor";
 
 type LibraryDialogState =
@@ -57,19 +57,44 @@ export function LibraryDataContextProvider({
     error: booksError,
     reload: reloadBooks,
   } = useLibraryBooks();
+  const [selectedBookId, setSelectedBookId] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (books.length === 0) {
+      setSelectedBookId(null);
+      return;
+    }
+
+    setSelectedBookId((current) => {
+      if (current && books.some((book) => book.id === current)) {
+        return current;
+      }
+      return books[0].id;
+    });
+  }, [books]);
+
   const {
     sections,
     loading: sectionsLoading,
     error: sectionsError,
     reload: reloadSections,
-  } = useLibrarySections();
+  } = useLibrarySections(selectedBookId);
 
-  const { refreshLibrary, selectBook, selectedBook, selectedBookId } =
-    useLibrarySelection({
-      books,
-      reloadBooks,
-      reloadSections,
-    });
+  const selectBook = useCallback((bookId: string) => {
+    setSelectedBookId(bookId);
+  }, []);
+
+  const selectedBook = useMemo(
+    () => books.find((book) => book.id === selectedBookId) ?? null,
+    [books, selectedBookId],
+  );
+
+  const refreshLibrary = useCallback(() => {
+    reloadBooks();
+    if (selectedBookId) {
+      reloadSections();
+    }
+  }, [reloadBooks, reloadSections, selectedBookId]);
 
   const { editorState, openEditor, closeEditor } = useLibraryEditor();
 

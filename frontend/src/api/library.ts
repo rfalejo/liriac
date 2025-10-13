@@ -17,8 +17,20 @@ export type PatchedChapterUpsert =
 export type PatchedContextItemsUpdateRequest =
   components["schemas"]["PatchedContextItemsUpdateRequest"];
 
-export async function fetchLibrarySections(): Promise<LibraryResponse> {
-  return request<LibraryResponse>("/api/library/");
+export async function fetchBookContext(
+  bookId: string,
+  params?: { chapterId?: string },
+): Promise<LibraryResponse> {
+  const search = new URLSearchParams();
+  if (params?.chapterId) {
+    search.set("chapterId", params.chapterId);
+  }
+
+  const query = search.toString();
+  const suffix = query ? `?${query}` : "";
+  return request<LibraryResponse>(
+    `/api/library/books/${bookId}/context/${suffix}`,
+  );
 }
 
 export async function fetchLibraryBooks(): Promise<LibraryBooksResponse> {
@@ -71,11 +83,15 @@ export async function updateLibraryChapter(
   });
 }
 
-export async function updateLibraryContextItems(
+export async function updateBookContextItems(
+  bookId: string,
   payload: PatchedContextItemsUpdateRequest,
 ): Promise<LibraryResponse> {
-  return request<LibraryResponse>("/api/library/context/items/", {
+  return request<LibraryResponse>(
+    `/api/library/books/${bookId}/context/items/`,
+    {
     method: "PATCH",
     body: JSON.stringify(payload),
-  });
+    },
+  );
 }

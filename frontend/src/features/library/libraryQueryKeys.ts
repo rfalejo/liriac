@@ -1,7 +1,8 @@
 export const libraryQueryKeys = {
   root: ["library"] as const,
   books: () => [...libraryQueryKeys.root, "books"] as const,
-  sections: () => [...libraryQueryKeys.root, "sections"] as const,
+  sections: (bookId: string | null) =>
+    [...libraryQueryKeys.root, "sections", bookId ?? "none"] as const,
 };
 
 export const chapterQueryKeys = {

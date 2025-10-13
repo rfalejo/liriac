@@ -13,10 +13,7 @@ export function LibraryLanding() {
     booksLoading,
     booksError,
     reloadBooks,
-    sections,
     sectionsLoading,
-    sectionsError,
-    reloadSections,
     refreshLibrary,
     selectBook,
     selectedBook,
@@ -127,10 +124,6 @@ export function LibraryLanding() {
         book={editingBook}
         onClose={closeDialog}
         onSelectBook={selectBook}
-        sections={sections}
-        sectionsLoading={sectionsLoading}
-        sectionsError={sectionsError}
-        onReloadSections={reloadSections}
       />
 
       <ChapterDialog

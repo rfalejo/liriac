@@ -47,11 +47,6 @@ export function useUpsertBook() {
         },
       );
 
-      if (variables.mode === "create") {
-        void queryClient.invalidateQueries({
-          queryKey: libraryQueryKeys.sections(),
-        });
-      }
     },
   });
 }

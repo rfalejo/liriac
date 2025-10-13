@@ -1,21 +1,39 @@
+import { useCallback } from "react";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import type { LibraryResponse } from "../../../api/library";
-import { fetchLibrarySections } from "../../../api/library";
+import { fetchBookContext } from "../../../api/library";
 import { libraryQueryKeys } from "../libraryQueryKeys";
-import { useLibraryResource } from "./useLibraryResource";
 
-export function useLibrarySections() {
-  const { data, loading, error, reload } = useLibraryResource<
-    LibraryResponse,
-    LibraryResponse["sections"]
-  >({
-    queryKey: libraryQueryKeys.sections(),
-    queryFn: fetchLibrarySections,
+export function useLibrarySections(bookId: string | null) {
+  const queryClient = useQueryClient();
+
+  const query = useQuery<LibraryResponse, Error, LibraryResponse["sections"]>({
+    queryKey: libraryQueryKeys.sections(bookId),
+    queryFn: async () => {
+      if (!bookId) {
+        throw new Error("Missing book id");
+      }
+      return fetchBookContext(bookId);
+    },
     select: (response) => response.sections,
-    placeholderData: [],
+    enabled: Boolean(bookId),
   });
 
+  const reload = useCallback(() => {
+    if (!bookId) {
+      return;
+    }
+    void queryClient.invalidateQueries({
+      queryKey: libraryQueryKeys.sections(bookId),
+    });
+  }, [bookId, queryClient]);
+
+  const sections = bookId ? query.data ?? [] : [];
+  const loading = bookId ? query.isPending || query.isFetching : false;
+  const error = bookId ? query.error ?? null : null;
+
   return {
-    sections: data,
+    sections,
     loading,
     error,
     reload,

@@ -3,22 +3,31 @@ import {
   type ContextItemUpdate,
   type LibraryResponse,
   type PatchedContextItemsUpdateRequest,
-  updateLibraryContextItems,
+  updateBookContextItems,
 } from "../../../api/library";
 import { libraryQueryKeys } from "../libraryQueryKeys";
 
 export type UpdateLibraryContextVariables = ContextItemUpdate[];
 
-export function useUpdateLibraryContext() {
+export function useUpdateLibraryContext(bookId: string | null) {
   const queryClient = useQueryClient();
 
   return useMutation<LibraryResponse, Error, UpdateLibraryContextVariables>({
     mutationFn: async (items) => {
+      if (!bookId) {
+        throw new Error("Cannot update context without a book id");
+      }
       const payload: PatchedContextItemsUpdateRequest = { items };
-      return updateLibraryContextItems(payload);
+      return updateBookContextItems(bookId, payload);
     },
     onSuccess: (response) => {
-      queryClient.setQueryData(libraryQueryKeys.sections(), response.sections);
+      if (!bookId) {
+        return;
+      }
+      queryClient.setQueryData(
+        libraryQueryKeys.sections(bookId),
+        response.sections,
+      );
     },
   });
 }
