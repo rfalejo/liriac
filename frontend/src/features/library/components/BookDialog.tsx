@@ -2,15 +2,26 @@ import { useEffect, useMemo, useState } from "react";
 import {
   Alert,
   Button,
+  CircularProgress,
+  Divider,
   Dialog,
   DialogActions,
   DialogContent,
   DialogContentText,
   DialogTitle,
+  List,
+  ListItem,
+  ListItemText,
   Stack,
   TextField,
+  Typography,
 } from "@mui/material";
-import type { LibraryBook } from "../../../api/library";
+import type {
+  ContextItem,
+  ContextSection,
+  LibraryBook,
+  LibraryResponse,
+} from "../../../api/library";
 import { useUpsertBook } from "../hooks/useUpsertBook";
 import { useDeleteBook } from "../hooks/useDeleteBook";
 
@@ -20,6 +31,16 @@ const emptyFormState = {
   synopsis: "",
 };
 
+const CONTEXT_SECTION_IDS_IN_ORDER = ["characters", "world", "styleTone"] as const;
+
+function getItemPrimaryText(item: ContextItem) {
+  return item.title ?? item.name ?? "Sin título";
+}
+
+function getItemSecondaryText(item: ContextItem) {
+  return item.summary ?? item.description ?? item.facts ?? undefined;
+}
+
 type BookDialogMode = "create" | "edit";
 
 type BookDialogProps = {
@@ -28,6 +49,10 @@ type BookDialogProps = {
   book: LibraryBook | null;
   onClose: () => void;
   onSelectBook: (bookId: string) => void;
+  sections: LibraryResponse["sections"];
+  sectionsLoading: boolean;
+  sectionsError: Error | null;
+  onReloadSections: () => void;
 };
 
 export function BookDialog({
@@ -36,6 +61,10 @@ export function BookDialog({
   book,
   onClose,
   onSelectBook,
+  sections,
+  sectionsLoading,
+  sectionsError,
+  onReloadSections,
 }: BookDialogProps) {
   const { mutateAsync: upsertBook, isPending: isSaving } = useUpsertBook();
   const { mutateAsync: deleteBook, isPending: isDeleting } = useDeleteBook();
@@ -77,6 +106,18 @@ export function BookDialog({
 
   const submitLabel = mode === "create" ? "Crear" : "Guardar";
   const isBusy = isSaving || isDeleting;
+
+  const contextSections = useMemo(() => {
+    const sectionsById = new Map<string, ContextSection>();
+    for (const section of sections) {
+      sectionsById.set(section.id, section);
+    }
+    return CONTEXT_SECTION_IDS_IN_ORDER.map((sectionId) =>
+      sectionsById.get(sectionId),
+    ).filter((section): section is ContextSection => Boolean(section));
+  }, [sections]);
+
+  const showContextArea = mode === "edit";
 
   function handleDialogClose() {
     if (isBusy) {
@@ -223,6 +264,101 @@ export function BookDialog({
                 minRows={3}
                 disabled={isBusy}
               />
+              {showContextArea ? (
+                <Stack spacing={2} sx={{ pt: 1 }}>
+                  <Divider />
+                  <Stack spacing={1}>
+                    <Typography variant="overline" sx={{ letterSpacing: 0.8 }}>
+                      Contexto creativo
+                    </Typography>
+                    <Typography variant="body2" color="text.secondary">
+                      Consulta los elementos clave del universo de la historia.
+                    </Typography>
+                  </Stack>
+                  {sectionsLoading ? (
+                    <Stack
+                      spacing={1.5}
+                      alignItems="center"
+                      justifyContent="center"
+                      sx={{ py: 3 }}
+                    >
+                      <CircularProgress size={20} />
+                      <Typography variant="body2" color="text.secondary">
+                        Cargando contexto
+                      </Typography>
+                    </Stack>
+                  ) : null}
+                  {!sectionsLoading && sectionsError ? (
+                    <Stack spacing={1.5} alignItems="flex-start">
+                      <Typography variant="body2" color="text.secondary">
+                        No se pudo obtener el contexto.
+                      </Typography>
+                      <Button
+                        size="small"
+                        variant="contained"
+                        onClick={onReloadSections}
+                      >
+                        Reintentar
+                      </Button>
+                    </Stack>
+                  ) : null}
+                  {!sectionsLoading && !sectionsError &&
+                  contextSections.length === 0 ? (
+                    <Typography variant="body2" color="text.secondary">
+                      Aún no hay elementos de contexto.
+                    </Typography>
+                  ) : null}
+                  {!sectionsLoading && !sectionsError &&
+                  contextSections.length > 0 ? (
+                    <Stack spacing={2.5}>
+                      {contextSections.map((section) => (
+                        <Stack key={section.id} spacing={1.25}>
+                          <Typography variant="subtitle2" fontWeight={600}>
+                            {section.title}
+                          </Typography>
+                          {section.items.length === 0 ? (
+                            <Typography
+                              variant="body2"
+                              color="text.secondary"
+                            >
+                              No hay elementos registrados.
+                            </Typography>
+                          ) : (
+                            <List disablePadding>
+                              {section.items.map((item) => (
+                                <ListItem
+                                  key={item.id}
+                                  disableGutters
+                                  sx={{
+                                    py: 0.75,
+                                    borderBottom: "1px solid",
+                                    borderColor: "divider",
+                                    "&:last-of-type": {
+                                      borderBottom: "none",
+                                    },
+                                  }}
+                                >
+                                  <ListItemText
+                                    primary={getItemPrimaryText(item)}
+                                    secondary={getItemSecondaryText(item)}
+                                    slotProps={{
+                                      primary: { variant: "body2" },
+                                      secondary: {
+                                        variant: "caption",
+                                        color: "text.secondary",
+                                      },
+                                    }}
+                                  />
+                                </ListItem>
+                              ))}
+                            </List>
+                          )}
+                        </Stack>
+                      ))}
+                    </Stack>
+                  ) : null}
+                </Stack>
+              ) : null}
             </Stack>
           </DialogContent>
           <DialogActions

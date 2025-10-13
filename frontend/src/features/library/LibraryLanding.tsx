@@ -1,12 +1,11 @@
 import { useCallback, useState } from "react";
-import { Box, Button, Container, Stack, Typography } from "@mui/material";
+import { Box, Container, Stack, Typography } from "@mui/material";
 import { EditorContainer } from "../editor/EditorContainer";
 import { LibraryBooksPanel } from "./LibraryBooksPanel";
 import { useLibraryData } from "./LibraryDataContext";
 import { BookDialog } from "./components/BookDialog";
 import { ChapterDialog } from "./components/ChapterDialog";
 import { LibraryChaptersDialog } from "./LibraryChaptersDialog";
-import { LibraryContextDialog } from "./LibraryContextDialog";
 
 export function LibraryLanding() {
   const {
@@ -34,7 +33,6 @@ export function LibraryLanding() {
   } = useLibraryData();
 
   const [chaptersDialogOpen, setChaptersDialogOpen] = useState(false);
-  const [contextDialogOpen, setContextDialogOpen] = useState(false);
 
   const handleOpenBook = useCallback(
     (bookId: string) => {
@@ -46,14 +44,6 @@ export function LibraryLanding() {
 
   const handleCloseChapters = useCallback(() => {
     setChaptersDialogOpen(false);
-  }, []);
-
-  const handleOpenContext = useCallback(() => {
-    setContextDialogOpen(true);
-  }, []);
-
-  const handleCloseContext = useCallback(() => {
-    setContextDialogOpen(false);
   }, []);
 
   const isBookDialogOpen = dialogState?.type === "book";
@@ -114,15 +104,6 @@ export function LibraryLanding() {
                 Gestiona tus historias y accede a sus capítulos en un toque.
               </Typography>
             </Stack>
-            <Stack direction="row" spacing={1.5} alignItems="center">
-              <Button
-                variant="text"
-                onClick={handleOpenContext}
-                disabled={sectionsLoading}
-              >
-                Ver contexto
-              </Button>
-            </Stack>
           </Stack>
 
           <LibraryBooksPanel
@@ -146,6 +127,10 @@ export function LibraryLanding() {
         book={editingBook}
         onClose={closeDialog}
         onSelectBook={selectBook}
+        sections={sections}
+        sectionsLoading={sectionsLoading}
+        sectionsError={sectionsError}
+        onReloadSections={reloadSections}
       />
 
       <ChapterDialog
@@ -165,15 +150,6 @@ export function LibraryLanding() {
         onOpenChapter={openEditor}
         onCreateChapter={openCreateChapterDialog}
         onEditChapter={openEditChapterDialog}
-      />
-
-      <LibraryContextDialog
-        open={contextDialogOpen}
-        sections={sections}
-        loading={sectionsLoading}
-        error={sectionsError}
-        onReload={reloadSections}
-        onClose={handleCloseContext}
       />
     </Box>
   );
