@@ -66,6 +66,8 @@ export function LibraryLanding() {
     [bookEditor, books],
   );
 
+  const editingActive = Boolean(editingBook);
+
   const dialogBookForChapter =
     dialogState && dialogState.type === "chapter"
       ? (books.find((book) => book.id === dialogState.bookId) ?? null)
@@ -123,12 +125,27 @@ export function LibraryLanding() {
             spacing={{ xs: 3, lg: 3.5 }}
             alignItems="stretch"
           >
-            <Box sx={{ flexGrow: 1, minWidth: 0 }}>
+            <Box
+              sx={{
+                flexGrow: editingActive ? 0 : 1,
+                flexShrink: 0,
+                minWidth: 0,
+                width: {
+                  xs: "100%",
+                  lg: editingActive ? 320 : "100%",
+                },
+                maxWidth: {
+                  xs: "100%",
+                  lg: editingActive ? 360 : "none",
+                },
+              }}
+            >
               <LibraryBooksPanel
                 books={books}
                 loading={booksLoading}
                 error={booksError}
                 selectedBookId={selectedBookId}
+                condensed={editingActive}
                 onOpenBook={handleOpenBook}
                 onReload={reloadBooks}
                 onCreateBook={openCreateBookDialog}
@@ -140,8 +157,10 @@ export function LibraryLanding() {
             {editingBook ? (
               <Box
                 sx={{
-                  flexShrink: 0,
-                  width: { xs: "100%", lg: 380 },
+                  flexGrow: 1,
+                  flexShrink: 1,
+                  minWidth: 0,
+                  width: { xs: "100%", lg: "auto" },
                 }}
               >
                 <BookEditorPanel

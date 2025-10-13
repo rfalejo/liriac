@@ -10,6 +10,7 @@ type LibraryBooksPanelProps = {
   loading: boolean;
   error: Error | null;
   selectedBookId: string | null;
+  condensed?: boolean;
   onOpenBook: (bookId: string) => void;
   onReload: () => void;
   onCreateBook: () => void;
@@ -23,6 +24,7 @@ export function LibraryBooksPanel({
   loading,
   error,
   selectedBookId,
+  condensed = false,
   onOpenBook,
   onReload,
   onCreateBook,
@@ -95,12 +97,18 @@ export function LibraryBooksPanel({
           <Box
             sx={{
               display: "grid",
-              gap: { xs: 2, sm: 2.5 },
-              gridTemplateColumns: {
-                xs: "repeat(1, minmax(0, 1fr))",
-                sm: "repeat(2, minmax(0, 1fr))",
-                md: "repeat(3, minmax(0, 1fr))",
-              },
+              gap: { xs: 2, sm: condensed ? 2 : 2.5 },
+              gridTemplateColumns: condensed
+                ? {
+                    xs: "repeat(1, minmax(0, 1fr))",
+                    sm: "repeat(1, minmax(0, 1fr))",
+                    md: "repeat(1, minmax(0, 1fr))",
+                  }
+                : {
+                    xs: "repeat(1, minmax(0, 1fr))",
+                    sm: "repeat(2, minmax(0, 1fr))",
+                    md: "repeat(3, minmax(0, 1fr))",
+                  },
             }}
           >
             {hasBooks ? (
@@ -126,8 +134,8 @@ export function LibraryBooksPanel({
                 sx={{
                   gridColumn: {
                     xs: "1 / -1",
-                    sm: "1 / span 2",
-                    md: "1 / span 3",
+                    sm: condensed ? "1 / -1" : "1 / span 2",
+                    md: condensed ? "1 / -1" : "1 / span 3",
                   },
                   textAlign: "center",
                 }}
