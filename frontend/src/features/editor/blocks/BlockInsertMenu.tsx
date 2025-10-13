@@ -82,9 +82,14 @@ export function BlockInsertMenu({
       if (root && nextFocus && root.contains(nextFocus)) {
         return;
       }
+
+      if (hovered) {
+        return;
+      }
+
       setExpanded(false);
     },
-    [],
+    [hovered],
   );
 
   const optionButtons = useMemo(
