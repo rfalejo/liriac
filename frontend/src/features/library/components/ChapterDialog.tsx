@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import Alert from "@mui/material/Alert";
 import Button from "@mui/material/Button";
 import Dialog from "@mui/material/Dialog";
@@ -11,11 +11,27 @@ import Typography from "@mui/material/Typography";
 import type { ChapterSummary, LibraryBook } from "../../../api/library";
 import { useUpsertChapter } from "../hooks/useUpsertChapter";
 
-const emptyFormState = {
+type ChapterFormState = {
+  title: string;
+  summary: string;
+  ordinal: string;
+};
+
+const emptyFormState: ChapterFormState = {
   title: "",
   summary: "",
   ordinal: "",
 };
+
+const CREATE_CHAPTER_PLACEHOLDER_ID = "__create__";
+
+function areChapterFormStatesEqual(a: ChapterFormState, b: ChapterFormState) {
+  return a.title === b.title && a.summary === b.summary && a.ordinal === b.ordinal;
+}
+
+function buildDialogKey(mode: ChapterDialogMode, bookId: string | null, chapterId: string | null) {
+  return `${mode}:${bookId ?? "none"}:${chapterId ?? CREATE_CHAPTER_PLACEHOLDER_ID}`;
+}
 
 type ChapterDialogMode = "create" | "edit";
 
@@ -37,30 +53,64 @@ export function ChapterDialog({
   onSelectBook,
 }: ChapterDialogProps) {
   const { mutateAsync, isPending } = useUpsertChapter();
-  const [formState, setFormState] = useState(emptyFormState);
+  const [formState, setFormState] = useState<ChapterFormState>(emptyFormState);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const initialRef = useRef<ChapterFormState>(emptyFormState);
+  const lastLoadedRef = useRef<{
+    key: string;
+    snapshot: ChapterFormState;
+  } | null>(null);
+
+  const dialogKey = buildDialogKey(mode, book?.id ?? null, chapter?.id ?? null);
+
+  const formHasChanges = useMemo(() => {
+    const initial = initialRef.current;
+    return (
+      formState.title !== initial.title ||
+      formState.summary !== initial.summary ||
+      formState.ordinal !== initial.ordinal
+    );
+  }, [formState]);
 
   useEffect(() => {
     if (!open) {
       return;
     }
 
-    if (mode === "edit" && chapter) {
-      setFormState({
-        title: chapter.title,
-        summary: chapter.summary ?? "",
-        ordinal: String(chapter.ordinal),
-      });
-    } else {
-      const nextOrdinal = book ? book.chapters.length + 1 : 1;
-      setFormState({
-        title: "",
-        summary: "",
-        ordinal: String(nextOrdinal),
-      });
+    const nextState: ChapterFormState = mode === "edit" && chapter
+      ? {
+          title: chapter.title,
+          summary: chapter.summary ?? "",
+          ordinal: String(chapter.ordinal),
+        }
+      : {
+          title: "",
+          summary: "",
+          ordinal: String((book?.chapters.length ?? 0) + 1),
+        };
+
+    const lastLoaded = lastLoadedRef.current;
+    if (lastLoaded?.key === dialogKey) {
+      if (formHasChanges || areChapterFormStatesEqual(lastLoaded.snapshot, nextState)) {
+        return;
+      }
     }
+
+    setFormState(nextState);
+    initialRef.current = nextState;
+    lastLoadedRef.current = { key: dialogKey, snapshot: nextState };
     setErrorMessage(null);
-  }, [open, mode, chapter, book]);
+  }, [
+    open,
+    mode,
+    book?.chapters.length,
+    dialogKey,
+    chapter?.id,
+    chapter?.ordinal,
+    chapter?.summary,
+    chapter?.title,
+    formHasChanges,
+  ]);
 
   const dialogTitle = useMemo(() => {
     if (mode === "create") {
@@ -97,6 +147,12 @@ export function ChapterDialog({
 
     const summaryValue = formState.summary.trim();
 
+    const savedState: ChapterFormState = {
+      title: trimmedTitle,
+      summary: summaryValue,
+      ordinal: String(normalizedOrdinal),
+    };
+
     try {
       if (mode === "create") {
         await mutateAsync({
@@ -121,6 +177,9 @@ export function ChapterDialog({
         });
       }
 
+      initialRef.current = savedState;
+      lastLoadedRef.current = { key: dialogKey, snapshot: savedState };
+      setFormState(savedState);
       onSelectBook(book.id);
       onClose();
     } catch (error) {

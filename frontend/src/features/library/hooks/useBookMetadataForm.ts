@@ -7,6 +7,13 @@ export type BookEditorFormState = {
   synopsis: string;
 };
 
+function areFormStatesEqual(
+  a: BookEditorFormState,
+  b: BookEditorFormState,
+): boolean {
+  return a.title === b.title && a.author === b.author && a.synopsis === b.synopsis;
+}
+
 type UseBookMetadataFormArgs = {
   book: LibraryBook;
   upsertBook: (args: {
@@ -42,23 +49,10 @@ export function useBookMetadataForm({
 }: UseBookMetadataFormArgs) {
   const [formState, setFormState] = useState<BookEditorFormState>(EMPTY_FORM_STATE);
   const initialRef = useRef<BookEditorFormState>(EMPTY_FORM_STATE);
-
-  useEffect(() => {
-    const nextState: BookEditorFormState = {
-      title: book.title,
-      author: book.author ?? "",
-      synopsis: book.synopsis ?? "",
-    };
-    setFormState(nextState);
-    initialRef.current = nextState;
-  }, [book]);
-
-  const handleFieldChange = useCallback(
-    (field: keyof BookEditorFormState, value: string) => {
-      setFormState((current) => ({ ...current, [field]: value }));
-    },
-    [],
-  );
+  const lastLoadedRef = useRef<{
+    bookId: string;
+    snapshot: BookEditorFormState;
+  } | null>(null);
 
   const metadataHasChanges = useMemo(() => {
     const initial = initialRef.current;
@@ -68,6 +62,34 @@ export function useBookMetadataForm({
       formState.synopsis !== initial.synopsis
     );
   }, [formState]);
+
+  useEffect(() => {
+    const nextState: BookEditorFormState = {
+      title: book.title,
+      author: book.author ?? "",
+      synopsis: book.synopsis ?? "",
+    };
+    const lastLoaded = lastLoadedRef.current;
+    const sameBook = lastLoaded?.bookId === book.id;
+    const matchesSnapshot = lastLoaded && areFormStatesEqual(nextState, lastLoaded.snapshot);
+
+    if (sameBook) {
+      if (metadataHasChanges || matchesSnapshot) {
+        return;
+      }
+    }
+
+    setFormState(nextState);
+    initialRef.current = nextState;
+    lastLoadedRef.current = { bookId: book.id, snapshot: nextState };
+  }, [book, metadataHasChanges]);
+
+  const handleFieldChange = useCallback(
+    (field: keyof BookEditorFormState, value: string) => {
+      setFormState((current) => ({ ...current, [field]: value }));
+    },
+    [],
+  );
 
   const submitMetadata = useCallback(async (): Promise<MetadataSubmissionResult> => {
     const trimmedTitle = formState.title.trim();
@@ -111,6 +133,15 @@ export function useBookMetadataForm({
       author: trimmedAuthor,
       synopsis: trimmedSynopsis,
     });
+
+    lastLoadedRef.current = {
+      bookId: book.id,
+      snapshot: {
+        title: trimmedTitle,
+        author: trimmedAuthor,
+        synopsis: trimmedSynopsis,
+      },
+    };
 
     onSuccess();
     return { success: true };
