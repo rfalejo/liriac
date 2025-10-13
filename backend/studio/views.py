@@ -10,6 +10,7 @@ from rest_framework.views import APIView
 from .data import (
     create_book,
     create_chapter,
+    create_chapter_block,
     delete_book,
     get_chapter_detail,
     get_editor_state,
@@ -23,6 +24,7 @@ from .data import (
 from .serializers import (
     BookUpsertSerializer,
     ChapterBlockUpdateSerializer,
+    ChapterBlockCreateSerializer,
     ChapterDetailSerializer,
     ChapterSummarySerializer,
     ChapterUpsertSerializer,
@@ -264,6 +266,32 @@ class ChapterBlockUpdateView(APIView):
 
         response_serializer = ChapterDetailSerializer(updated_chapter)
         return Response(response_serializer.data)
+
+
+class ChapterBlockListView(APIView):
+    """Create blocks within a chapter."""
+
+    authentication_classes: list = []
+    permission_classes: list = []
+
+    @extend_schema(
+        request=ChapterBlockCreateSerializer,
+        responses=ChapterDetailSerializer,
+    )
+    def post(self, request, chapter_id: str):
+        serializer = ChapterBlockCreateSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        payload = serializer.validated_data
+
+        try:
+            updated_chapter = create_chapter_block(chapter_id, payload)
+        except KeyError as exc:
+            raise Http404(str(exc)) from exc
+        except ValueError as exc:
+            raise ValidationError(str(exc)) from exc
+
+        response_serializer = ChapterDetailSerializer(updated_chapter)
+        return Response(response_serializer.data, status=status.HTTP_201_CREATED)
 
 
 class EditorView(APIView):

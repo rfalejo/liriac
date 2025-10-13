@@ -28,22 +28,31 @@ export function ChapterBlockList({
   return (
     <Stack spacing={0}>
       {blockEntries.map((entry, index) => {
-        const previous = blockEntries[index - 1];
         const insertPosition: BlockInsertPosition = {
-          afterBlockId: previous?.id ?? null,
+          afterBlockId: index > 0 ? blockEntries[index - 1]?.id ?? null : null,
           beforeBlockId: entry.id,
           index,
         };
 
         return (
           <Fragment key={entry.id}>
-            {onInsertBlock && index > 0 ? (
+            {onInsertBlock ? (
               <BlockInsertMenu
                 position={insertPosition}
                 onInsertBlock={onInsertBlock}
               />
             ) : null}
             {entry.node}
+            {onInsertBlock && index === blockEntries.length - 1 ? (
+              <BlockInsertMenu
+                position={{
+                  afterBlockId: entry.id,
+                  beforeBlockId: null,
+                  index: index + 1,
+                }}
+                onInsertBlock={onInsertBlock}
+              />
+            ) : null}
           </Fragment>
         );
       })}

@@ -4,6 +4,8 @@ import { request } from "./client";
 export type ChapterDetail = components["schemas"]["ChapterDetail"];
 export type ChapterBlockUpdatePayload =
   components["schemas"]["PatchedChapterBlockUpdate"];
+export type ChapterBlockCreatePayload =
+  components["schemas"]["ChapterBlockCreate"];
 
 export async function fetchChapterDetail(
   chapterId: string,
@@ -30,6 +32,26 @@ export async function updateChapterBlock({
     `/api/library/chapters/${encodedChapter}/blocks/${encodedBlock}/`,
     {
       method: "PATCH",
+      body: JSON.stringify(payload),
+    },
+  );
+}
+
+type CreateChapterBlockParams = {
+  chapterId: string;
+  payload: ChapterBlockCreatePayload;
+};
+
+export async function createChapterBlock({
+  chapterId,
+  payload,
+}: CreateChapterBlockParams): Promise<ChapterDetail> {
+  const encodedChapter = encodeURIComponent(chapterId);
+
+  return request<ChapterDetail>(
+    `/api/library/chapters/${encodedChapter}/blocks/`,
+    {
+      method: "POST",
       body: JSON.stringify(payload),
     },
   );

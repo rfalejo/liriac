@@ -63,7 +63,7 @@ export function EditorChapterView({
         ) : null}
 
         {blockEntries.length === 0 ? (
-          <ChapterEmptyState />
+          <ChapterEmptyState onInsertBlock={onInsertBlock} />
         ) : (
           <ChapterBlockList
             blockEntries={blockEntries}

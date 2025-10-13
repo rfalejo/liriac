@@ -167,6 +167,31 @@ paths:
               schema:
                 $ref: '#/components/schemas/ChapterSummary'
           description: ''
+  /api/library/chapters/{chapter_id}/blocks/:
+    post:
+      operationId: library_chapters_blocks_create
+      description: Create blocks within a chapter.
+      parameters:
+      - in: path
+        name: chapter_id
+        schema:
+          type: string
+        required: true
+      tags:
+      - library
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ChapterBlockCreate'
+        required: true
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ChapterDetail'
+          description: ''
   /api/library/chapters/{chapter_id}/blocks/{block_id}/:
     patch:
       operationId: library_chapters_blocks_partial_update
@@ -318,6 +343,91 @@ components:
       required:
       - id
       - position
+      - type
+    ChapterBlockCreate:
+      type: object
+      properties:
+        id:
+          type: string
+        type:
+          $ref: '#/components/schemas/ChapterBlockTypeEnum'
+        position:
+          type: integer
+        text:
+          type: string
+        style:
+          type: string
+          nullable: true
+        tags:
+          type: array
+          items:
+            type: string
+        turns:
+          type: array
+          items:
+            $ref: '#/components/schemas/DialogueTurn'
+        context:
+          type: string
+          nullable: true
+        label:
+          type: string
+          nullable: true
+        summary:
+          type: string
+          nullable: true
+        locationId:
+          type: string
+          nullable: true
+        locationName:
+          type: string
+          nullable: true
+        timestamp:
+          type: string
+          nullable: true
+        mood:
+          type: string
+          nullable: true
+        kind:
+          type: string
+          nullable: true
+        title:
+          type: string
+          nullable: true
+        subtitle:
+          type: string
+          nullable: true
+        ordinal:
+          type: integer
+          nullable: true
+        epigraph:
+          type: string
+          nullable: true
+        epigraphAttribution:
+          type: string
+          nullable: true
+        povCharacterId:
+          type: string
+          nullable: true
+        povCharacterName:
+          type: string
+          nullable: true
+        timelineMarker:
+          type: string
+          nullable: true
+        themeTags:
+          type: array
+          items:
+            type: string
+        status:
+          type: string
+          nullable: true
+        owner:
+          type: string
+          nullable: true
+        lastUpdated:
+          type: string
+          nullable: true
+      required:
       - type
     ChapterBlockTypeEnum:
       enum:

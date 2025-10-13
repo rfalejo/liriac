@@ -5,12 +5,13 @@ from typing import Any, Dict, List, Optional, cast
 from uuid import uuid4
 
 from django.db import IntegrityError, transaction
-from django.db.models import Max
+from django.db.models import F, Max
 
 from .models import (
     Book,
     Chapter,
     ChapterBlock,
+    ChapterBlockType,
     LibraryContextItem,
     LibrarySection,
 )
@@ -277,6 +278,68 @@ def update_chapter_block(
 
         chapter = block.chapter
     return chapter.to_detail_payload()
+
+
+def create_chapter_block(
+    chapter_id: str,
+    payload: Dict[str, Any],
+) -> ChapterDetailPayload:
+    with transaction.atomic():
+        try:
+            chapter = (
+                Chapter.objects.select_for_update()
+                .select_related("book")
+                .prefetch_related("blocks")
+                .get(pk=chapter_id)
+            )
+        except Chapter.DoesNotExist as exc:
+            raise KeyError(f"Unknown chapter: {chapter_id}") from exc
+
+        block_type = str(payload.get("type"))
+        if block_type not in ChapterBlockType.values:
+            raise ValueError("Tipo de bloque no soportado.")
+
+        block_id = str(payload.get("id") or uuid4().hex)
+
+        if ChapterBlock.objects.filter(pk=block_id).exists():
+            raise ValueError("Ya existe un bloque con ese identificador.")
+
+        raw_position = payload.get("position")
+        if raw_position is None:
+            current_max = chapter.blocks.aggregate(Max("position")).get("position__max")
+            position = (int(current_max) + 1) if current_max is not None else 0
+        else:
+            position = int(raw_position)
+            ChapterBlock.objects.filter(
+                chapter=chapter,
+                position__gte=position,
+            ).update(position=F("position") + 1)
+
+        payload_updates: Dict[str, Any] = {
+            key: value
+            for key, value in payload.items()
+            if key not in {"id", "type", "position"}
+        }
+
+        if block_type == ChapterBlockType.DIALOGUE:
+            turns = payload_updates.get("turns")
+            if turns is None:
+                turns = []
+            if not isinstance(turns, list):
+                raise ValueError("Los turnos de diálogo deben enviarse como lista.")
+            payload_updates["turns"] = ensure_turn_identifiers(block_id, turns)
+
+        ChapterBlock.objects.create(
+            id=block_id,
+            chapter=chapter,
+            type=block_type,
+            position=position,
+            payload=payload_updates,
+        )
+
+    return (
+        Chapter.objects.select_related("book").prefetch_related("blocks").get(pk=chapter_id)
+    ).to_detail_payload()
 
 
 def update_context_items(updates: List[Dict[str, Any]]) -> List[ContextSectionPayload]:

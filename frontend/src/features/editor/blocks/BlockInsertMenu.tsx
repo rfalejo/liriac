@@ -25,7 +25,7 @@ type BlockInsertMenuProps = {
   ) => void;
 };
 
-const BLOCK_OPTIONS = [
+export const BLOCK_INSERT_OPTIONS = [
   {
     type: "paragraph" as const,
     label: "Añadir párrafo",
@@ -89,7 +89,7 @@ export function BlockInsertMenu({
 
   const optionButtons = useMemo(
     () =>
-      BLOCK_OPTIONS.map(({ type, label, Icon }) => (
+  BLOCK_INSERT_OPTIONS.map(({ type, label, Icon }) => (
         <Tooltip key={type} title={label} placement="top" arrow>
           <IconButton
             size="small"

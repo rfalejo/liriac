@@ -167,6 +167,7 @@ frontend/
 |   |   |   |   |   \-- useSceneBoundaryBlockEditingSession.ts
 |   |   |   |   |-- useChapterBlockSelectors.ts
 |   |   |   |   |-- useChapterBlocks.ts
+|   |   |   |   |-- useCreateChapterBlock.ts
 |   |   |   |   |-- useDialogueEditingState.ts
 |   |   |   |   |-- useEditorChapterNavigation.ts
 |   |   |   |   |-- useEditorEditingState.ts

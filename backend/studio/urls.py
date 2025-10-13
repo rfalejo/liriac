@@ -2,6 +2,7 @@ from django.urls import path
 
 from .views import (
     ChapterBlockUpdateView,
+    ChapterBlockListView,
     ChapterDetailView,
     EditorView,
     LibraryBookChaptersView,
@@ -28,6 +29,11 @@ urlpatterns = [
         "library/chapters/<str:chapter_id>/",
         ChapterDetailView.as_view(),
         name="library-chapter-detail",
+    ),
+    path(
+        "library/chapters/<str:chapter_id>/blocks/",
+        ChapterBlockListView.as_view(),
+        name="library-chapter-blocks",
     ),
     path(
         "library/chapters/<str:chapter_id>/blocks/<str:block_id>/",

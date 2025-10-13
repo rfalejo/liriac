@@ -92,6 +92,16 @@ class ChapterBlockUpdateSerializer(ChapterBlockSerializer):
             field.required = False
 
 
+class ChapterBlockCreateSerializer(ChapterBlockSerializer):
+    class Meta:
+        ref_name = "ChapterBlockCreate"
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.fields["id"].required = False
+        self.fields["position"].required = False
+
+
 class ContextItemSerializer(serializers.Serializer):
     id = serializers.CharField()
     type = serializers.ChoiceField(
