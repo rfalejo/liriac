@@ -1,8 +1,9 @@
-import { useCallback, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { Box, Container, Stack, Typography } from "@mui/material";
 import { EditorContainer } from "../editor/EditorContainer";
 import { LibraryBooksPanel } from "./LibraryBooksPanel";
 import { useLibraryData } from "./LibraryDataContext";
+import { BookEditorPanel } from "./components/BookEditorPanel";
 import { BookDialog } from "./components/BookDialog";
 import { ChapterDialog } from "./components/ChapterDialog";
 import { LibraryChaptersDialog } from "./LibraryChaptersDialog";
@@ -21,9 +22,11 @@ export function LibraryLanding() {
     editorState,
     openEditor,
     closeEditor,
+    bookEditor,
+    openBookEditor,
+    closeBookEditor,
     dialogState,
     openCreateBookDialog,
-    openEditBookDialog,
     openCreateChapterDialog,
     openEditChapterDialog,
     closeDialog,
@@ -46,10 +49,22 @@ export function LibraryLanding() {
   const isBookDialogOpen = dialogState?.type === "book";
   const isChapterDialogOpen = dialogState?.type === "chapter";
 
-  const editingBook =
-    dialogState && dialogState.type === "book" && dialogState.mode === "edit"
-      ? (books.find((book) => book.id === dialogState.bookId) ?? null)
-      : null;
+  useEffect(() => {
+    if (!bookEditor) {
+      return;
+    }
+    if (!books.some((book) => book.id === bookEditor.bookId)) {
+      closeBookEditor();
+    }
+  }, [bookEditor, books, closeBookEditor]);
+
+  const editingBook = useMemo(
+    () =>
+      bookEditor
+        ? books.find((book) => book.id === bookEditor.bookId) ?? null
+        : null,
+    [bookEditor, books],
+  );
 
   const dialogBookForChapter =
     dialogState && dialogState.type === "chapter"
@@ -103,25 +118,44 @@ export function LibraryLanding() {
             </Stack>
           </Stack>
 
-          <LibraryBooksPanel
-            books={books}
-            loading={booksLoading}
-            error={booksError}
-            selectedBookId={selectedBookId}
-            onOpenBook={handleOpenBook}
-            onReload={reloadBooks}
-            onCreateBook={openCreateBookDialog}
-            onEditBook={openEditBookDialog}
-            onRefreshLibrary={refreshLibrary}
-            refreshDisabled={booksLoading || sectionsLoading}
-          />
+          <Stack
+            direction={{ xs: "column", lg: "row" }}
+            spacing={{ xs: 3, lg: 3.5 }}
+            alignItems="stretch"
+          >
+            <Box sx={{ flexGrow: 1, minWidth: 0 }}>
+              <LibraryBooksPanel
+                books={books}
+                loading={booksLoading}
+                error={booksError}
+                selectedBookId={selectedBookId}
+                onOpenBook={handleOpenBook}
+                onReload={reloadBooks}
+                onCreateBook={openCreateBookDialog}
+                onEditBook={openBookEditor}
+                onRefreshLibrary={refreshLibrary}
+                refreshDisabled={booksLoading || sectionsLoading}
+              />
+            </Box>
+            {editingBook ? (
+              <Box
+                sx={{
+                  flexShrink: 0,
+                  width: { xs: "100%", lg: 380 },
+                }}
+              >
+                <BookEditorPanel
+                  book={editingBook}
+                  onClose={closeBookEditor}
+                />
+              </Box>
+            ) : null}
+          </Stack>
         </Stack>
       </Container>
 
       <BookDialog
         open={isBookDialogOpen}
-        mode={dialogState?.type === "book" ? dialogState.mode : "create"}
-        book={editingBook}
         onClose={closeDialog}
         onSelectBook={selectBook}
       />

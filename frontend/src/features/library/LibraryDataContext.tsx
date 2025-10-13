@@ -14,9 +14,10 @@ import { useLibraryEditor } from "./hooks/useLibraryEditor";
 
 type LibraryDialogState =
   | { type: "book"; mode: "create" }
-  | { type: "book"; mode: "edit"; bookId: string }
   | { type: "chapter"; mode: "create"; bookId: string }
   | { type: "chapter"; mode: "edit"; bookId: string; chapterId: string };
+
+type BookEditorState = { bookId: string } | null;
 
 type LibraryDataContextValue = {
   books: LibraryBook[];
@@ -34,9 +35,11 @@ type LibraryDataContextValue = {
   editorState: ReturnType<typeof useLibraryEditor>["editorState"];
   openEditor: (chapterId: string) => void;
   closeEditor: () => void;
+  bookEditor: BookEditorState;
+  openBookEditor: (bookId: string) => void;
+  closeBookEditor: () => void;
   dialogState: LibraryDialogState | null;
   openCreateBookDialog: () => void;
-  openEditBookDialog: (bookId: string) => void;
   openCreateChapterDialog: (bookId: string) => void;
   openEditChapterDialog: (bookId: string, chapterId: string) => void;
   closeDialog: () => void;
@@ -101,14 +104,30 @@ export function LibraryDataContextProvider({
   const [dialogState, setDialogState] = useState<LibraryDialogState | null>(
     null,
   );
+  const [bookEditor, setBookEditor] = useState<BookEditorState>(null);
 
   const openCreateBookDialog = useCallback(() => {
+    setBookEditor(null);
     setDialogState({ type: "book", mode: "create" });
   }, []);
 
-  const openEditBookDialog = useCallback((bookId: string) => {
-    setDialogState({ type: "book", mode: "edit", bookId });
-  }, []);
+  const openBookEditor = useCallback(
+    (bookId: string) => {
+      setDialogState(null);
+      setSelectedBookId(bookId);
+      setBookEditor({ bookId });
+    },
+    [setSelectedBookId],
+  );
+
+  useEffect(() => {
+    if (!bookEditor) {
+      return;
+    }
+    if (!books.some((book) => book.id === bookEditor.bookId)) {
+      setBookEditor(null);
+    }
+  }, [books, bookEditor]);
 
   const openCreateChapterDialog = useCallback((bookId: string) => {
     setDialogState({ type: "chapter", mode: "create", bookId });
@@ -130,6 +149,10 @@ export function LibraryDataContextProvider({
     setDialogState(null);
   }, []);
 
+  const closeBookEditor = useCallback(() => {
+    setBookEditor(null);
+  }, []);
+
   const value = useMemo<LibraryDataContextValue>(
     () => ({
       books,
@@ -147,9 +170,11 @@ export function LibraryDataContextProvider({
       editorState,
       openEditor,
       closeEditor,
+      bookEditor,
+      openBookEditor,
+      closeBookEditor,
       dialogState,
       openCreateBookDialog,
-      openEditBookDialog,
       openCreateChapterDialog,
       openEditChapterDialog,
       closeDialog,
@@ -170,9 +195,11 @@ export function LibraryDataContextProvider({
       editorState,
       openEditor,
       closeEditor,
+      bookEditor,
+      openBookEditor,
+      closeBookEditor,
       dialogState,
       openCreateBookDialog,
-      openEditBookDialog,
       openCreateChapterDialog,
       openEditChapterDialog,
       closeDialog,
