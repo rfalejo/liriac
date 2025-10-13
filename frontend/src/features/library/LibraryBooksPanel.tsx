@@ -1,23 +1,18 @@
-import {
-  Button,
-  IconButton,
-  List,
-  ListItemText,
-  Stack,
-  Tooltip,
-} from "@mui/material";
-import EditRoundedIcon from "@mui/icons-material/EditRounded";
+import { Box, Stack, Typography } from "@mui/material";
 import type { LibraryBook } from "../../api/library";
 import { LibraryPanel } from "./components/LibraryPanel";
 import { resolveLibraryPanelStatus } from "./components/panelStatus";
-import { LibraryListItemButton } from "./components/LibraryListItemButton";
+import {
+  AddBookCoverCard,
+  BookCoverCard,
+} from "./components/BookCoverCard";
 
 type LibraryBooksPanelProps = {
   books: LibraryBook[];
   loading: boolean;
   error: Error | null;
   selectedBookId: string | null;
-  onSelectBook: (bookId: string) => void;
+  onOpenBook: (bookId: string) => void;
   onReload: () => void;
   onCreateBook: () => void;
   onEditBook: (bookId: string) => void;
@@ -28,87 +23,98 @@ export function LibraryBooksPanel({
   loading,
   error,
   selectedBookId,
-  onSelectBook,
+  onOpenBook,
   onReload,
   onCreateBook,
   onEditBook,
 }: LibraryBooksPanelProps) {
+  const hasBooks = books.length > 0;
+
   const status = resolveLibraryPanelStatus({
     loading,
     error,
-    isEmpty: books.length === 0,
+    isEmpty: false,
     config: {
-      loading: { message: "Cargando libros", centered: true },
+      loading: { message: "Cargando tu biblioteca", centered: true },
       error: {
         message: "No se pudieron cargar los libros.",
         actionLabel: "Reintentar",
         onAction: onReload,
         centered: true,
       },
-      empty: { message: "Aún no hay libros disponibles." },
     },
   });
 
-  const showList = !status;
+  const showContent = !status;
 
   return (
     <LibraryPanel
-      title="Libros"
+      title="Tu biblioteca"
       status={status}
-      actions={
-        <Button
-          variant="outlined"
-          size="small"
-          onClick={onCreateBook}
-          disabled={loading}
-        >
-          Nuevo
-        </Button>
-      }
-      sx={{ flexBasis: { md: "32%" }, flexGrow: 1 }}
+      sx={{ flexGrow: 1 }}
     >
-      {showList && (
-        <List disablePadding>
-          {books.map((book) => (
-            <LibraryListItemButton
-              key={book.id}
-              selected={book.id === selectedBookId}
-              onClick={() => onSelectBook(book.id)}
-            >
-              <Stack
-                direction="row"
-                alignItems="flex-start"
-                justifyContent="space-between"
-                sx={{ width: "100%" }}
-                spacing={1}
-              >
-                <ListItemText
-                  primary={book.title}
-                  secondary={book.author ?? undefined}
-                  slotProps={{
-                    primary: { variant: "body2", fontWeight: 600 },
-                    secondary: {
-                      variant: "caption",
-                      color: "text.secondary",
-                    },
-                  }}
-                />
-                <Tooltip title="Editar">
-                  <IconButton
-                    size="small"
-                    aria-label="Editar libro"
-                    onClick={(event) => {
-                      event.stopPropagation();
-                      onEditBook(book.id);
+      {showContent && (
+        <Stack spacing={2.5} alignItems="stretch">
+          <Typography variant="body2" color="text.secondary">
+            {books.length} {books.length === 1 ? "libro" : "libros"}
+          </Typography>
+          <Box
+            sx={{
+              display: "grid",
+              gap: { xs: 2, sm: 2.5 },
+              gridTemplateColumns: {
+                xs: "repeat(1, minmax(0, 1fr))",
+                sm: "repeat(2, minmax(0, 1fr))",
+                md: "repeat(3, minmax(0, 1fr))",
+              },
+            }}
+          >
+            {hasBooks
+              ? books.map((book) => (
+                  <Box key={book.id} sx={{ height: "100%" }}>
+                    <BookCoverCard
+                      title={book.title}
+                      author={book.author}
+                      synopsis={book.synopsis ?? undefined}
+                      chaptersCount={book.chapters.length}
+                      selected={book.id === selectedBookId}
+                      disabled={loading}
+                      onSelect={() => onOpenBook(book.id)}
+                      onEdit={() => onEditBook(book.id)}
+                    />
+                  </Box>
+                ))
+              : (
+                  <Stack
+                    spacing={2}
+                    alignItems="center"
+                    justifyContent="center"
+                    sx={{
+                      gridColumn: {
+                        xs: "1 / -1",
+                        sm: "1 / span 2",
+                        md: "1 / span 3",
+                      },
+                      textAlign: "center",
                     }}
                   >
-                    <EditRoundedIcon fontSize="small" />
-                  </IconButton>
-                </Tooltip>
-              </Stack>
-            </LibraryListItemButton>
-          ))}
-        </List>
+                    <Typography variant="body1" fontWeight={600}>
+                      Tu biblioteca está vacía
+                    </Typography>
+                    <Typography variant="body2" color="text.secondary">
+                      Crea tu primer libro para comenzar a organizar capítulos.
+                    </Typography>
+                  </Stack>
+                )}
+            <Box sx={{ height: "100%" }}>
+              <AddBookCoverCard
+                onClick={onCreateBook}
+                disabled={loading}
+                label="Nuevo libro"
+              />
+            </Box>
+          </Box>
+        </Stack>
       )}
     </LibraryPanel>
   );

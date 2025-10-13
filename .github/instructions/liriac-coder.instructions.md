@@ -83,12 +83,16 @@ feat(library): add book listing endpoint
 When planning a big change, you can use the following tools:
 - `context7/*`: fetch up-to-date information about external libraries or frameworks.
 
+## File handling
+- If you want to delete a file, do not try to do so using the `edit` or `apply_patch` tools, instead, use the `rm` command in the terminal.
+- If you want to rewrite a file completely, do not try to do so using the `edit` or `apply_patch` tools, instead, empty the file using the `echo '' > path/to/file` command in the terminal, and then you can use the built-in tools again to write to the file.
+
 ## Repository layout snapshot
 
 ```
 .github/
-\-- chatmodes/
-    \-- coder.chatmode.md
+\-- instructions/
+    \-- liriac-coder.instructions.md
 backend/
 |-- config/
 |   |-- __init__.py
@@ -98,6 +102,8 @@ backend/
 |   \-- wsgi.py
 |-- studio/
 |   |-- migrations/
+|   |   |-- 0001_initial.py
+|   |   |-- 0002_load_sample_data.py
 |   |   \-- __init__.py
 |   |-- __init__.py
 |   |-- admin.py
@@ -105,6 +111,8 @@ backend/
 |   |-- data.py
 |   |-- middleware.py
 |   |-- models.py
+|   |-- payloads.py
+|   |-- sample_data.py
 |   |-- serializers.py
 |   |-- tests.py
 |   |-- urls.py
@@ -129,6 +137,8 @@ frontend/
 |   |   |   |   |   |-- EditableBlock.tsx
 |   |   |   |   |   |-- EditableContentField.tsx
 |   |   |   |   |   \-- EditableDialogueTurn.tsx
+|   |   |   |   |-- utils/
+|   |   |   |   |   \-- blockEditingHelpers.ts
 |   |   |   |   |-- BlockInsertMenu.tsx
 |   |   |   |   |-- DialogueBlock.tsx
 |   |   |   |   |-- EditorBlockFrame.tsx
@@ -181,8 +191,12 @@ frontend/
 |   |   |   \-- types.ts
 |   |   \-- library/
 |   |       |-- components/
+|   |       |   |-- BookDialog.tsx
+|   |       |   |-- ChapterDialog.tsx
+|   |       |   |-- LibraryListItemButton.tsx
 |   |       |   |-- LibraryPanel.tsx
-|   |       |   \-- LibraryPanelStatus.tsx
+|   |       |   |-- LibraryPanelStatus.tsx
+|   |       |   \-- panelStatus.ts
 |   |       |-- hooks/
 |   |       |   |-- useBookLookup.ts
 |   |       |   |-- useChapterDetail.ts
@@ -190,7 +204,9 @@ frontend/
 |   |       |   |-- useLibraryEditor.ts
 |   |       |   |-- useLibraryResource.ts
 |   |       |   |-- useLibrarySections.ts
-|   |       |   \-- useLibrarySelection.ts
+|   |       |   |-- useLibrarySelection.ts
+|   |       |   |-- useUpsertBook.ts
+|   |       |   \-- useUpsertChapter.ts
 |   |       |-- LibraryBooksPanel.tsx
 |   |       |-- LibraryChaptersPanel.tsx
 |   |       |-- LibraryContextPanel.tsx

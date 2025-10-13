@@ -1,11 +1,12 @@
+import { useCallback, useState } from "react";
 import { Box, Button, Container, Stack, Typography } from "@mui/material";
 import { EditorContainer } from "../editor/EditorContainer";
 import { LibraryBooksPanel } from "./LibraryBooksPanel";
-import { LibraryChaptersPanel } from "./LibraryChaptersPanel";
-import { LibraryContextPanel } from "./LibraryContextPanel";
 import { useLibraryData } from "./LibraryDataContext";
 import { BookDialog } from "./components/BookDialog";
 import { ChapterDialog } from "./components/ChapterDialog";
+import { LibraryChaptersDialog } from "./LibraryChaptersDialog";
+import { LibraryContextDialog } from "./LibraryContextDialog";
 
 export function LibraryLanding() {
   const {
@@ -31,6 +32,29 @@ export function LibraryLanding() {
     openEditChapterDialog,
     closeDialog,
   } = useLibraryData();
+
+  const [chaptersDialogOpen, setChaptersDialogOpen] = useState(false);
+  const [contextDialogOpen, setContextDialogOpen] = useState(false);
+
+  const handleOpenBook = useCallback(
+    (bookId: string) => {
+      selectBook(bookId);
+      setChaptersDialogOpen(true);
+    },
+    [selectBook],
+  );
+
+  const handleCloseChapters = useCallback(() => {
+    setChaptersDialogOpen(false);
+  }, []);
+
+  const handleOpenContext = useCallback(() => {
+    setContextDialogOpen(true);
+  }, []);
+
+  const handleCloseContext = useCallback(() => {
+    setContextDialogOpen(false);
+  }, []);
 
   const isBookDialogOpen = dialogState?.type === "book";
   const isChapterDialogOpen = dialogState?.type === "chapter";
@@ -75,54 +99,48 @@ export function LibraryLanding() {
       }}
     >
       <Container maxWidth="lg" sx={{ py: { xs: 5, md: 6 } }}>
-        <Stack spacing={3} alignItems="stretch">
-          <Stack
-            direction="row"
-            justifyContent="space-between"
-            alignItems="center"
-          >
-            <Typography variant="h6">Biblioteca</Typography>
-            <Button
-              variant="outlined"
-              size="small"
-              onClick={refreshLibrary}
-              disabled={booksLoading || sectionsLoading}
-            >
-              Actualizar
-            </Button>
-          </Stack>
-
+        <Stack spacing={4} alignItems="stretch">
           <Stack
             direction={{ xs: "column", md: "row" }}
-            spacing={3}
-            alignItems="stretch"
+            spacing={{ xs: 2, md: 3 }}
+            alignItems={{ xs: "flex-start", md: "center" }}
+            justifyContent="space-between"
           >
-            <LibraryBooksPanel
-              books={books}
-              loading={booksLoading}
-              error={booksError}
-              selectedBookId={selectedBookId}
-              onSelectBook={selectBook}
-              onReload={reloadBooks}
-              onCreateBook={openCreateBookDialog}
-              onEditBook={openEditBookDialog}
-            />
-
-            <LibraryChaptersPanel
-              book={selectedBook}
-              loading={booksLoading}
-              error={booksError}
-              onOpenChapter={openEditor}
-              onCreateChapter={openCreateChapterDialog}
-              onEditChapter={openEditChapterDialog}
-            />
+            <Stack spacing={0.75}>
+              <Typography variant="h4" sx={{ fontWeight: 600 }}>
+                Biblioteca
+              </Typography>
+              <Typography variant="body2" color="text.secondary">
+                Gestiona tus historias y accede a sus capítulos en un toque.
+              </Typography>
+            </Stack>
+            <Stack direction="row" spacing={1.5} alignItems="center">
+              <Button
+                variant="text"
+                onClick={handleOpenContext}
+                disabled={sectionsLoading}
+              >
+                Ver contexto
+              </Button>
+              <Button
+                variant="outlined"
+                onClick={refreshLibrary}
+                disabled={booksLoading || sectionsLoading}
+              >
+                Actualizar
+              </Button>
+            </Stack>
           </Stack>
 
-          <LibraryContextPanel
-            sections={sections}
-            loading={sectionsLoading}
-            error={sectionsError}
-            onReload={reloadSections}
+          <LibraryBooksPanel
+            books={books}
+            loading={booksLoading}
+            error={booksError}
+            selectedBookId={selectedBookId}
+            onOpenBook={handleOpenBook}
+            onReload={reloadBooks}
+            onCreateBook={openCreateBookDialog}
+            onEditBook={openEditBookDialog}
           />
         </Stack>
       </Container>
@@ -142,6 +160,25 @@ export function LibraryLanding() {
         chapter={editingChapter}
         onClose={closeDialog}
         onSelectBook={selectBook}
+      />
+
+      <LibraryChaptersDialog
+        open={chaptersDialogOpen && Boolean(selectedBook)}
+        book={selectedBook}
+        loading={booksLoading}
+        onClose={handleCloseChapters}
+        onOpenChapter={openEditor}
+        onCreateChapter={openCreateChapterDialog}
+        onEditChapter={openEditChapterDialog}
+      />
+
+      <LibraryContextDialog
+        open={contextDialogOpen}
+        sections={sections}
+        loading={sectionsLoading}
+        error={sectionsError}
+        onReload={reloadSections}
+        onClose={handleCloseContext}
       />
     </Box>
   );

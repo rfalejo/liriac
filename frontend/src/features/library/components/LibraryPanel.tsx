@@ -1,5 +1,6 @@
 import { Box, Paper, Stack, Typography } from "@mui/material";
 import type { PaperProps } from "@mui/material";
+import { alpha } from "@mui/material/styles";
 import type { SxProps, Theme } from "@mui/material/styles";
 import type { ReactNode } from "react";
 import { LibraryPanelStatus } from "./LibraryPanelStatus";
@@ -25,15 +26,33 @@ export function LibraryPanel({
   sx,
   ...paperProps
 }: LibraryPanelProps) {
-  const extraSx = Array.isArray(sx)
-    ? (sx as SxProps<Theme>[])
-    : sx
-      ? ([sx] as SxProps<Theme>[])
-      : [];
+  const baseSx: SxProps<Theme> = (theme) => ({
+    p: { xs: 2.5, md: 3 },
+    backgroundColor: alpha(theme.palette.background.paper, 0.95),
+    borderRadius: Number(theme.shape.borderRadius) * 1.25,
+    border: `1px solid ${alpha(theme.palette.primary.main, 0.14)}`,
+    boxShadow: `0 18px 36px ${alpha(theme.palette.common.black, 0.05)}`,
+    display: "flex",
+    flexDirection: "column",
+    gap: 2,
+    height: "100%",
+  });
 
-  const resolvedSx: SxProps<Theme> = extraSx.length
-    ? ([{ p: 3 }, ...extraSx] as SxProps<Theme>)
-    : ({ p: 3 } as SxProps<Theme>);
+  type SxArray = Extract<SxProps<Theme>, readonly unknown[]>;
+  const isSxArray = (value: SxProps<Theme>): value is SxArray =>
+    Array.isArray(value);
+
+  const resolvedSx: SxProps<Theme> = (() => {
+    if (!sx) {
+      return baseSx;
+    }
+
+    if (isSxArray(sx)) {
+      return [baseSx, ...sx] as SxProps<Theme>;
+    }
+
+    return [baseSx, sx] as SxProps<Theme>;
+  })();
 
   return (
     <Paper
@@ -42,14 +61,15 @@ export function LibraryPanel({
       {...paperProps}
       sx={resolvedSx}
     >
-      <Stack
-        direction="row"
-        alignItems="center"
-        justifyContent="space-between"
-        spacing={1.5}
-        mb={2}
-      >
-        <Typography variant="subtitle2" color="text.secondary">
+      <Stack direction="row" alignItems="center" justifyContent="space-between">
+        <Typography
+          variant="overline"
+          sx={{
+            letterSpacing: "0.18em",
+            textTransform: "uppercase",
+            color: "text.secondary",
+          }}
+        >
           {title}
         </Typography>
         {actions ? <Box>{actions}</Box> : null}
