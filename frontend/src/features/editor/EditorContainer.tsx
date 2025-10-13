@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef } from "react";
 import type { components } from "../../api/schema";
 import { useEditorScrollbar } from "./hooks/useEditorScrollbar";
 import { useEditorChapterNavigation } from "./hooks/useEditorChapterNavigation";
@@ -9,140 +9,20 @@ import { useCreateChapterBlock } from "./hooks/useCreateChapterBlock";
 import { useEditorEditingState } from "./hooks/useEditorEditingState";
 import { useDeleteChapterBlock } from "./hooks/useDeleteChapterBlock";
 import { showBlockUpdateErrorToast } from "./utils/showBlockUpdateErrorToast";
-import { generateTurnId } from "./utils/dialogueTurns";
 import type { EditingDiscardContext } from "./hooks/editing/types";
-import type { ChapterBlockCreatePayload } from "../../api/chapters";
 import { ConfirmationDialog } from "./components/ConfirmationDialog";
+import {
+  useEditorConfirmDialog,
+  type ConfirmDialogOptions,
+} from "./hooks/useEditorConfirmDialog";
+import {
+  attachPosition,
+  buildDefaultBlockPayload,
+  generateBlockId,
+} from "./utils/blockCreation";
 
 type ChapterBlockType = components["schemas"]["ChapterBlockTypeEnum"];
 
-type ConfirmDialogTone = "warning" | "danger";
-
-type ConfirmDialogOptions = {
-  title: string;
-  description: string;
-  confirmLabel: string;
-  cancelLabel: string;
-  tone: ConfirmDialogTone;
-};
-
-type ConfirmDialogState = ConfirmDialogOptions & {
-  resolve: (decision: boolean) => void;
-};
-
-function generateBlockId(): string {
-  const cryptoRef =
-    typeof globalThis !== "undefined"
-      ? (globalThis.crypto as Crypto | undefined)
-      : undefined;
-  if (cryptoRef && "randomUUID" in cryptoRef) {
-    return cryptoRef.randomUUID();
-  }
-  return `local-block-${Math.random().toString(36).slice(2, 10)}`;
-}
-
-function buildDefaultBlockPayload(
-  blockType: ChapterBlockType,
-  blockId: string,
-): ChapterBlockCreatePayload {
-  if (blockType === "paragraph") {
-    return {
-      id: blockId,
-      type: blockType,
-      text: "",
-      style: "narration",
-      tags: [],
-    };
-  }
-
-  if (blockType === "dialogue") {
-    return {
-      id: blockId,
-      type: blockType,
-      turns: [
-        {
-          id: generateTurnId(),
-          speakerId: null,
-          speakerName: "",
-          utterance: "",
-          stageDirection: null,
-          tone: null,
-        },
-      ],
-      context: null,
-    };
-  }
-
-  if (blockType === "scene_boundary") {
-    return {
-      id: blockId,
-      type: blockType,
-      label: "",
-      summary: "",
-      locationId: null,
-      locationName: null,
-      timestamp: null,
-      mood: null,
-    };
-  }
-
-  return {
-    id: blockId,
-    type: "metadata",
-    kind: "metadata",
-    text: "",
-  };
-}
-
-function attachPosition(
-  payload: ChapterBlockCreatePayload,
-  position: {
-    afterBlockId: string | null;
-    beforeBlockId: string | null;
-  },
-  chapter: components["schemas"]["ChapterDetail"] | null,
-): ChapterBlockCreatePayload {
-  if (!chapter) {
-    return payload;
-  }
-
-  const blocks = chapter.blocks ?? [];
-
-  if (position.beforeBlockId) {
-    const target = blocks.find((block) => block.id === position.beforeBlockId);
-    if (target && typeof target.position === "number") {
-      return {
-        ...payload,
-        position: target.position,
-      };
-    }
-  }
-
-  if (position.afterBlockId) {
-    const target = blocks.find((block) => block.id === position.afterBlockId);
-    if (target && typeof target.position === "number") {
-      return {
-        ...payload,
-        position: target.position + 1,
-      };
-    }
-  }
-
-  const maxPosition = blocks.reduce<number | null>((acc, block) => {
-    if (typeof block.position !== "number") {
-      return acc;
-    }
-    if (acc === null) {
-      return block.position;
-    }
-    return Math.max(acc, block.position);
-  }, null);
-
-  return {
-    ...payload,
-    position: typeof maxPosition === "number" ? maxPosition + 1 : 0,
-  };
-}
 
 type EditorContainerProps = {
   chapterId: string;
@@ -186,29 +66,15 @@ export function EditorContainer({
     chapterId: chapter?.id,
   });
 
-  const [confirmDialog, setConfirmDialog] = useState<ConfirmDialogState | null>(
-    null,
-  );
+  const { dialogState: confirmDialog, openConfirmDialog, resolveDialog } =
+    useEditorConfirmDialog();
 
-  const openConfirmDialog = useCallback(
-    (options: ConfirmDialogOptions) =>
-      new Promise<boolean>((resolve) => {
-        setConfirmDialog({
-          ...options,
-          resolve,
-        });
-      }),
-    [],
+  const handleConfirmClose = useCallback(
+    (decision: boolean) => {
+      resolveDialog(decision);
+    },
+    [resolveDialog],
   );
-
-  const handleConfirmClose = useCallback((decision: boolean) => {
-    setConfirmDialog((current) => {
-      if (current) {
-        current.resolve(decision);
-      }
-      return null;
-    });
-  }, []);
 
   const confirmDiscardChanges = useCallback(
     (context: EditingDiscardContext) => {
@@ -282,7 +148,7 @@ export function EditorContainer({
 
   const handleInsertBlock = useCallback(
     (
-      blockType: components["schemas"]["ChapterBlockTypeEnum"],
+      blockType: ChapterBlockType,
       position: {
         afterBlockId: string | null;
         beforeBlockId: string | null;
