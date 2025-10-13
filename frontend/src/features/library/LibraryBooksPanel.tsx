@@ -1,4 +1,5 @@
-import { Box, Stack, Typography } from "@mui/material";
+import { Box, IconButton, Stack, Tooltip, Typography } from "@mui/material";
+import RefreshRoundedIcon from "@mui/icons-material/RefreshRounded";
 import type { LibraryBook } from "../../api/library";
 import { LibraryPanel } from "./components/LibraryPanel";
 import { resolveLibraryPanelStatus } from "./components/panelStatus";
@@ -13,6 +14,8 @@ type LibraryBooksPanelProps = {
   onReload: () => void;
   onCreateBook: () => void;
   onEditBook: (bookId: string) => void;
+  onRefreshLibrary: () => void;
+  refreshDisabled?: boolean;
 };
 
 export function LibraryBooksPanel({
@@ -24,6 +27,8 @@ export function LibraryBooksPanel({
   onReload,
   onCreateBook,
   onEditBook,
+  onRefreshLibrary,
+  refreshDisabled = false,
 }: LibraryBooksPanelProps) {
   const hasBooks = books.length > 0;
 
@@ -45,7 +50,29 @@ export function LibraryBooksPanel({
   const showContent = !status;
 
   return (
-    <LibraryPanel title="Tu biblioteca" status={status} sx={{ flexGrow: 1 }}>
+    <LibraryPanel
+      title="Tu biblioteca"
+      status={status}
+      sx={{ flexGrow: 1 }}
+      actions={
+        <Tooltip title="Actualizar biblioteca">
+          <span>
+            <IconButton
+              aria-label="Actualizar biblioteca"
+              size="small"
+              onClick={onRefreshLibrary}
+              disabled={refreshDisabled}
+              sx={(theme) => ({
+                color: theme.palette.text.secondary,
+                "&:hover": { color: theme.palette.primary.main },
+              })}
+            >
+              <RefreshRoundedIcon fontSize="small" />
+            </IconButton>
+          </span>
+        </Tooltip>
+      }
+    >
       {showContent && (
         <Stack spacing={2.5} alignItems="stretch">
           <Typography variant="body2" color="text.secondary">

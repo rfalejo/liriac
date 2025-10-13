@@ -122,13 +122,6 @@ export function LibraryLanding() {
               >
                 Ver contexto
               </Button>
-              <Button
-                variant="outlined"
-                onClick={refreshLibrary}
-                disabled={booksLoading || sectionsLoading}
-              >
-                Actualizar
-              </Button>
             </Stack>
           </Stack>
 
@@ -141,6 +134,8 @@ export function LibraryLanding() {
             onReload={reloadBooks}
             onCreateBook={openCreateBookDialog}
             onEditBook={openEditBookDialog}
+            onRefreshLibrary={refreshLibrary}
+            refreshDisabled={booksLoading || sectionsLoading}
           />
         </Stack>
       </Container>
