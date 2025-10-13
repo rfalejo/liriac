@@ -1,4 +1,12 @@
-import { List, ListItemText } from "@mui/material";
+import {
+  Button,
+  IconButton,
+  List,
+  ListItemText,
+  Stack,
+  Tooltip,
+} from "@mui/material";
+import EditRoundedIcon from "@mui/icons-material/EditRounded";
 import type { LibraryBook } from "../../api/library";
 import { LibraryPanel } from "./components/LibraryPanel";
 import { resolveLibraryPanelStatus } from "./components/panelStatus";
@@ -11,6 +19,8 @@ type LibraryBooksPanelProps = {
   selectedBookId: string | null;
   onSelectBook: (bookId: string) => void;
   onReload: () => void;
+  onCreateBook: () => void;
+  onEditBook: (bookId: string) => void;
 };
 
 export function LibraryBooksPanel({
@@ -20,6 +30,8 @@ export function LibraryBooksPanel({
   selectedBookId,
   onSelectBook,
   onReload,
+  onCreateBook,
+  onEditBook,
 }: LibraryBooksPanelProps) {
   const status = resolveLibraryPanelStatus({
     loading,
@@ -43,6 +55,16 @@ export function LibraryBooksPanel({
     <LibraryPanel
       title="Libros"
       status={status}
+      actions={
+        <Button
+          variant="outlined"
+          size="small"
+          onClick={onCreateBook}
+          disabled={loading}
+        >
+          Nuevo
+        </Button>
+      }
       sx={{ flexBasis: { md: "32%" }, flexGrow: 1 }}
     >
       {showList && (
@@ -53,17 +75,37 @@ export function LibraryBooksPanel({
               selected={book.id === selectedBookId}
               onClick={() => onSelectBook(book.id)}
             >
-              <ListItemText
-                primary={book.title}
-                secondary={book.author ?? undefined}
-                slotProps={{
-                  primary: { variant: "body2", fontWeight: 600 },
-                  secondary: {
-                    variant: "caption",
-                    color: "text.secondary",
-                  },
-                }}
-              />
+              <Stack
+                direction="row"
+                alignItems="flex-start"
+                justifyContent="space-between"
+                sx={{ width: "100%" }}
+                spacing={1}
+              >
+                <ListItemText
+                  primary={book.title}
+                  secondary={book.author ?? undefined}
+                  slotProps={{
+                    primary: { variant: "body2", fontWeight: 600 },
+                    secondary: {
+                      variant: "caption",
+                      color: "text.secondary",
+                    },
+                  }}
+                />
+                <Tooltip title="Editar">
+                  <IconButton
+                    size="small"
+                    aria-label="Editar libro"
+                    onClick={(event) => {
+                      event.stopPropagation();
+                      onEditBook(book.id);
+                    }}
+                  >
+                    <EditRoundedIcon fontSize="small" />
+                  </IconButton>
+                </Tooltip>
+              </Stack>
             </LibraryListItemButton>
           ))}
         </List>

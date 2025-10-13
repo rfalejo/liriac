@@ -4,6 +4,8 @@ import { LibraryBooksPanel } from "./LibraryBooksPanel";
 import { LibraryChaptersPanel } from "./LibraryChaptersPanel";
 import { LibraryContextPanel } from "./LibraryContextPanel";
 import { useLibraryData } from "./LibraryDataContext";
+import { BookDialog } from "./components/BookDialog";
+import { ChapterDialog } from "./components/ChapterDialog";
 
 export function LibraryLanding() {
   const {
@@ -22,7 +24,36 @@ export function LibraryLanding() {
     editorState,
     openEditor,
     closeEditor,
+    dialogState,
+    openCreateBookDialog,
+    openEditBookDialog,
+    openCreateChapterDialog,
+    openEditChapterDialog,
+    closeDialog,
   } = useLibraryData();
+
+  const isBookDialogOpen = dialogState?.type === "book";
+  const isChapterDialogOpen = dialogState?.type === "chapter";
+
+  const editingBook =
+    dialogState && dialogState.type === "book" && dialogState.mode === "edit"
+      ? books.find((book) => book.id === dialogState.bookId) ?? null
+      : null;
+
+  const dialogBookForChapter =
+    dialogState && dialogState.type === "chapter"
+      ? books.find((book) => book.id === dialogState.bookId) ?? null
+      : null;
+
+  const editingChapter =
+    dialogState &&
+    dialogState.type === "chapter" &&
+    dialogState.mode === "edit" &&
+    dialogBookForChapter
+      ? dialogBookForChapter.chapters.find(
+          (chapter) => chapter.id === dialogState.chapterId,
+        ) ?? null
+      : null;
 
   if (editorState.open && editorState.chapterId) {
     return (
@@ -73,6 +104,8 @@ export function LibraryLanding() {
               selectedBookId={selectedBookId}
               onSelectBook={selectBook}
               onReload={reloadBooks}
+              onCreateBook={openCreateBookDialog}
+              onEditBook={openEditBookDialog}
             />
 
             <LibraryChaptersPanel
@@ -80,6 +113,8 @@ export function LibraryLanding() {
               loading={booksLoading}
               error={booksError}
               onOpenChapter={openEditor}
+              onCreateChapter={openCreateChapterDialog}
+              onEditChapter={openEditChapterDialog}
             />
           </Stack>
 
@@ -91,6 +126,23 @@ export function LibraryLanding() {
           />
         </Stack>
       </Container>
+
+      <BookDialog
+        open={isBookDialogOpen}
+        mode={dialogState?.type === "book" ? dialogState.mode : "create"}
+        book={editingBook}
+        onClose={closeDialog}
+        onSelectBook={selectBook}
+      />
+
+      <ChapterDialog
+        open={isChapterDialogOpen}
+        mode={dialogState?.type === "chapter" ? dialogState.mode : "create"}
+        book={dialogBookForChapter}
+        chapter={editingChapter}
+        onClose={closeDialog}
+        onSelectBook={selectBook}
+      />
     </Box>
   );
 }

@@ -1,4 +1,14 @@
-import { Divider, List, ListItemText, Stack, Typography } from "@mui/material";
+import {
+  Button,
+  Divider,
+  IconButton,
+  List,
+  ListItemText,
+  Stack,
+  Tooltip,
+  Typography,
+} from "@mui/material";
+import EditRoundedIcon from "@mui/icons-material/EditRounded";
 import type { LibraryBook } from "../../api/library";
 import { LibraryPanel } from "./components/LibraryPanel";
 import { resolveLibraryPanelStatus } from "./components/panelStatus";
@@ -9,6 +19,8 @@ type LibraryChaptersPanelProps = {
   loading: boolean;
   error: Error | null;
   onOpenChapter: (chapterId: string) => void;
+  onCreateChapter: (bookId: string) => void;
+  onEditChapter: (bookId: string, chapterId: string) => void;
 };
 
 export function LibraryChaptersPanel({
@@ -16,6 +28,8 @@ export function LibraryChaptersPanel({
   loading,
   error,
   onOpenChapter,
+  onCreateChapter,
+  onEditChapter,
 }: LibraryChaptersPanelProps) {
   const status = resolveLibraryPanelStatus({
     loading,
@@ -37,6 +51,18 @@ export function LibraryChaptersPanel({
     <LibraryPanel
       title="Capítulos"
       status={status}
+      actions={
+        book ? (
+          <Button
+            variant="outlined"
+            size="small"
+            onClick={() => onCreateChapter(book.id)}
+            disabled={loading}
+          >
+            Nuevo
+          </Button>
+        ) : undefined
+      }
       sx={{ flexBasis: { md: "68%" }, flexGrow: 1 }}
     >
       {book && (
@@ -63,17 +89,37 @@ export function LibraryChaptersPanel({
                   variant="stacked"
                   onClick={() => onOpenChapter(chapter.id)}
                 >
-                  <ListItemText
-                    primary={chapter.title}
-                    secondary={chapter.summary ?? undefined}
-                    slotProps={{
-                      primary: { variant: "body2", fontWeight: 500 },
-                      secondary: {
-                        variant: "caption",
-                        color: "text.secondary",
-                      },
-                    }}
-                  />
+                  <Stack
+                    direction="row"
+                    alignItems="flex-start"
+                    justifyContent="space-between"
+                    spacing={1}
+                    sx={{ width: "100%" }}
+                  >
+                    <ListItemText
+                      primary={chapter.title}
+                      secondary={chapter.summary ?? undefined}
+                      slotProps={{
+                        primary: { variant: "body2", fontWeight: 500 },
+                        secondary: {
+                          variant: "caption",
+                          color: "text.secondary",
+                        },
+                      }}
+                    />
+                    <Tooltip title="Editar">
+                      <IconButton
+                        size="small"
+                        aria-label="Editar capítulo"
+                        onClick={(event) => {
+                          event.stopPropagation();
+                          onEditChapter(book.id, chapter.id);
+                        }}
+                      >
+                        <EditRoundedIcon fontSize="small" />
+                      </IconButton>
+                    </Tooltip>
+                  </Stack>
                 </LibraryListItemButton>
               ))}
             </List>

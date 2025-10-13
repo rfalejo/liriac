@@ -1,4 +1,4 @@
-import { Paper, Typography } from "@mui/material";
+import { Box, Paper, Stack, Typography } from "@mui/material";
 import type { PaperProps } from "@mui/material";
 import type { SxProps, Theme } from "@mui/material/styles";
 import type { ReactNode } from "react";
@@ -9,6 +9,7 @@ type LibraryPanelProps = {
   title: string;
   status?: LibraryPanelStatusProps | null;
   children?: ReactNode;
+  actions?: ReactNode;
 } & PaperProps;
 
 /**
@@ -18,6 +19,7 @@ export function LibraryPanel({
   title,
   status = null,
   children,
+  actions,
   elevation = 0,
   variant = "outlined",
   sx,
@@ -40,9 +42,18 @@ export function LibraryPanel({
       {...paperProps}
       sx={resolvedSx}
     >
-      <Typography variant="subtitle2" color="text.secondary" gutterBottom>
-        {title}
-      </Typography>
+      <Stack
+        direction="row"
+        alignItems="center"
+        justifyContent="space-between"
+        spacing={1.5}
+        mb={2}
+      >
+        <Typography variant="subtitle2" color="text.secondary">
+          {title}
+        </Typography>
+        {actions ? <Box>{actions}</Box> : null}
+      </Stack>
       {status ? <LibraryPanelStatus {...status} /> : children}
     </Paper>
   );

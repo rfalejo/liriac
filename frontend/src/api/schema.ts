@@ -4,356 +4,516 @@
  */
 
 export interface paths {
-  "/api/editor/": {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
+    "/api/editor/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** @description Return the current editor snapshot. */
+        get: operations["editor_retrieve"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
     };
-    /** @description Return the current editor snapshot. */
-    get: operations["editor_retrieve"];
-    put?: never;
-    post?: never;
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  "/api/library/": {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
+    "/api/library/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** @description Return the available context sections for the local library. */
+        get: operations["library_retrieve"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
     };
-    /** @description Return the available context sections for the local library. */
-    get: operations["library_retrieve"];
-    put?: never;
-    post?: never;
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  "/api/library/books/": {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
+    "/api/library/books/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** @description Return the list of books and chapter summaries. */
+        get: operations["library_books_retrieve"];
+        put?: never;
+        /** @description Return the list of books and chapter summaries. */
+        post: operations["library_books_create"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
     };
-    /** @description Return the list of books and chapter summaries. */
-    get: operations["library_books_retrieve"];
-    put?: never;
-    post?: never;
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  "/api/library/chapters/{chapter_id}/": {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
+    "/api/library/books/{book_id}/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        /** @description Update metadata for a single book. */
+        patch: operations["library_books_partial_update"];
+        trace?: never;
     };
-    /** @description Return the full content for a single chapter. */
-    get: operations["library_chapters_retrieve"];
-    put?: never;
-    post?: never;
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  "/api/library/chapters/{chapter_id}/blocks/{block_id}/": {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
+    "/api/library/books/{book_id}/chapters/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** @description Manage chapters belonging to a single book. */
+        post: operations["library_books_chapters_create"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
     };
-    get?: never;
-    put?: never;
-    post?: never;
-    delete?: never;
-    options?: never;
-    head?: never;
-    /** @description Update a single block within a chapter. */
-    patch: operations["library_chapters_blocks_partial_update"];
-    trace?: never;
-  };
+    "/api/library/chapters/{chapter_id}/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** @description Return the full content for a single chapter. */
+        get: operations["library_chapters_retrieve"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        /** @description Return the full content for a single chapter. */
+        patch: operations["library_chapters_partial_update"];
+        trace?: never;
+    };
+    "/api/library/chapters/{chapter_id}/blocks/{block_id}/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        /** @description Update a single block within a chapter. */
+        patch: operations["library_chapters_blocks_partial_update"];
+        trace?: never;
+    };
 }
 export type webhooks = Record<string, never>;
 export interface components {
-  schemas: {
-    ChapterBlock: {
-      id: string;
-      type: components["schemas"]["ChapterBlockTypeEnum"];
-      position: number;
-      text?: string;
-      style?: string | null;
-      tags?: string[];
-      turns?: components["schemas"]["DialogueTurn"][];
-      context?: string | null;
-      label?: string | null;
-      summary?: string | null;
-      locationId?: string | null;
-      locationName?: string | null;
-      timestamp?: string | null;
-      mood?: string | null;
-      kind?: string | null;
-      title?: string | null;
-      subtitle?: string | null;
-      ordinal?: number | null;
-      epigraph?: string | null;
-      epigraphAttribution?: string | null;
-      povCharacterId?: string | null;
-      povCharacterName?: string | null;
-      timelineMarker?: string | null;
-      themeTags?: string[];
-      status?: string | null;
-      owner?: string | null;
-      lastUpdated?: string | null;
+    schemas: {
+        BookUpsert: {
+            id?: string;
+            title: string;
+            author?: string;
+            synopsis?: string;
+            order?: number;
+        };
+        ChapterBlock: {
+            id: string;
+            type: components["schemas"]["ChapterBlockTypeEnum"];
+            position: number;
+            text?: string;
+            style?: string | null;
+            tags?: string[];
+            turns?: components["schemas"]["DialogueTurn"][];
+            context?: string | null;
+            label?: string | null;
+            summary?: string | null;
+            locationId?: string | null;
+            locationName?: string | null;
+            timestamp?: string | null;
+            mood?: string | null;
+            kind?: string | null;
+            title?: string | null;
+            subtitle?: string | null;
+            ordinal?: number | null;
+            epigraph?: string | null;
+            epigraphAttribution?: string | null;
+            povCharacterId?: string | null;
+            povCharacterName?: string | null;
+            timelineMarker?: string | null;
+            themeTags?: string[];
+            status?: string | null;
+            owner?: string | null;
+            lastUpdated?: string | null;
+        };
+        /**
+         * @description * `paragraph` - paragraph
+         *     * `dialogue` - dialogue
+         *     * `scene_boundary` - scene_boundary
+         *     * `metadata` - metadata
+         * @enum {string}
+         */
+        ChapterBlockTypeEnum: "paragraph" | "dialogue" | "scene_boundary" | "metadata";
+        ChapterDetail: {
+            id: string;
+            title: string;
+            summary?: string | null;
+            ordinal: number;
+            tokens?: number | null;
+            wordCount?: number | null;
+            content: string;
+            paragraphs: string[];
+            blocks: components["schemas"]["ChapterBlock"][];
+            bookId?: string | null;
+            bookTitle?: string | null;
+        };
+        ChapterSummary: {
+            id: string;
+            title: string;
+            summary?: string | null;
+            ordinal: number;
+            tokens?: number | null;
+            wordCount?: number | null;
+        };
+        ChapterUpsert: {
+            id?: string;
+            title: string;
+            summary?: string | null;
+            ordinal?: number;
+            tokens?: number | null;
+            wordCount?: number | null;
+        };
+        ContextItem: {
+            id: string;
+            type: components["schemas"]["ContextItemTypeEnum"];
+            name?: string;
+            role?: string;
+            summary?: string;
+            title?: string;
+            description?: string;
+            facts?: string;
+            tokens?: number;
+            checked?: boolean;
+            disabled?: boolean;
+        };
+        /**
+         * @description * `character` - character
+         *     * `world` - world
+         *     * `styleTone` - styleTone
+         *     * `chapter` - chapter
+         * @enum {string}
+         */
+        ContextItemTypeEnum: "character" | "world" | "styleTone" | "chapter";
+        ContextSection: {
+            id: string;
+            title: string;
+            defaultOpen?: boolean;
+            items: components["schemas"]["ContextItem"][];
+        };
+        DialogueTurn: {
+            id: string;
+            speakerId?: string | null;
+            speakerName?: string | null;
+            utterance: string;
+            stageDirection?: string | null;
+            tone?: string | null;
+        };
+        EditorState: {
+            content: string;
+            paragraphs: string[];
+            blocks: components["schemas"]["ChapterBlock"][];
+            tokens: number;
+            cursor?: number | null;
+            bookId?: string | null;
+            bookTitle?: string | null;
+            chapterId?: string | null;
+            chapterTitle?: string | null;
+        };
+        LibraryBook: {
+            id: string;
+            title: string;
+            author?: string | null;
+            synopsis?: string | null;
+            chapters: components["schemas"]["ChapterSummary"][];
+        };
+        LibraryBooksResponse: {
+            books: components["schemas"]["LibraryBook"][];
+        };
+        LibraryResponse: {
+            sections: components["schemas"]["ContextSection"][];
+        };
+        PatchedBookUpsert: {
+            id?: string;
+            title?: string;
+            author?: string;
+            synopsis?: string;
+            order?: number;
+        };
+        PatchedChapterBlockUpdate: {
+            id?: string;
+            type?: components["schemas"]["ChapterBlockTypeEnum"];
+            position?: number;
+            text?: string;
+            style?: string | null;
+            tags?: string[];
+            turns?: components["schemas"]["DialogueTurn"][];
+            context?: string | null;
+            label?: string | null;
+            summary?: string | null;
+            locationId?: string | null;
+            locationName?: string | null;
+            timestamp?: string | null;
+            mood?: string | null;
+            kind?: string | null;
+            title?: string | null;
+            subtitle?: string | null;
+            ordinal?: number | null;
+            epigraph?: string | null;
+            epigraphAttribution?: string | null;
+            povCharacterId?: string | null;
+            povCharacterName?: string | null;
+            timelineMarker?: string | null;
+            themeTags?: string[];
+            status?: string | null;
+            owner?: string | null;
+            lastUpdated?: string | null;
+        };
+        PatchedChapterUpsert: {
+            id?: string;
+            title?: string;
+            summary?: string | null;
+            ordinal?: number;
+            tokens?: number | null;
+            wordCount?: number | null;
+        };
     };
-    /**
-     * @description * `paragraph` - paragraph
-     *     * `dialogue` - dialogue
-     *     * `scene_boundary` - scene_boundary
-     *     * `metadata` - metadata
-     * @enum {string}
-     */
-    ChapterBlockTypeEnum:
-      | "paragraph"
-      | "dialogue"
-      | "scene_boundary"
-      | "metadata";
-    ChapterDetail: {
-      id: string;
-      title: string;
-      summary?: string | null;
-      ordinal: number;
-      tokens?: number | null;
-      wordCount?: number | null;
-      content: string;
-      paragraphs: string[];
-      blocks: components["schemas"]["ChapterBlock"][];
-      bookId?: string | null;
-      bookTitle?: string | null;
-    };
-    ChapterSummary: {
-      id: string;
-      title: string;
-      summary?: string | null;
-      ordinal: number;
-      tokens?: number | null;
-      wordCount?: number | null;
-    };
-    ContextItem: {
-      id: string;
-      type: components["schemas"]["ContextItemTypeEnum"];
-      name?: string;
-      role?: string;
-      summary?: string;
-      title?: string;
-      description?: string;
-      facts?: string;
-      tokens?: number;
-      checked?: boolean;
-      disabled?: boolean;
-    };
-    /**
-     * @description * `character` - character
-     *     * `world` - world
-     *     * `styleTone` - styleTone
-     *     * `chapter` - chapter
-     * @enum {string}
-     */
-    ContextItemTypeEnum: "character" | "world" | "styleTone" | "chapter";
-    ContextSection: {
-      id: string;
-      title: string;
-      defaultOpen?: boolean;
-      items: components["schemas"]["ContextItem"][];
-    };
-    DialogueTurn: {
-      id: string;
-      speakerId?: string | null;
-      speakerName?: string | null;
-      utterance: string;
-      stageDirection?: string | null;
-      tone?: string | null;
-    };
-    EditorState: {
-      content: string;
-      paragraphs: string[];
-      blocks: components["schemas"]["ChapterBlock"][];
-      tokens: number;
-      cursor?: number | null;
-      bookId?: string | null;
-      bookTitle?: string | null;
-      chapterId?: string | null;
-      chapterTitle?: string | null;
-    };
-    LibraryBook: {
-      id: string;
-      title: string;
-      author?: string | null;
-      synopsis?: string | null;
-      chapters: components["schemas"]["ChapterSummary"][];
-    };
-    LibraryBooksResponse: {
-      books: components["schemas"]["LibraryBook"][];
-    };
-    LibraryResponse: {
-      sections: components["schemas"]["ContextSection"][];
-    };
-    PatchedChapterBlockUpdate: {
-      id?: string;
-      type?: components["schemas"]["ChapterBlockTypeEnum"];
-      position?: number;
-      text?: string;
-      style?: string | null;
-      tags?: string[];
-      turns?: components["schemas"]["DialogueTurn"][];
-      context?: string | null;
-      label?: string | null;
-      summary?: string | null;
-      locationId?: string | null;
-      locationName?: string | null;
-      timestamp?: string | null;
-      mood?: string | null;
-      kind?: string | null;
-      title?: string | null;
-      subtitle?: string | null;
-      ordinal?: number | null;
-      epigraph?: string | null;
-      epigraphAttribution?: string | null;
-      povCharacterId?: string | null;
-      povCharacterName?: string | null;
-      timelineMarker?: string | null;
-      themeTags?: string[];
-      status?: string | null;
-      owner?: string | null;
-      lastUpdated?: string | null;
-    };
-  };
-  responses: never;
-  parameters: never;
-  requestBodies: never;
-  headers: never;
-  pathItems: never;
+    responses: never;
+    parameters: never;
+    requestBodies: never;
+    headers: never;
+    pathItems: never;
 }
 export type $defs = Record<string, never>;
 export interface operations {
-  editor_retrieve: {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    requestBody?: never;
-    responses: {
-      200: {
-        headers: {
-          [name: string]: unknown;
+    editor_retrieve: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
         };
-        content: {
-          "application/json": components["schemas"]["EditorState"];
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["EditorState"];
+                };
+            };
         };
-      };
     };
-  };
-  library_retrieve: {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    requestBody?: never;
-    responses: {
-      200: {
-        headers: {
-          [name: string]: unknown;
+    library_retrieve: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
         };
-        content: {
-          "application/json": components["schemas"]["LibraryResponse"];
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["LibraryResponse"];
+                };
+            };
         };
-      };
     };
-  };
-  library_books_retrieve: {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    requestBody?: never;
-    responses: {
-      200: {
-        headers: {
-          [name: string]: unknown;
+    library_books_retrieve: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
         };
-        content: {
-          "application/json": components["schemas"]["LibraryBooksResponse"];
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["LibraryBooksResponse"];
+                };
+            };
         };
-      };
     };
-  };
-  library_chapters_retrieve: {
-    parameters: {
-      query?: never;
-      header?: never;
-      path: {
-        chapter_id: string;
-      };
-      cookie?: never;
-    };
-    requestBody?: never;
-    responses: {
-      200: {
-        headers: {
-          [name: string]: unknown;
+    library_books_create: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
         };
-        content: {
-          "application/json": components["schemas"]["ChapterDetail"];
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["BookUpsert"];
+            };
         };
-      };
-    };
-  };
-  library_chapters_blocks_partial_update: {
-    parameters: {
-      query?: never;
-      header?: never;
-      path: {
-        block_id: string;
-        chapter_id: string;
-      };
-      cookie?: never;
-    };
-    requestBody?: {
-      content: {
-        "application/json": components["schemas"]["PatchedChapterBlockUpdate"];
-      };
-    };
-    responses: {
-      200: {
-        headers: {
-          [name: string]: unknown;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["LibraryBook"];
+                };
+            };
         };
-        content: {
-          "application/json": components["schemas"]["ChapterDetail"];
-        };
-      };
     };
-  };
+    library_books_partial_update: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                book_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: {
+            content: {
+                "application/json": components["schemas"]["PatchedBookUpsert"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["LibraryBook"];
+                };
+            };
+        };
+    };
+    library_books_chapters_create: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                book_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ChapterUpsert"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ChapterSummary"];
+                };
+            };
+        };
+    };
+    library_chapters_retrieve: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                chapter_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ChapterDetail"];
+                };
+            };
+        };
+    };
+    library_chapters_partial_update: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                chapter_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: {
+            content: {
+                "application/json": components["schemas"]["PatchedChapterUpsert"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ChapterSummary"];
+                };
+            };
+        };
+    };
+    library_chapters_blocks_partial_update: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                block_id: string;
+                chapter_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: {
+            content: {
+                "application/json": components["schemas"]["PatchedChapterBlockUpdate"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ChapterDetail"];
+                };
+            };
+        };
+    };
 }
