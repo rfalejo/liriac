@@ -3,16 +3,11 @@ import CloseRoundedIcon from "@mui/icons-material/CloseRounded";
 import {
   Alert,
   Button,
-  CircularProgress,
-  Dialog,
-  DialogActions,
-  DialogContent,
-  DialogContentText,
-  DialogTitle,
   Divider,
   IconButton,
   Stack,
-  TextField,
+  Tab,
+  Tabs,
   Typography,
 } from "@mui/material";
 import type {
@@ -25,12 +20,14 @@ import {
   cloneContextFormValues,
   CONTEXT_FIELDS_BY_SECTION,
   CONTEXT_SECTION_IDS_IN_ORDER,
-  getItemPrimaryText,
   makeContextKey,
   type ContextEditableField,
   type ContextItemFormValue,
 } from "./bookContextHelpers";
 import { LibraryPanel } from "./LibraryPanel";
+import { BookDeleteDialog } from "./BookDeleteDialog";
+import { BookEditorContextTab } from "./BookEditorContextTab";
+import { BookEditorMetadataTab } from "./BookEditorMetadataTab";
 import { useUpsertBook } from "../hooks/useUpsertBook";
 import { useDeleteBook } from "../hooks/useDeleteBook";
 import { useLibrarySections } from "../hooks/useLibrarySections";
@@ -46,6 +43,8 @@ type BookEditorPanelProps = {
   book: LibraryBook;
   onClose: () => void;
 };
+
+type BookEditorTabValue = "metadata" | "context";
 
 export function BookEditorPanel({ book, onClose }: BookEditorPanelProps) {
   const { mutateAsync: upsertBook, isPending: isSaving } = useUpsertBook();
@@ -65,6 +64,7 @@ export function BookEditorPanel({ book, onClose }: BookEditorPanelProps) {
     Record<string, ContextItemFormValue>
   >({});
   const contextInitialRef = useRef<Record<string, ContextItemFormValue>>({});
+  const [activeTab, setActiveTab] = useState<BookEditorTabValue>("metadata");
 
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [deleteConfirmation, setDeleteConfirmation] = useState("");
@@ -78,6 +78,7 @@ export function BookEditorPanel({ book, onClose }: BookEditorPanelProps) {
       author: book.author ?? "",
       synopsis: book.synopsis ?? "",
     });
+    setActiveTab("metadata");
   }, [book]);
 
   const contextSections = useMemo(() => {
@@ -309,159 +310,48 @@ export function BookEditorPanel({ book, onClose }: BookEditorPanelProps) {
 
           {errorMessage ? <Alert severity="error">{errorMessage}</Alert> : null}
 
-          <Stack spacing={2}>
-            <TextField
-              label="Título"
-              value={formState.title}
-              onChange={(event) => handleFieldChange("title", event.target.value)}
-              required
+          <Tabs
+            value={activeTab}
+            onChange={(_, value) => {
+              setActiveTab(value as BookEditorTabValue);
+            }}
+            aria-label="Editor de libro"
+            sx={(theme) => ({
+              borderRadius: theme.spacing(1),
+              bgcolor: theme.palette.background.default,
+              px: 1,
+              "& .MuiTabs-indicator": {
+                height: 3,
+                borderRadius: theme.spacing(1),
+              },
+            })}
+          >
+            <Tab
+              value="metadata"
+              label="Información general"
+              sx={{ alignSelf: "center" }}
+            />
+            <Tab value="context" label="Contexto creativo" />
+          </Tabs>
+
+          {activeTab === "metadata" ? (
+            <BookEditorMetadataTab
+              formState={formState}
+              onFieldChange={handleFieldChange}
               disabled={disableActions}
             />
-            <TextField
-              label="Autor"
-              value={formState.author}
-              onChange={(event) => handleFieldChange("author", event.target.value)}
-              disabled={disableActions}
+          ) : null}
+
+          {activeTab === "context" ? (
+            <BookEditorContextTab
+              loading={contextLoading}
+              error={contextError}
+              sections={contextSections}
+              contextValues={contextFormValues}
+              onFieldChange={handleContextFieldChange}
+              onRetry={reloadContext}
+              disabled={disableActions || contextLoading}
             />
-            <TextField
-              label="Sinopsis"
-              value={formState.synopsis}
-              onChange={(event) =>
-                handleFieldChange("synopsis", event.target.value)
-              }
-              multiline
-              minRows={3}
-              disabled={disableActions}
-            />
-          </Stack>
-
-          <Divider />
-
-          <Stack spacing={1.5}>
-            <Typography variant="subtitle2" fontWeight={600}>
-              Contexto creativo
-            </Typography>
-            <Typography variant="body2" color="text.secondary">
-              Consulta y ajusta los elementos clave del universo de la historia.
-            </Typography>
-          </Stack>
-
-          {contextLoading ? (
-            <Stack
-              spacing={1.5}
-              alignItems="center"
-              justifyContent="center"
-              sx={{ py: 3 }}
-            >
-              <CircularProgress size={20} />
-              <Typography variant="body2" color="text.secondary">
-                Cargando contexto
-              </Typography>
-            </Stack>
-          ) : null}
-
-          {!contextLoading && contextError ? (
-            <Stack spacing={1.5} alignItems="flex-start">
-              <Typography variant="body2" color="text.secondary">
-                No se pudo obtener el contexto.
-              </Typography>
-              <Button
-                size="small"
-                variant="contained"
-                onClick={reloadContext}
-                disabled={disableActions}
-              >
-                Reintentar
-              </Button>
-            </Stack>
-          ) : null}
-
-          {!contextLoading && !contextError && contextSections.length === 0 ? (
-            <Typography variant="body2" color="text.secondary">
-              Aún no hay elementos de contexto.
-            </Typography>
-          ) : null}
-
-          {!contextLoading && !contextError && contextSections.length > 0 ? (
-            <Stack spacing={2.5}>
-              {contextSections.map((section) => {
-                const sectionId = CONTEXT_SECTION_IDS_IN_ORDER.find(
-                  (id) => id === section.id,
-                );
-                if (!sectionId) {
-                  return null;
-                }
-
-                const descriptors = CONTEXT_FIELDS_BY_SECTION[sectionId];
-                if (!descriptors?.length) {
-                  return null;
-                }
-
-                return (
-                  <Stack key={section.id} spacing={1.5}>
-                    <Typography variant="subtitle2" fontWeight={600}>
-                      {section.title}
-                    </Typography>
-                    {section.items.length === 0 ? (
-                      <Typography variant="body2" color="text.secondary">
-                        No hay elementos registrados.
-                      </Typography>
-                    ) : (
-                      <Stack spacing={2}>
-                        {section.items.map((item) => {
-                          const key = makeContextKey(
-                            section.id,
-                            item.id,
-                            item.chapterId ?? null,
-                          );
-                          const formValue = contextFormValues[key];
-                          const itemLabel = getItemPrimaryText(item);
-
-                          return (
-                            <Stack
-                              key={item.id}
-                              spacing={1.25}
-                              sx={{
-                                border: "1px solid",
-                                borderColor: "divider",
-                                borderRadius: 1,
-                                p: 1.5,
-                              }}
-                            >
-                              <Typography variant="body2" fontWeight={600}>
-                                {itemLabel}
-                              </Typography>
-                              <Stack spacing={1.25}>
-                                {descriptors.map((descriptor) => (
-                                  <TextField
-                                    key={`${item.id}-${descriptor.field}`}
-                                    label={descriptor.label}
-                                    value={formValue?.[descriptor.field] ?? ""}
-                                    onChange={(event) =>
-                                      handleContextFieldChange(
-                                        section.id,
-                                        item.id,
-                                        item.chapterId ?? null,
-                                        item.type,
-                                        descriptor.field,
-                                        event.target.value,
-                                      )
-                                    }
-                                    multiline={descriptor.multiline}
-                                    minRows={descriptor.minRows}
-                                    disabled={disableActions || contextLoading}
-                                  />
-                                ))}
-                              </Stack>
-                            </Stack>
-                          );
-                        })}
-                      </Stack>
-                    )}
-                  </Stack>
-                );
-              })}
-            </Stack>
           ) : null}
 
           <Divider />
@@ -495,7 +385,7 @@ export function BookEditorPanel({ book, onClose }: BookEditorPanelProps) {
         </Stack>
       </LibraryPanel>
 
-      <DeleteBookDialog
+  <BookDeleteDialog
         open={deleteDialogOpen}
         bookTitle={book.title}
         confirmationValue={deleteConfirmation}
@@ -513,70 +403,5 @@ export function BookEditorPanel({ book, onClose }: BookEditorPanelProps) {
         disabled={isDeleting}
       />
     </>
-  );
-}
-
-type DeleteBookDialogProps = {
-  open: boolean;
-  bookTitle: string;
-  confirmationValue: string;
-  errorMessage: string | null;
-  disabled: boolean;
-  onChangeConfirmation: (value: string) => void;
-  onClose: () => void;
-  onSubmit: (event: React.FormEvent<HTMLFormElement>) => void;
-};
-
-function DeleteBookDialog({
-  open,
-  bookTitle,
-  confirmationValue,
-  errorMessage,
-  disabled,
-  onChangeConfirmation,
-  onClose,
-  onSubmit,
-}: DeleteBookDialogProps) {
-  return (
-    <Dialog open={open} onClose={onClose} fullWidth maxWidth="xs">
-      <form onSubmit={onSubmit} noValidate>
-        <DialogTitle>Eliminar libro</DialogTitle>
-        <DialogContent dividers>
-          <Stack spacing={2} mt={1}>
-            <DialogContentText>
-              Esta acción no se puede deshacer. Escribe el título del libro para
-              confirmar.
-            </DialogContentText>
-            <DialogContentText sx={{ fontWeight: 500 }}>
-              "{bookTitle}"
-            </DialogContentText>
-            {errorMessage ? <Alert severity="error">{errorMessage}</Alert> : null}
-            <TextField
-              label="Título del libro"
-              value={confirmationValue}
-              onChange={(event) => onChangeConfirmation(event.target.value)}
-              placeholder={bookTitle}
-              autoFocus
-              disabled={disabled}
-            />
-          </Stack>
-        </DialogContent>
-        <DialogActions>
-          <Button onClick={onClose} disabled={disabled}>
-            Cancelar
-          </Button>
-          <Button
-            type="submit"
-            color="error"
-            variant="contained"
-            disabled={
-              disabled || confirmationValue.trim() !== bookTitle.trim()
-            }
-          >
-            Eliminar
-          </Button>
-        </DialogActions>
-      </form>
-    </Dialog>
   );
 }
