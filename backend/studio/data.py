@@ -139,7 +139,11 @@ def extract_chapter_context_for_block(
     # Find metadata block (usually at position 0)
     metadata_block = None
     for block in sorted_blocks:
-        if block.get("type") == "metadata":
+        if block.get("type") != "metadata":
+            continue
+        if metadata_block is None:
+            metadata_block = block
+        if block.get("kind") == "context":
             metadata_block = block
             break
 
@@ -182,8 +186,8 @@ def extract_chapter_context_for_block(
             break
         block = sorted_blocks[idx]
         block_type = block.get("type")
-        # Skip metadata but include scene boundaries in the count
-        if block_type == "metadata":
+        # Skip metadata and scene boundaries to avoid duplicating context sections
+        if block_type in {"metadata", "scene_boundary"}:
             continue
         preceding_blocks.insert(0, block)
         count += 1
@@ -192,8 +196,9 @@ def extract_chapter_context_for_block(
     following_blocks = []
     for idx in range(target_index + 1, min(target_index + 3, len(sorted_blocks))):
         block = sorted_blocks[idx]
-        if block.get("type") != "metadata":  # Skip metadata
-            following_blocks.append(block)
+        if block.get("type") in {"metadata", "scene_boundary"}:
+            continue
+        following_blocks.append(block)
 
     return {
         "metadata_block": metadata_block,

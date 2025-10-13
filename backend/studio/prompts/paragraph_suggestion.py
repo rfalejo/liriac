@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import re
 from textwrap import dedent
 from typing import List, Optional
 
@@ -51,58 +52,49 @@ def _format_context_items_section(context_items: List[ContextItemPayload]) -> st
     if not context_items:
         return ""
 
-    lines = ["Contexto adicional de la biblioteca:"]
-
     # Group by type
     characters = [item for item in context_items if item.get("type") == "character"]
     world_items = [item for item in context_items if item.get("type") == "world"]
     style_items = [item for item in context_items if item.get("type") == "styleTone"]
 
-    # Format characters
+    lines: List[str] = []
+    total = len(context_items)
+    lines.append(f"Contexto seleccionado en la biblioteca ({total} elementos):")
+
     if characters:
-        lines.append("\nPersonajes:")
+        lines.append("- Personajes clave:")
         for char in characters:
             name = char.get("name", "")
             role = char.get("role")
             summary = char.get("summary")
-            facts = char.get("facts")
-
-            char_line = f"  - {name}"
+            entry = f"  • {name}"
             if role:
-                char_line += f" ({role})"
-            lines.append(char_line)
-
+                entry += f" ({role})"
             if summary:
-                lines.append(f"    Resumen: {summary}")
-            if facts:
-                lines.append(f"    Datos: {facts}")
+                entry += f": {summary}"
+            lines.append(entry)
 
-    # Format world-building
     if world_items:
-        lines.append("\nMundo y ambientación:")
+        lines.append("- Detalles del mundo:")
         for item in world_items:
-            name = item.get("name", "")
-            description = item.get("description")
-            facts = item.get("facts")
-
-            lines.append(f"  - {name}")
+            name = item.get("name") or item.get("title", "")
+            description = item.get("description") or item.get("summary")
+            entry = f"  • {name}"
             if description:
-                lines.append(f"    Descripción: {description}")
-            if facts:
-                lines.append(f"    Datos: {facts}")
+                entry += f": {description}"
+            lines.append(entry)
 
-    # Format style & tone
     if style_items:
-        lines.append("\nEstilo y tono narrativo:")
+        lines.append("- Notas de estilo y tono:")
         for item in style_items:
-            name = item.get("name", "")
+            name = item.get("name") or "Estilo"
             description = item.get("description")
-
-            lines.append(f"  - {name}")
+            entry = f"  • {name}"
             if description:
-                lines.append(f"    {description}")
+                entry += f": {description}"
+            lines.append(entry)
 
-    return "\n".join(lines)
+    return "\n".join([line for line in lines if line])
 
 
 def _format_scene_context_section(
@@ -195,9 +187,12 @@ def _extract_block_preview(block: ChapterBlockPayload, max_length: int = 200) ->
         style = block.get("style")
         prefix = f"[{style}] " if style and style != "narration" else ""
         preview = text.replace("\n", " ").strip()
-        if len(preview) > max_length:
-            preview = preview[:max_length] + "..."
-        return prefix + preview
+        if not preview:
+            return ""
+        sentence = re.split(r"(?<=[.!?])\s+", preview, maxsplit=1)[0]
+        if len(sentence) > max_length:
+            sentence = sentence[: max_length - 3] + "..."
+        return prefix + sentence
 
     elif block_type == "dialogue":
         turns = block.get("turns", [])
@@ -208,14 +203,16 @@ def _extract_block_preview(block: ChapterBlockPayload, max_length: int = 200) ->
         utterance = first_turn.get("utterance", "")
         preview = f"{speaker}: {utterance}" if speaker else utterance
         if len(preview) > max_length:
-            preview = preview[:max_length] + "..."
+            preview = preview[: max_length - 3] + "..."
         return f"[diálogo] {preview}"
 
     elif block_type == "scene_boundary":
         label = block.get("label", "")
         summary = block.get("summary", "")
         text = label or summary or "cambio de escena"
-        return f"[escena] {text[:max_length]}"
+        if len(text) > max_length:
+            text = text[: max_length - 3] + "..."
+        return f"[escena] {text}"
 
     elif block_type == "metadata":
         kind = block.get("kind", "")
@@ -309,10 +306,11 @@ def build_paragraph_suggestion_prompt(
     sections = [
         base_instruction,
         guidance,
+        "Objetivo de edición:",
+        _format_block_section(block),
         _format_book_section(title=book_title, author=book_author, synopsis=book_synopsis),
         _format_chapter_section(chapter),
     ]
-
     # Add context items if available
     if context_items:
         context_section = _format_context_items_section(context_items)
@@ -335,9 +333,6 @@ def build_paragraph_suggestion_prompt(
         )
         if surrounding:
             sections.append(surrounding)
-
-    # Add the target block
-    sections.append(_format_block_section(block))
 
     # Add response format instruction
     sections.append('Devuelve solo un objeto JSON con la forma {"paragraph_suggestion": "texto"}.')
