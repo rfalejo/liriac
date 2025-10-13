@@ -17,17 +17,17 @@ from .data import (
     delete_chapter_block,
     extract_chapter_context_for_block,
     get_active_context_items,
+    get_book_context_sections,
     get_book_metadata,
     get_chapter_detail,
     get_editor_state,
     get_library_books,
-    get_library_sections,
     update_book,
     update_chapter,
     update_chapter_block,
-    update_context_items,
+    update_book_context_items,
 )
-from .models import ChapterBlockType
+from .models import Book, ChapterBlockType
 from .payloads import ParagraphBlockPayload
 from .prompts import build_paragraph_suggestion_prompt
 from .serializers import (
@@ -135,15 +135,20 @@ def _flatten_structured_block_fields(
     return flattened
 
 
-class LibraryView(APIView):
-    """Return the available context sections for the local library."""
+class LibraryBookContextView(APIView):
+    """Return the context sections scoped to a specific book (optionally a chapter)."""
 
     authentication_classes: list = []
     permission_classes: list = []
 
     @extend_schema(responses=LibraryResponseSerializer)
-    def get(self, _request):
-        sections = get_library_sections()
+    def get(self, request, book_id: str):
+        chapter_id = request.query_params.get("chapterId")
+
+        sections = get_book_context_sections(book_id, chapter_id=chapter_id)
+        if not sections and not Book.objects.filter(pk=book_id).exists():
+            raise Http404("Book not found")
+
         serializer = LibraryResponseSerializer({"sections": sections})
         return Response(serializer.data)
 
@@ -253,8 +258,8 @@ class LibraryBookChaptersView(APIView):
         return Response(response_serializer.data, status=status.HTTP_201_CREATED)
 
 
-class LibraryContextItemsView(APIView):
-    """Update editable fields for context items."""
+class LibraryBookContextItemsView(APIView):
+    """Update editable fields for context items belonging to a book."""
 
     authentication_classes: list = []
     permission_classes: list = []
@@ -263,13 +268,16 @@ class LibraryContextItemsView(APIView):
         request=ContextItemsUpdateRequestSerializer,
         responses=LibraryResponseSerializer,
     )
-    def patch(self, request):
+    def patch(self, request, book_id: str):
         serializer = ContextItemsUpdateRequestSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         updates = serializer.validated_data["items"]
 
+        if not Book.objects.filter(pk=book_id).exists():
+            raise Http404("Book not found")
+
         try:
-            sections = update_context_items(updates)
+            sections = update_book_context_items(book_id, updates)
         except KeyError as exc:
             raise Http404(str(exc)) from exc
 
@@ -467,7 +475,13 @@ class ChapterParagraphSuggestionView(APIView):
                 book_synopsis = metadata.get("synopsis")
 
         # Get active context items from library
-        context_items = get_active_context_items()
+        if book_id:
+            context_items = get_active_context_items(
+                book_id=book_id,
+                chapter_id=chapter.get("id"),
+            )
+        else:
+            context_items = []
 
         # Extract surrounding blocks and scene context
         context = extract_chapter_context_for_block(chapter, block_id)

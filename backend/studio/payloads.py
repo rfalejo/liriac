@@ -109,6 +109,7 @@ class ContextItemPayload(TypedDict, total=False):
     tokens: Optional[int]
     checked: bool
     disabled: bool
+    chapterId: Optional[str]
 
 
 class ContextSectionPayload(TypedDict, total=False):

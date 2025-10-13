@@ -1,11 +1,11 @@
 from __future__ import annotations
 
 from copy import deepcopy
-from typing import Any, Dict, List, Optional, cast
+from typing import Any, Dict, Iterable, List, Optional, cast
 from uuid import uuid4
 
 from django.db import IntegrityError, transaction
-from django.db.models import F, Max
+from django.db.models import F, Max, Q
 
 from .models import (
     Book,
@@ -49,18 +49,131 @@ def ensure_turn_identifiers(block_id: str, turns: List[Dict[str, Any]]) -> List[
     return normalized
 
 
-def get_library_sections() -> List[ContextSectionPayload]:
-    sections = LibrarySection.objects.prefetch_related("items").order_by("order", "id").all()
-    if not sections:
-        return cast(List[ContextSectionPayload], deepcopy(SAMPLE_LIBRARY_SECTIONS))
-    return [section.to_payload() for section in sections]
+def _section_templates_for_book(book_id: str) -> List[Dict[str, Any]]:
+    template_source = deepcopy(SAMPLE_LIBRARY_SECTIONS)
+    sample_book_ids = {book.get("id") for book in SAMPLE_LIBRARY_BOOKS}
+
+    if book_id in sample_book_ids:
+        return cast(List[Dict[str, Any]], template_source)
+
+    # Provide empty templates (no default items) for non-sample books so users can
+    # populate their own context.
+    templates: List[Dict[str, Any]] = []
+    for section in template_source:
+        templates.append(  # type: ignore[arg-type]
+            {
+                "id": section.get("id"),
+                "slug": section.get("slug") or section.get("id"),
+                "title": section.get("title"),
+                "defaultOpen": section.get("defaultOpen", False),
+                "items": [],
+            }
+        )
+    return templates
 
 
-def get_active_context_items() -> List[ContextItemPayload]:
-    """Retrieve all checked (active) context items from the library."""
-    items = LibraryContextItem.objects.filter(checked=True, disabled=False).order_by(
-        "section__order", "order"
+def _ensure_book_context_sections(book: Book) -> List[LibrarySection]:
+    sections = list(
+        LibrarySection.objects.prefetch_related("items")
+        .filter(book=book)
+        .order_by("order", "slug", "id")
     )
+    if sections:
+        return sections
+
+    templates = _section_templates_for_book(book.id)
+    created_sections: List[LibrarySection] = []
+
+    for order, template in enumerate(templates):
+        slug = str(template.get("slug") or template.get("id") or f"section-{order}")
+        section = LibrarySection.objects.create(
+            id=uuid4().hex,
+            book=book,
+            slug=slug,
+            title=str(template.get("title") or slug.title()),
+            default_open=bool(template.get("defaultOpen", False)),
+            order=int(template.get("order", order)),
+        )
+
+        for item_order, raw_item in enumerate(cast(Iterable[Dict[str, Any]], template.get("items", []))):
+            LibraryContextItem.objects.create(
+                section=section,
+                chapter=None,
+                item_id=str(raw_item.get("id") or f"{slug}-{item_order}"),
+                item_type=str(raw_item.get("type") or "chapter"),
+                name=str(raw_item.get("name") or ""),
+                role=str(raw_item.get("role") or ""),
+                summary=str(raw_item.get("summary") or ""),
+                title=str(raw_item.get("title") or ""),
+                description=str(raw_item.get("description") or ""),
+                facts=str(raw_item.get("facts") or ""),
+                tokens=raw_item.get("tokens"),
+                checked=bool(raw_item.get("checked", False)),
+                disabled=bool(raw_item.get("disabled", False)),
+                order=item_order,
+            )
+
+        created_sections.append(section)
+
+    return created_sections
+
+
+def get_book_context_sections(
+    book_id: str,
+    *,
+    chapter_id: Optional[str] = None,
+) -> List[ContextSectionPayload]:
+    try:
+        book = Book.objects.get(pk=book_id)
+    except Book.DoesNotExist:
+        return []
+
+    sections = _ensure_book_context_sections(book)
+
+    chapter_specific_items: Dict[str, List[ContextItemPayload]] = {}
+    if chapter_id:
+        chapter_specific_items = {}
+        for item in LibraryContextItem.objects.filter(
+            section__book=book,
+            chapter_id=chapter_id,
+        ).order_by("section__order", "order"):
+            chapter_specific_items.setdefault(item.section.slug, []).append(item.to_payload())
+
+    payloads: List[ContextSectionPayload] = []
+    for section in sections:
+        base_items = [
+            item.to_payload()
+            for item in section.items.all()
+            if item.chapter_id is None
+        ]
+
+        if chapter_id:
+            extra_items = chapter_specific_items.get(section.slug, [])
+            items = base_items + extra_items
+        else:
+            items = base_items
+
+        payload = dict(section.to_payload())
+        payload["items"] = items
+        payloads.append(cast(ContextSectionPayload, payload))
+
+    return payloads
+
+
+def get_active_context_items(
+    *,
+    book_id: str,
+    chapter_id: Optional[str] = None,
+) -> List[ContextItemPayload]:
+    """Retrieve checked context items scoped to a book (and optionally a chapter)."""
+
+    filters = Q(section__book_id=book_id, checked=True, disabled=False)
+    if chapter_id:
+        filters &= Q(Q(chapter__isnull=True) | Q(chapter_id=chapter_id))
+    else:
+        filters &= Q(chapter__isnull=True)
+
+    items = LibraryContextItem.objects.filter(filters).order_by("section__order", "order")
     return [item.to_payload() for item in items]
 
 
@@ -242,6 +355,8 @@ def create_book(
             )
         except IntegrityError as exc:
             raise ValueError("Ya existe un libro con ese identificador.") from exc
+
+        _ensure_book_context_sections(book)
     return book.to_payload()
 
 
@@ -486,9 +601,12 @@ def create_chapter_block(
     ).to_detail_payload()
 
 
-def update_context_items(updates: List[Dict[str, Any]]) -> List[ContextSectionPayload]:
+def update_book_context_items(
+    book_id: str,
+    updates: List[Dict[str, Any]],
+) -> List[ContextSectionPayload]:
     if not updates:
-        return get_library_sections()
+        return get_book_context_sections(book_id)
 
     editable_fields = {
         "name": "name",
@@ -501,17 +619,28 @@ def update_context_items(updates: List[Dict[str, Any]]) -> List[ContextSectionPa
 
     with transaction.atomic():
         for update in updates:
-            section_id = str(update["sectionId"])
+            section_slug = str(update["sectionSlug"])
             item_id = str(update["id"])
+            chapter_id = update.get("chapterId")
 
             try:
                 item = (
                     LibraryContextItem.objects.select_for_update()
                     .select_related("section")
-                    .get(section_id=section_id, item_id=item_id)
+                    .get(
+                        section__book_id=book_id,
+                        section__slug=section_slug,
+                        item_id=item_id,
+                        **(
+                            {"chapter_id": str(chapter_id)}
+                            if chapter_id is not None
+                            else {"chapter__isnull": True}
+                        ),
+                    )
                 )
             except LibraryContextItem.DoesNotExist as exc:
-                raise KeyError(f"Unknown context item: {section_id}:{item_id}") from exc
+                scope = section_slug if chapter_id is None else f"{section_slug}:{chapter_id}"
+                raise KeyError(f"Unknown context item: {scope}:{item_id}") from exc
 
             fields_to_update: List[str] = []
 
@@ -527,7 +656,7 @@ def update_context_items(updates: List[Dict[str, Any]]) -> List[ContextSectionPa
             if fields_to_update:
                 item.save(update_fields=fields_to_update + ["updated_at"])
 
-    return get_library_sections()
+    return get_book_context_sections(book_id)
 
 
 def bootstrap_sample_data(*, force: bool = False, apps=None) -> None:
@@ -541,6 +670,11 @@ def bootstrap_sample_data(*, force: bool = False, apps=None) -> None:
         LibraryContextItem if apps is None else apps.get_model("studio", "LibraryContextItem")
     )
 
+    section_has_book_field = any(field.name == "book" for field in LibrarySectionModel._meta.fields)
+    context_item_has_chapter_field = any(
+        field.name == "chapter" for field in LibraryContextItemModel._meta.fields
+    )
+
     with transaction.atomic():
         if not force and LibrarySectionModel.objects.exists():
             return
@@ -551,36 +685,6 @@ def bootstrap_sample_data(*, force: bool = False, apps=None) -> None:
             ChapterBlockModel.objects.all().delete()
             ChapterModel.objects.all().delete()
             BookModel.objects.all().delete()
-
-        for order, section in enumerate(SAMPLE_LIBRARY_SECTIONS):
-            section_obj, _ = LibrarySectionModel.objects.update_or_create(
-                id=section["id"],
-                defaults={
-                    "title": section.get("title", ""),
-                    "default_open": bool(section.get("defaultOpen", False)),
-                    "order": order,
-                },
-            )
-            items = section.get("items", [])
-            for item_order, item in enumerate(items):
-                defaults: Dict[str, Any] = {
-                    "item_type": item.get("type", "chapter"),
-                    "name": item.get("name", ""),
-                    "role": item.get("role", ""),
-                    "summary": item.get("summary", ""),
-                    "title": item.get("title", ""),
-                    "description": item.get("description", ""),
-                    "facts": item.get("facts", ""),
-                    "tokens": item.get("tokens"),
-                    "checked": bool(item.get("checked", False)),
-                    "disabled": bool(item.get("disabled", False)),
-                    "order": item_order,
-                }
-                LibraryContextItemModel.objects.update_or_create(
-                    section=section_obj,
-                    item_id=item.get("id", f"{section_obj.id}-{item_order}"),
-                    defaults=defaults,
-                )
 
         book_objects: Dict[str, Any] = {}
         for order, book in enumerate(SAMPLE_LIBRARY_BOOKS):
@@ -660,4 +764,86 @@ def bootstrap_sample_data(*, force: bool = False, apps=None) -> None:
                             "position": int(block.get("position", 0)),
                             "payload": payload,
                         },
+                    )
+
+        if not section_has_book_field:
+            for order, section in enumerate(SAMPLE_LIBRARY_SECTIONS):
+                section_obj, _ = LibrarySectionModel.objects.update_or_create(
+                    id=section["id"],
+                    defaults={
+                        "title": section.get("title", ""),
+                        "default_open": bool(section.get("defaultOpen", False)),
+                        "order": order,
+                    },
+                )
+                items = section.get("items", [])
+                for item_order, item in enumerate(items):
+                    defaults = {
+                        "item_type": item.get("type", "chapter"),
+                        "name": item.get("name", ""),
+                        "role": item.get("role", ""),
+                        "summary": item.get("summary", ""),
+                        "title": item.get("title", ""),
+                        "description": item.get("description", ""),
+                        "facts": item.get("facts", ""),
+                        "tokens": item.get("tokens"),
+                        "checked": bool(item.get("checked", False)),
+                        "disabled": bool(item.get("disabled", False)),
+                        "order": item_order,
+                    }
+                    LibraryContextItemModel.objects.update_or_create(
+                        section=section_obj,
+                        item_id=item.get("id", f"{section_obj.id}-{item_order}"),
+                        defaults=defaults,
+                    )
+            return
+
+        for book_obj in BookModel.objects.all():
+            templates = _section_templates_for_book(book_obj.id)
+            for order, template in enumerate(templates):
+                slug = str(template.get("slug") or template.get("id") or f"section-{order}")
+                section_pk = f"{book_obj.id}-{slug}"
+                if len(section_pk) > 64:
+                    section_pk = section_pk[:64]
+
+                section_defaults = {
+                    "book": book_obj,
+                    "slug": slug,
+                    "title": template.get("title", ""),
+                    "default_open": bool(template.get("defaultOpen", False)),
+                    "order": int(template.get("order", order)),
+                }
+                section_obj, _ = LibrarySectionModel.objects.update_or_create(
+                    id=section_pk,
+                    defaults=section_defaults,
+                )
+
+                items = cast(Iterable[Dict[str, Any]], template.get("items", []) or [])
+                for item_order, item in enumerate(items):
+                    defaults = {
+                        "item_type": item.get("type", "chapter"),
+                        "name": item.get("name", ""),
+                        "role": item.get("role", ""),
+                        "summary": item.get("summary", ""),
+                        "title": item.get("title", ""),
+                        "description": item.get("description", ""),
+                        "facts": item.get("facts", ""),
+                        "tokens": item.get("tokens"),
+                        "checked": bool(item.get("checked", False)),
+                        "disabled": bool(item.get("disabled", False)),
+                        "order": item_order,
+                    }
+
+                    if context_item_has_chapter_field:
+                        if item.get("type") == "chapter":
+                            defaults["chapter"] = ChapterModel.objects.filter(
+                                id=item.get("id")
+                            ).first()
+                        else:
+                            defaults["chapter"] = None
+
+                    LibraryContextItemModel.objects.update_or_create(
+                        section=section_obj,
+                        item_id=item.get("id", f"{slug}-{item_order}"),
+                        defaults=defaults,
                     )

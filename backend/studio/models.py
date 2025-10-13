@@ -4,6 +4,7 @@ from typing import Any, Dict
 
 from django.core.serializers.json import DjangoJSONEncoder
 from django.db import models
+from django.db.models import F, Q
 
 from .payloads import (
     ChapterBlockPayload,
@@ -26,12 +27,21 @@ class TimeStampedModel(models.Model):
 
 class LibrarySection(TimeStampedModel):
     id = models.CharField(primary_key=True, max_length=64)
+    book = models.ForeignKey(
+        "studio.Book",
+        related_name="context_sections",
+        on_delete=models.CASCADE,
+    )
+    slug = models.CharField(max_length=64)
     title = models.CharField(max_length=255)
     default_open = models.BooleanField(default=False)
     order = models.PositiveIntegerField(default=0)
 
     class Meta:
-        ordering = ["order", "id"]
+        ordering = ["book", "order", "slug"]
+        constraints = [
+            models.UniqueConstraint(fields=["book", "slug"], name="uniq_section_book_slug"),
+        ]
 
     def __str__(self) -> str:
         return self.title
@@ -39,7 +49,7 @@ class LibrarySection(TimeStampedModel):
     def to_payload(self) -> ContextSectionPayload:
         items = [item.to_payload() for item in self.items.all()]
         return {
-            "id": self.id,
+            "id": self.slug,
             "title": self.title,
             "defaultOpen": self.default_open,
             "items": items,
@@ -58,6 +68,13 @@ class LibraryContextItem(TimeStampedModel):
         LibrarySection,
         related_name="items",
         on_delete=models.CASCADE,
+    )
+    chapter = models.ForeignKey(
+        "studio.Chapter",
+        related_name="context_items",
+        on_delete=models.CASCADE,
+        null=True,
+        blank=True,
     )
     item_id = models.CharField(max_length=64)
     item_type = models.CharField(
@@ -89,6 +106,8 @@ class LibraryContextItem(TimeStampedModel):
             "checked": self.checked,
             "disabled": self.disabled,
         }
+        if self.chapter_id:
+            payload["chapterId"] = self.chapter_id
         if self.name:
             payload["name"] = self.name
         if self.role:

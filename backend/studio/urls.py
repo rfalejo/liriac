@@ -7,19 +7,28 @@ from .views import (
     ChapterParagraphSuggestionView,
     EditorView,
     LibraryBookChaptersView,
+    LibraryBookContextItemsView,
+    LibraryBookContextView,
     LibraryBookDetailView,
     LibraryBooksView,
-    LibraryContextItemsView,
-    LibraryView,
 )
 
 urlpatterns = [
-    path("library/", LibraryView.as_view(), name="library"),
     path("library/books/", LibraryBooksView.as_view(), name="library-books"),
     path(
         "library/books/<str:book_id>/",
         LibraryBookDetailView.as_view(),
         name="library-book-detail",
+    ),
+    path(
+        "library/books/<str:book_id>/context/",
+        LibraryBookContextView.as_view(),
+        name="library-book-context",
+    ),
+    path(
+        "library/books/<str:book_id>/context/items/",
+        LibraryBookContextItemsView.as_view(),
+        name="library-book-context-items",
     ),
     path(
         "library/books/<str:book_id>/chapters/",
@@ -45,11 +54,6 @@ urlpatterns = [
         "library/chapters/<str:chapter_id>/paragraph-suggestion/",
         ChapterParagraphSuggestionView.as_view(),
         name="library-chapter-paragraph-suggestion",
-    ),
-    path(
-        "library/context/items/",
-        LibraryContextItemsView.as_view(),
-        name="library-context-items",
     ),
     path("editor/", EditorView.as_view(), name="editor"),
 ]

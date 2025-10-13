@@ -18,19 +18,6 @@ paths:
               schema:
                 $ref: '#/components/schemas/EditorState'
           description: ''
-  /api/library/:
-    get:
-      operationId: library_retrieve
-      description: Return the available context sections for the local library.
-      tags:
-      - library
-      responses:
-        '200':
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/LibraryResponse'
-          description: ''
   /api/library/books/:
     get:
       operationId: library_books_retrieve
@@ -124,6 +111,50 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ChapterSummary'
+          description: ''
+  /api/library/books/{book_id}/context/:
+    get:
+      operationId: library_books_context_retrieve
+      description: Return the context sections scoped to a specific book (optionally
+        a chapter).
+      parameters:
+      - in: path
+        name: book_id
+        schema:
+          type: string
+        required: true
+      tags:
+      - library
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LibraryResponse'
+          description: ''
+  /api/library/books/{book_id}/context/items/:
+    patch:
+      operationId: library_books_context_items_partial_update
+      description: Update editable fields for context items belonging to a book.
+      parameters:
+      - in: path
+        name: book_id
+        schema:
+          type: string
+        required: true
+      tags:
+      - library
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PatchedContextItemsUpdateRequest'
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LibraryResponse'
           description: ''
   /api/library/chapters/{chapter_id}/:
     get:
@@ -263,24 +294,6 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ParagraphSuggestionResponse'
-          description: ''
-  /api/library/context/items/:
-    patch:
-      operationId: library_context_items_partial_update
-      description: Update editable fields for context items.
-      tags:
-      - library
-      requestBody:
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/PatchedContextItemsUpdateRequest'
-      responses:
-        '200':
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/LibraryResponse'
           description: ''
 components:
   schemas:
@@ -611,6 +624,9 @@ components:
           type: boolean
         disabled:
           type: boolean
+        chapterId:
+          type: string
+          nullable: true
       required:
       - id
       - type
@@ -631,8 +647,11 @@ components:
       properties:
         id:
           type: string
-        sectionId:
+        sectionSlug:
           type: string
+        chapterId:
+          type: string
+          nullable: true
         name:
           type: string
           nullable: true
@@ -653,7 +672,7 @@ components:
           nullable: true
       required:
       - id
-      - sectionId
+      - sectionSlug
     ContextSection:
       type: object
       properties:

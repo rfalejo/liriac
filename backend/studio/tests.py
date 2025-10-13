@@ -11,8 +11,12 @@ ORIGIN = "http://localhost:5173"
 
 
 class LibraryEndpointTests(TestCase):
-    def test_library_returns_sections(self) -> None:
-        response = self.client.get(reverse("library"), HTTP_ORIGIN=ORIGIN)
+    def test_book_context_returns_sections(self) -> None:
+        book_id = "bk-karamazov"
+        response = self.client.get(
+            reverse("library-book-context", kwargs={"book_id": book_id}),
+            HTTP_ORIGIN=ORIGIN,
+        )
         self.assertEqual(response.status_code, 200)
         payload = response.json()
         self.assertIn("sections", payload)

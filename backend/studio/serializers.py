@@ -182,6 +182,7 @@ class ContextItemSerializer(serializers.Serializer):
     tokens = serializers.IntegerField(required=False)
     checked = serializers.BooleanField(required=False)
     disabled = serializers.BooleanField(required=False)
+    chapterId = serializers.CharField(required=False, allow_null=True, allow_blank=True)
 
 
 class ContextSectionSerializer(serializers.Serializer):
@@ -197,7 +198,8 @@ class LibraryResponseSerializer(serializers.Serializer):
 
 class ContextItemUpdateSerializer(serializers.Serializer):
     id = serializers.CharField()
-    sectionId = serializers.CharField()
+    sectionSlug = serializers.CharField()
+    chapterId = serializers.CharField(required=False, allow_null=True, allow_blank=True)
     name = serializers.CharField(required=False, allow_blank=True, allow_null=True)
     role = serializers.CharField(required=False, allow_blank=True, allow_null=True)
     summary = serializers.CharField(required=False, allow_blank=True, allow_null=True)

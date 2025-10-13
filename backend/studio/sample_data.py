@@ -5,6 +5,7 @@ from typing import Dict, List
 SAMPLE_LIBRARY_SECTIONS: List[Dict[str, object]] = [
     {
         "id": "chapters",
+        "slug": "chapters",
         "title": "Capítulos",
         "defaultOpen": True,
         "items": [
@@ -26,6 +27,7 @@ SAMPLE_LIBRARY_SECTIONS: List[Dict[str, object]] = [
     },
     {
         "id": "characters",
+        "slug": "characters",
         "title": "Personajes",
         "defaultOpen": False,
         "items": [
@@ -60,6 +62,7 @@ SAMPLE_LIBRARY_SECTIONS: List[Dict[str, object]] = [
     },
     {
         "id": "world",
+        "slug": "world",
         "title": "Mundo",
         "defaultOpen": False,
         "items": [
@@ -83,6 +86,7 @@ SAMPLE_LIBRARY_SECTIONS: List[Dict[str, object]] = [
     },
     {
         "id": "styleTone",
+        "slug": "styleTone",
         "title": "Estilo y tono",
         "defaultOpen": False,
         "items": [
