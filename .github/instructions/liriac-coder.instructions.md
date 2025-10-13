@@ -207,11 +207,11 @@ frontend/
 |   |       |   |-- useLibraryResource.ts
 |   |       |   |-- useLibrarySections.ts
 |   |       |   |-- useLibrarySelection.ts
+|   |       |   |-- useUpdateLibraryContext.ts
 |   |       |   |-- useUpsertBook.ts
 |   |       |   \-- useUpsertChapter.ts
 |   |       |-- LibraryBooksPanel.tsx
 |   |       |-- LibraryChaptersDialog.tsx
-|   |       |-- LibraryContextDialog.tsx
 |   |       |-- LibraryDataContext.tsx
 |   |       |-- LibraryDataProvider.tsx
 |   |       |-- LibraryLanding.tsx
