@@ -36,6 +36,8 @@ export function BookEditorPanel({ book, onClose }: BookEditorPanelProps) {
     contextError,
     errorMessage,
     disableActions,
+  metadataHasChanges,
+  contextHasChanges,
     deleteDialogOpen,
     deleteConfirmation,
     deleteErrorMessage,
@@ -156,7 +158,12 @@ export function BookEditorPanel({ book, onClose }: BookEditorPanelProps) {
             <Button
               type="submit"
               variant="contained"
-              disabled={disableActions}
+              disabled={
+                disableActions ||
+                (activeTab === "metadata"
+                  ? !metadataHasChanges
+                  : !contextHasChanges)
+              }
             >
               Guardar
             </Button>

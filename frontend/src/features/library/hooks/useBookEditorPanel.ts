@@ -54,6 +54,8 @@ type UseBookEditorPanelResult = {
   contextError: Error | null;
   errorMessage: string | null;
   disableActions: boolean;
+  metadataHasChanges: boolean;
+  contextHasChanges: boolean;
   deleteDialogOpen: boolean;
   deleteConfirmation: string;
   deleteErrorMessage: string | null;
@@ -102,6 +104,7 @@ export function useBookEditorPanel({
   const [formState, setFormState] = useState<BookEditorFormState>(
     emptyFormState,
   );
+  const metadataInitialRef = useRef<BookEditorFormState>(emptyFormState);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [contextFormValues, setContextFormValues] = useState<
     Record<string, ContextItemFormValue>
@@ -115,11 +118,13 @@ export function useBookEditorPanel({
     useState<string | null>(null);
 
   useEffect(() => {
-    setFormState({
+    const nextFormState = {
       title: book.title,
       author: book.author ?? "",
       synopsis: book.synopsis ?? "",
-    });
+    };
+    setFormState(nextFormState);
+    metadataInitialRef.current = nextFormState;
     setActiveTab("metadata");
   }, [book]);
 
@@ -240,56 +245,98 @@ export function useBookEditorPanel({
     return updates;
   }, [contextFormValues, contextSections]);
 
+  const metadataHasChanges = useMemo(() => {
+    const initial = metadataInitialRef.current;
+    return (
+      formState.title !== initial.title ||
+      formState.author !== initial.author ||
+      formState.synopsis !== initial.synopsis
+    );
+  }, [formState]);
+
+  const pendingContextUpdates = useMemo(
+    () => buildContextUpdates(),
+    [buildContextUpdates],
+  );
+  const contextHasChanges = pendingContextUpdates.length > 0;
+
   const handleSubmit = useCallback(
     async (event: FormEvent<HTMLFormElement>) => {
       event.preventDefault();
-
-      const trimmedTitle = formState.title.trim();
-      if (!trimmedTitle) {
-        setErrorMessage("El título es obligatorio.");
-        return;
-      }
-
-      setErrorMessage(null);
-
-      const contextUpdates = buildContextUpdates();
-
-      try {
-        await upsertBook({
-          mode: "update",
-          bookId: book.id,
-          payload: {
-            title: trimmedTitle,
-            author: formState.author.trim(),
-            synopsis: formState.synopsis.trim(),
-          },
-        });
-      } catch (error) {
-        console.error("Failed to update book", error);
-        setErrorMessage("No se pudo guardar el libro. Intenta nuevamente.");
-        return;
-      }
-
-      if (contextUpdates.length > 0) {
-        try {
-          await updateContextItems(contextUpdates);
-          contextInitialRef.current = cloneContextFormValues(contextFormValues);
-        } catch (error) {
-          console.error("Failed to update context", error);
-          setErrorMessage("No se pudo guardar el contexto. Intenta nuevamente.");
+      if (activeTab === "metadata") {
+        const trimmedTitle = formState.title.trim();
+        if (!trimmedTitle) {
+          setErrorMessage("El título es obligatorio.");
           return;
         }
+
+        if (!metadataHasChanges) {
+          return;
+        }
+
+        const trimmedAuthor = formState.author.trim();
+        const trimmedSynopsis = formState.synopsis.trim();
+
+        try {
+          await upsertBook({
+            mode: "update",
+            bookId: book.id,
+            payload: {
+              title: trimmedTitle,
+              author: trimmedAuthor,
+              synopsis: trimmedSynopsis,
+            },
+          });
+        } catch (error) {
+          console.error("Failed to update book", error);
+          setErrorMessage(
+            "No se pudo guardar el libro. Intenta nuevamente.",
+          );
+          return;
+        }
+
+        metadataInitialRef.current = {
+          title: trimmedTitle,
+          author: trimmedAuthor,
+          synopsis: trimmedSynopsis,
+        };
+
+        setFormState((current) => ({
+          ...current,
+          title: trimmedTitle,
+          author: trimmedAuthor,
+          synopsis: trimmedSynopsis,
+        }));
+
+        setErrorMessage(null);
+        return;
+      }
+
+      if (!contextHasChanges) {
+        return;
+      }
+
+      try {
+        await updateContextItems(pendingContextUpdates);
+        contextInitialRef.current = cloneContextFormValues(contextFormValues);
+      } catch (error) {
+        console.error("Failed to update context", error);
+        setErrorMessage("No se pudo guardar el contexto. Intenta nuevamente.");
+        return;
       }
 
       setErrorMessage(null);
     },
     [
+      activeTab,
       book.id,
-      buildContextUpdates,
       contextFormValues,
+      contextHasChanges,
       formState.author,
       formState.synopsis,
       formState.title,
+      metadataHasChanges,
+      pendingContextUpdates,
       updateContextItems,
       upsertBook,
     ],
@@ -355,6 +402,8 @@ export function useBookEditorPanel({
     contextError,
     errorMessage,
     disableActions,
+    metadataHasChanges,
+    contextHasChanges,
     deleteDialogOpen,
     deleteConfirmation,
     deleteErrorMessage,
