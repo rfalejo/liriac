@@ -35,6 +35,11 @@ type SceneBoundaryViewProps = {
 };
 
 function SceneBoundaryReadView({ block }: SceneBoundaryViewProps) {
+  const sceneDetails = block.sceneDetails;
+  const location = sceneDetails?.locationName ?? block.locationName;
+  const timestamp = sceneDetails?.timestamp ?? block.timestamp;
+  const mood = sceneDetails?.mood ?? block.mood;
+
   return (
     <Stack spacing={1} alignItems="center" sx={{ textAlign: "center" }}>
       <Divider flexItem sx={(theme: Theme) => theme.editor.blocks.divider} />
@@ -48,6 +53,25 @@ function SceneBoundaryReadView({ block }: SceneBoundaryViewProps) {
         >
           {block.label ?? block.summary}
         </Typography>
+      )}
+      {(location || timestamp || mood) && (
+        <Stack spacing={0.5} sx={{ color: "text.secondary" }}>
+          {location && (
+            <Typography variant="caption" sx={{ display: "block" }}>
+              Ubicación: {location}
+            </Typography>
+          )}
+          {timestamp && (
+            <Typography variant="caption" sx={{ display: "block" }}>
+              Momento: {timestamp}
+            </Typography>
+          )}
+          {mood && (
+            <Typography variant="caption" sx={{ display: "block" }}>
+              Atmósfera: {mood}
+            </Typography>
+          )}
+        </Stack>
       )}
     </Stack>
   );
@@ -90,6 +114,46 @@ function SceneBoundaryEditView({ editingState }: SceneBoundaryEditViewProps) {
           ...theme.editor.blocks.interactiveField,
           color: theme.palette.editor.blockMuted,
           textAlign: "left",
+        })}
+        onKeyDown={handleShortcuts}
+      />
+      <EditableContentField
+        value={draft.locationName}
+        onChange={(value) => onChangeField("locationName", value)}
+        ariaLabel="Ubicación de la escena"
+        placeholder="Ubicación (opcional)"
+        disabled={disabled}
+        sx={(theme: Theme) => ({
+          ...theme.typography.editorBody,
+          ...theme.editor.blocks.interactiveField,
+          color: theme.palette.editor.blockMuted,
+        })}
+        onKeyDown={handleShortcuts}
+      />
+      <EditableContentField
+        value={draft.timestamp}
+        onChange={(value) => onChangeField("timestamp", value)}
+        ariaLabel="Momento de la escena"
+        placeholder="Marca temporal (opcional)"
+        disabled={disabled}
+        sx={(theme: Theme) => ({
+          ...theme.typography.editorBody,
+          ...theme.editor.blocks.interactiveField,
+          color: theme.palette.editor.blockMuted,
+        })}
+        onKeyDown={handleShortcuts}
+      />
+      <EditableContentField
+        value={draft.mood}
+        onChange={(value) => onChangeField("mood", value)}
+        ariaLabel="Atmósfera de la escena"
+        placeholder="Atmósfera o tono (opcional)"
+        disabled={disabled}
+        sx={(theme: Theme) => ({
+          ...theme.typography.editorBody,
+          fontStyle: "italic",
+          ...theme.editor.blocks.interactiveField,
+          color: theme.palette.editor.blockMuted,
         })}
         onKeyDown={handleShortcuts}
       />

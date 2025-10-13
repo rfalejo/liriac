@@ -17,6 +17,29 @@ type MetadataBlockProps = {
   block: ChapterBlock;
 };
 
+type DetailLineProps = {
+  term: string;
+  value: string;
+};
+
+function DetailLine({ term, value }: DetailLineProps) {
+  return (
+    <Stack spacing={0.25} alignItems="flex-start">
+      <Typography variant="caption" sx={{ fontWeight: 600 }}>
+        {term}
+      </Typography>
+      <Typography
+        variant="caption"
+        sx={{
+          color: "text.secondary",
+        }}
+      >
+        {value}
+      </Typography>
+    </Stack>
+  );
+}
+
 export function MetadataBlock({ block }: MetadataBlockProps) {
   if ((block.kind ?? "metadata") === "editorial") {
     return null;
@@ -120,20 +143,53 @@ function MetadataReadView({ block }: MetadataViewProps) {
 
   if (kind === "context") {
     const contextText = block.context?.trim() ?? block.text?.trim();
+    const narrative = block.narrativeContext;
+    const pov = narrative?.povCharacterName ?? block.povCharacterName;
+    const timeline = narrative?.timelineMarker ?? block.timelineMarker;
+    const location =
+      narrative?.locationName ??
+      block.locationName ??
+      narrative?.locationId ??
+      block.locationId;
+    const themeTags = narrative?.themeTags ?? block.themeTags ?? [];
+
+    const hasDetails = Boolean(pov || timeline || location || themeTags.length > 0);
 
     return (
-      <Typography
-        variant="body2"
-        sx={(theme: Theme) => ({
-          ...theme.typography.editorBody,
-          fontStyle: "italic",
-          color: theme.palette.editor.blockMuted,
-        })}
-      >
-        {contextText && contextText.length > 0
-          ? contextText
-          : "(Sin contexto disponible)"}
-      </Typography>
+      <Stack spacing={1} alignItems="flex-start">
+        <Typography
+          variant="body2"
+          sx={(theme: Theme) => ({
+            ...theme.typography.editorBody,
+            fontStyle: "italic",
+            color: theme.palette.editor.blockMuted,
+          })}
+        >
+          {contextText && contextText.length > 0
+            ? contextText
+            : "(Sin contexto disponible)"}
+        </Typography>
+
+        {hasDetails && (
+          <Stack spacing={0.75} alignItems="flex-start">
+            {pov && (
+              <DetailLine term="Punto de vista" value={pov} />
+            )}
+            {location && (
+              <DetailLine term="Ubicación" value={location} />
+            )}
+            {timeline && (
+              <DetailLine term="Momento" value={timeline} />
+            )}
+            {themeTags.length > 0 && (
+              <DetailLine
+                term="Temas"
+                value={themeTags.filter(Boolean).join(", ")}
+              />
+            )}
+          </Stack>
+        )}
+      </Stack>
     );
   }
 
@@ -260,23 +316,81 @@ function MetadataEditView({ block, editingState }: MetadataEditViewProps) {
     </Stack>
   );
 
-  const renderContextField = () => (
-    <EditableContentField
-      value={draft.context}
-      onChange={(value) => onChangeField("context", value)}
-      ariaLabel="Contexto"
-      placeholder="Añade notas de contexto"
-      disabled={isSaving}
-      multiline
-      autoFocus
-      sx={(theme: Theme) => ({
-        ...theme.typography.editorBody,
-        fontStyle: "italic",
-        color: theme.palette.editor.blockMuted,
-        ...theme.editor.blocks.interactiveField,
-      })}
-      onKeyDown={handleShortcuts}
-    />
+  const renderContextFields = () => (
+    <Stack spacing={1.25} alignItems="stretch">
+      <EditableContentField
+        value={draft.context}
+        onChange={(value) => onChangeField("context", value)}
+        ariaLabel="Contexto narrativo"
+        placeholder="Notas generales del contexto"
+        disabled={isSaving}
+        multiline
+        autoFocus
+        sx={(theme: Theme) => ({
+          ...theme.typography.editorBody,
+          fontStyle: "italic",
+          color: theme.palette.editor.blockMuted,
+          ...theme.editor.blocks.interactiveField,
+        })}
+        onKeyDown={handleShortcuts}
+      />
+
+      <EditableContentField
+        value={draft.povCharacterName}
+        onChange={(value) => onChangeField("povCharacterName", value)}
+        ariaLabel="Personaje en punto de vista"
+        placeholder="Punto de vista"
+        disabled={isSaving}
+        sx={(theme: Theme) => ({
+          ...theme.typography.editorBody,
+          ...theme.editor.blocks.interactiveField,
+          color: theme.palette.editor.blockMuted,
+        })}
+        onKeyDown={handleShortcuts}
+      />
+
+      <EditableContentField
+        value={draft.timelineMarker}
+        onChange={(value) => onChangeField("timelineMarker", value)}
+        ariaLabel="Marca temporal"
+        placeholder="Momento o marco temporal"
+        disabled={isSaving}
+        sx={(theme: Theme) => ({
+          ...theme.typography.editorBody,
+          ...theme.editor.blocks.interactiveField,
+          color: theme.palette.editor.blockMuted,
+        })}
+        onKeyDown={handleShortcuts}
+      />
+
+      <EditableContentField
+        value={draft.locationName}
+        onChange={(value) => onChangeField("locationName", value)}
+        ariaLabel="Ubicación"
+        placeholder="Escenario actual"
+        disabled={isSaving}
+        sx={(theme: Theme) => ({
+          ...theme.typography.editorBody,
+          ...theme.editor.blocks.interactiveField,
+          color: theme.palette.editor.blockMuted,
+        })}
+        onKeyDown={handleShortcuts}
+      />
+
+      <EditableContentField
+        value={draft.themeTags}
+        onChange={(value) => onChangeField("themeTags", value)}
+        ariaLabel="Etiquetas temáticas"
+        placeholder="Temas (separa con comas)"
+        disabled={isSaving}
+        sx={(theme: Theme) => ({
+          ...theme.typography.editorBody,
+          ...theme.editor.blocks.interactiveField,
+          color: theme.palette.editor.blockMuted,
+        })}
+        onKeyDown={handleShortcuts}
+      />
+    </Stack>
   );
 
   const renderMetadataField = () => (
@@ -303,7 +417,7 @@ function MetadataEditView({ block, editingState }: MetadataEditViewProps) {
     }
 
     if (kind === "context") {
-      return renderContextField();
+      return renderContextFields();
     }
 
     return renderMetadataField();

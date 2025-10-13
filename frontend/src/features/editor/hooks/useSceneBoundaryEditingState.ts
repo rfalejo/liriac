@@ -36,13 +36,27 @@ const useSceneBoundaryBlockEditingState = createBlockEditingState<
   deriveDraft: (block) => ({
     label: block?.label ?? "",
     summary: block?.summary ?? "",
+    locationName:
+      block?.sceneDetails?.locationName ?? block?.locationName ?? "",
+    timestamp: block?.sceneDetails?.timestamp ?? block?.timestamp ?? "",
+    mood: block?.sceneDetails?.mood ?? block?.mood ?? "",
   }),
   hasChanges: ({ block, draft }) =>
     (draft.label ?? "") !== (block.label ?? "") ||
-    (draft.summary ?? "") !== (block.summary ?? ""),
+    (draft.summary ?? "") !== (block.summary ?? "") ||
+    (draft.locationName ?? "") !==
+      (block.sceneDetails?.locationName ?? block.locationName ?? "") ||
+    (draft.timestamp ?? "") !==
+      (block.sceneDetails?.timestamp ?? block.timestamp ?? "") ||
+    (draft.mood ?? "") !== (block.sceneDetails?.mood ?? block.mood ?? ""),
   buildPayload: (draft) => ({
     label: toNullable(draft.label),
     summary: toNullable(draft.summary),
+    sceneDetails: {
+      locationName: toNullable(draft.locationName),
+      timestamp: toNullable(draft.timestamp),
+      mood: toNullable(draft.mood),
+    },
   }),
 });
 

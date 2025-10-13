@@ -41,6 +41,10 @@ const EMPTY_DRAFT: MetadataDraft = {
   epigraphAttribution: "",
   context: "",
   text: "",
+  povCharacterName: "",
+  timelineMarker: "",
+  locationName: "",
+  themeTags: "",
 };
 
 const SUPPORTED_KINDS: MetadataKindOption[] = [
@@ -71,6 +75,16 @@ function toDraft(block: MetadataBlock | null): MetadataDraft {
     epigraphAttribution: block.epigraphAttribution ?? "",
     context: block.context ?? "",
     text: block.text ?? "",
+    povCharacterName:
+      block.narrativeContext?.povCharacterName ?? block.povCharacterName ?? "",
+    timelineMarker:
+      block.narrativeContext?.timelineMarker ?? block.timelineMarker ?? "",
+    locationName:
+      block.narrativeContext?.locationName ?? block.locationName ?? "",
+    themeTags:
+      (block.narrativeContext?.themeTags ?? block.themeTags ?? [])
+        .filter((tag): tag is string => Boolean(tag && tag.trim().length > 0))
+        .join(", "),
   };
 }
 
@@ -79,7 +93,7 @@ function relevantFields(kind: MetadataBlock["kind"]): MetadataEditableField[] {
     return ["title", "subtitle", "epigraph", "epigraphAttribution"];
   }
   if (kind === "context") {
-    return ["context"];
+    return ["context", "povCharacterName", "timelineMarker", "locationName", "themeTags"];
   }
   return ["text"];
 }
@@ -102,6 +116,32 @@ function readBlockField(
       return block.epigraphAttribution ?? "";
     case "context":
       return block.context ?? "";
+    case "povCharacterName":
+      return (
+        block.narrativeContext?.povCharacterName ??
+        block.povCharacterName ??
+        ""
+      );
+    case "timelineMarker":
+      return (
+        block.narrativeContext?.timelineMarker ??
+        block.timelineMarker ??
+        ""
+      );
+    case "locationName":
+      return (
+        block.narrativeContext?.locationName ??
+        block.locationName ??
+        block.narrativeContext?.locationId ??
+        block.locationId ??
+        ""
+      );
+    case "themeTags":
+      return (
+        block.narrativeContext?.themeTags ?? block.themeTags ?? []
+      )
+        .filter((tag): tag is string => Boolean(tag && tag.trim().length > 0))
+        .join(", ");
     case "text":
     default:
       return block.text ?? "";
@@ -219,6 +259,11 @@ export function useMetadataEditingState({
       );
       payload.context = null;
       payload.text = "";
+      payload.narrativeContext = null;
+      payload.povCharacterName = null;
+      payload.timelineMarker = null;
+      payload.locationName = null;
+      payload.themeTags = [];
     } else if (targetKind === "context") {
       payload.context = toNullable(effectiveDraft.context);
       payload.title = null;
@@ -226,6 +271,21 @@ export function useMetadataEditingState({
       payload.epigraph = null;
       payload.epigraphAttribution = null;
       payload.text = "";
+      const normalizedTags = effectiveDraft.themeTags
+        .split(",")
+        .map((entry) => entry.trim())
+        .filter((entry) => entry.length > 0);
+
+      payload.narrativeContext = {
+        povCharacterName: toNullable(effectiveDraft.povCharacterName),
+        timelineMarker: toNullable(effectiveDraft.timelineMarker),
+        locationName: toNullable(effectiveDraft.locationName),
+        themeTags: normalizedTags,
+      };
+      payload.povCharacterName = null;
+      payload.timelineMarker = null;
+      payload.locationName = null;
+      payload.themeTags = normalizedTags;
     } else {
       payload.text = effectiveDraft.text;
       payload.title = null;
@@ -233,6 +293,11 @@ export function useMetadataEditingState({
       payload.epigraph = null;
       payload.epigraphAttribution = null;
       payload.context = null;
+      payload.narrativeContext = null;
+      payload.povCharacterName = null;
+      payload.timelineMarker = null;
+      payload.locationName = null;
+      payload.themeTags = [];
     }
 
     try {

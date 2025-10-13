@@ -30,11 +30,19 @@ export type DialogueEditingState = BaseEditingState<"dialogue"> & {
   };
 };
 
-export type SceneBoundaryEditableField = "label" | "summary";
+export type SceneBoundaryEditableField =
+  | "label"
+  | "summary"
+  | "locationName"
+  | "timestamp"
+  | "mood";
 
 export type SceneBoundaryDraft = {
   label: string;
   summary: string;
+  locationName: string;
+  timestamp: string;
+  mood: string;
 };
 
 export type SceneBoundaryEditingState = BaseEditingState<"scene_boundary"> & {
@@ -50,7 +58,11 @@ export type MetadataEditableField =
   | "epigraph"
   | "epigraphAttribution"
   | "context"
-  | "text";
+  | "text"
+  | "povCharacterName"
+  | "timelineMarker"
+  | "locationName"
+  | "themeTags";
 
 export type MetadataDraft = {
   title: string;
@@ -59,6 +71,10 @@ export type MetadataDraft = {
   epigraphAttribution: string;
   context: string;
   text: string;
+  povCharacterName: string;
+  timelineMarker: string;
+  locationName: string;
+  themeTags: string;
 };
 
 export type MetadataKindOption = "metadata" | "context" | "chapter_header";
