@@ -23,9 +23,16 @@ import {
 type BookEditorPanelProps = {
   book: LibraryBook;
   onClose: () => void;
+  focusTab?: BookEditorTabValue;
+  focusRequest?: number;
 };
 
-export function BookEditorPanel({ book, onClose }: BookEditorPanelProps) {
+export function BookEditorPanel({
+  book,
+  onClose,
+  focusTab = "metadata",
+  focusRequest = 0,
+}: BookEditorPanelProps) {
   const {
     formState,
     activeTab,
@@ -36,8 +43,8 @@ export function BookEditorPanel({ book, onClose }: BookEditorPanelProps) {
     contextError,
     errorMessage,
     disableActions,
-  metadataHasChanges,
-  contextHasChanges,
+    metadataHasChanges,
+    contextHasChanges,
     deleteDialogOpen,
     deleteConfirmation,
     deleteErrorMessage,
@@ -50,7 +57,12 @@ export function BookEditorPanel({ book, onClose }: BookEditorPanelProps) {
     closeDeleteDialog,
     handleDeleteConfirmationChange,
     handleConfirmDelete,
-  } = useBookEditorPanel({ book, onClose });
+  } = useBookEditorPanel({
+    book,
+    onClose,
+    focusTab,
+    focusRequest,
+  });
 
   return (
     <>

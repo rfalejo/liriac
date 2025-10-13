@@ -11,13 +11,18 @@ import type { LibraryBook, LibraryResponse } from "../../api/library";
 import { useLibraryBooks } from "./hooks/useLibraryBooks";
 import { useLibrarySections } from "./hooks/useLibrarySections";
 import { useLibraryEditor } from "./hooks/useLibraryEditor";
+import type { BookEditorTabValue } from "./hooks/useBookEditorPanel";
 
 type LibraryDialogState =
   | { type: "book"; mode: "create" }
   | { type: "chapter"; mode: "create"; bookId: string }
   | { type: "chapter"; mode: "edit"; bookId: string; chapterId: string };
 
-type BookEditorState = { bookId: string } | null;
+type BookEditorState = {
+  bookId: string;
+  focusTab: BookEditorTabValue;
+  requestId: number;
+} | null;
 
 type LibraryDataContextValue = {
   books: LibraryBook[];
@@ -36,7 +41,10 @@ type LibraryDataContextValue = {
   openEditor: (chapterId: string) => void;
   closeEditor: () => void;
   bookEditor: BookEditorState;
-  openBookEditor: (bookId: string) => void;
+  openBookEditor: (
+    bookId: string,
+    options?: { focusTab?: BookEditorTabValue },
+  ) => void;
   closeBookEditor: () => void;
   dialogState: LibraryDialogState | null;
   openCreateBookDialog: () => void;
@@ -112,10 +120,14 @@ export function LibraryDataContextProvider({
   }, []);
 
   const openBookEditor = useCallback(
-    (bookId: string) => {
+    (bookId: string, options?: { focusTab?: BookEditorTabValue }) => {
       setDialogState(null);
       setSelectedBookId(bookId);
-      setBookEditor({ bookId });
+      setBookEditor((current) => ({
+        bookId,
+        focusTab: options?.focusTab ?? "metadata",
+        requestId: (current?.requestId ?? 0) + 1,
+      }));
     },
     [setSelectedBookId],
   );

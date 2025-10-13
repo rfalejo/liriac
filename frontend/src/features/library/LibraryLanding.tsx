@@ -34,14 +34,6 @@ export function LibraryLanding() {
 
   const [chaptersDialogOpen, setChaptersDialogOpen] = useState(false);
 
-  const handleOpenBook = useCallback(
-    (bookId: string) => {
-      selectBook(bookId);
-      setChaptersDialogOpen(true);
-    },
-    [selectBook],
-  );
-
   const handleCloseChapters = useCallback(() => {
     setChaptersDialogOpen(false);
   }, []);
@@ -67,6 +59,27 @@ export function LibraryLanding() {
   );
 
   const editingActive = Boolean(editingBook);
+
+  useEffect(() => {
+    if (!editingActive) {
+      return;
+    }
+    setChaptersDialogOpen(false);
+  }, [editingActive, setChaptersDialogOpen]);
+
+  const handleOpenBook = useCallback(
+    (bookId: string) => {
+      if (editingActive) {
+        openBookEditor(bookId, { focusTab: "metadata" });
+        setChaptersDialogOpen(false);
+        return;
+      }
+
+      selectBook(bookId);
+      setChaptersDialogOpen(true);
+    },
+    [editingActive, openBookEditor, selectBook, setChaptersDialogOpen],
+  );
 
   const dialogBookForChapter =
     dialogState && dialogState.type === "chapter"
@@ -165,6 +178,8 @@ export function LibraryLanding() {
               >
                 <BookEditorPanel
                   book={editingBook}
+                  focusTab={bookEditor?.focusTab ?? "metadata"}
+                  focusRequest={bookEditor?.requestId ?? 0}
                   onClose={closeBookEditor}
                 />
               </Box>

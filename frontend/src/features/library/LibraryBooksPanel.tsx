@@ -126,7 +126,9 @@ export function LibraryBooksPanel({
                     disabled={loading}
                     condensed={condensed}
                     onSelect={() => onOpenBook(book.id)}
-                    onEdit={() => onEditBook(book.id)}
+                    onEdit={
+                      condensed ? undefined : () => onEditBook(book.id)
+                    }
                   />
                 </Box>
               ))

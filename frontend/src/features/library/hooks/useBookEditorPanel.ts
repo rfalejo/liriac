@@ -42,6 +42,8 @@ export type BookEditorTabValue = "metadata" | "context";
 type UseBookEditorPanelArgs = {
   book: LibraryBook;
   onClose: () => void;
+  focusTab?: BookEditorTabValue;
+  focusRequest?: number;
 };
 
 type UseBookEditorPanelResult = {
@@ -83,6 +85,8 @@ type UseBookEditorPanelResult = {
 export function useBookEditorPanel({
   book,
   onClose,
+  focusTab = "metadata",
+  focusRequest = 0,
 }: UseBookEditorPanelArgs): UseBookEditorPanelResult {
   const {
     mutateAsync: upsertBook,
@@ -125,8 +129,11 @@ export function useBookEditorPanel({
     };
     setFormState(nextFormState);
     metadataInitialRef.current = nextFormState;
-    setActiveTab("metadata");
   }, [book]);
+
+  useEffect(() => {
+    setActiveTab(focusTab);
+  }, [focusTab, focusRequest]);
 
   const contextSections = useMemo(() => {
     const sectionsById = new Map<string, ContextSection>();
