@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import CloseRoundedIcon from "@mui/icons-material/CloseRounded";
+import DeleteRoundedIcon from "@mui/icons-material/DeleteRounded";
 import {
   Alert,
   Button,
@@ -280,14 +281,35 @@ export function BookEditorPanel({ book, onClose }: BookEditorPanelProps) {
       <LibraryPanel
         title="Editar libro"
         actions={
-          <IconButton
-            aria-label="Cerrar editor de libro"
-            size="small"
-            onClick={onClose}
-            disabled={disableActions}
-          >
-            <CloseRoundedIcon fontSize="small" />
-          </IconButton>
+          <Stack direction="row" alignItems="center" spacing={1}>
+            <IconButton
+              aria-label="Eliminar libro"
+              size="small"
+              onClick={handleOpenDeleteDialog}
+              disabled={disableActions}
+              sx={(theme) => ({
+                color: disableActions
+                  ? theme.palette.error.light
+                  : theme.palette.error.main,
+                opacity: disableActions ? 0.5 : 0.7,
+                "&:hover": {
+                  opacity: 1,
+                  color: theme.palette.error.main,
+                  backgroundColor: theme.palette.error.main + "11",
+                },
+              })}
+            >
+              <DeleteRoundedIcon fontSize="small" />
+            </IconButton>
+            <IconButton
+              aria-label="Cerrar editor de libro"
+              size="small"
+              onClick={onClose}
+              disabled={disableActions}
+            >
+              <CloseRoundedIcon fontSize="small" />
+            </IconButton>
+          </Stack>
         }
         sx={{ minHeight: "100%" }}
       >
@@ -356,31 +378,14 @@ export function BookEditorPanel({ book, onClose }: BookEditorPanelProps) {
 
           <Divider />
 
-          <Stack
-            direction="row"
-            alignItems="center"
-            justifyContent="space-between"
-            spacing={1.5}
-          >
+          <Stack direction="row" justifyContent="flex-end">
             <Button
-              color="error"
-              onClick={handleOpenDeleteDialog}
+              type="submit"
+              variant="contained"
               disabled={disableActions}
             >
-              Eliminar libro
+              Guardar
             </Button>
-            <Stack direction="row" spacing={1.25} alignItems="center">
-              <Button onClick={onClose} disabled={disableActions}>
-                Cerrar
-              </Button>
-              <Button
-                type="submit"
-                variant="contained"
-                disabled={disableActions}
-              >
-                Guardar
-              </Button>
-            </Stack>
           </Stack>
         </Stack>
       </LibraryPanel>
