@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-import re
 from textwrap import dedent
 from typing import List, Optional
 
@@ -14,10 +13,27 @@ from ..payloads import (
 )
 
 
+def _first_sentence(text: str, *, max_length: int = 240) -> str:
+    """Return the first sentence-like chunk within the length budget."""
+
+    clean = text.replace("\n", " ").strip()
+    if not clean:
+        return ""
+
+    for delimiter in [". ", "? ", "! "]:
+        if delimiter in clean:
+            clean = clean.split(delimiter, 1)[0] + delimiter.strip()
+            break
+
+    if len(clean) > max_length:
+        clean = clean[: max_length - 3].rstrip() + "..."
+    return clean
+
+
 def _format_book_section(
     *, title: Optional[str], author: Optional[str], synopsis: Optional[str]
 ) -> str:
-    lines = ["Contexto del libro:"]
+    lines = ["### Contexto del libro"]
     if title:
         lines.append(f"- Título: {title}")
     if author:
@@ -28,7 +44,7 @@ def _format_book_section(
 
 
 def _format_chapter_section(chapter: ChapterDetailPayload) -> str:
-    lines = ["Contexto del capítulo:"]
+    lines = ["### Contexto del capítulo"]
     lines.append(f"- Título: {chapter.get('title', '')}")
     summary = chapter.get("summary")
     if summary:
@@ -36,14 +52,14 @@ def _format_chapter_section(chapter: ChapterDetailPayload) -> str:
     ordinal = chapter.get("ordinal")
     if ordinal is not None:
         lines.append(f"- Número de capítulo: {ordinal}")
-    lines.append("- Párrafos actuales:")
+    lines.append("- Párrafos actuales (extractos):")
     paragraphs = chapter.get("paragraphs", [])
     if not paragraphs:
         lines.append("  (sin contenido)")
     else:
         for index, paragraph in enumerate(paragraphs, start=1):
-            paragraph_text = paragraph.replace("\n", " ").strip()
-            lines.append(f"  {index}. {paragraph_text}")
+            excerpt = _first_sentence(paragraph)
+            lines.append(f"  {index}. {excerpt}")
     return "\n".join(lines)
 
 
@@ -59,7 +75,7 @@ def _format_context_items_section(context_items: List[ContextItemPayload]) -> st
 
     lines: List[str] = []
     total = len(context_items)
-    lines.append(f"Contexto seleccionado en la biblioteca ({total} elementos):")
+    lines.append(f"### Contexto seleccionado en la biblioteca ({total} elementos)")
 
     if characters:
         lines.append("- Personajes clave:")
@@ -113,7 +129,7 @@ def _format_scene_context_section(
         theme_tags = metadata_block.get("themeTags", [])
 
         if pov_name or location_name or timeline or theme_tags:
-            lines.append("Contexto narrativo:")
+            lines.append("### Contexto narrativo")
 
             if pov_name:
                 lines.append(f"- Punto de vista: {pov_name}")
@@ -135,7 +151,7 @@ def _format_scene_context_section(
         if label or summary or mood or location or timestamp:
             if lines:
                 lines.append("")  # Add spacing
-            lines.append("Escena actual:")
+            lines.append("### Escena actual")
 
             if label:
                 lines.append(f"- Etiqueta: {label}")
@@ -160,7 +176,7 @@ def _format_surrounding_blocks_section(
     lines = []
 
     if preceding_blocks:
-        lines.append("Bloques precedentes (para continuidad):")
+        lines.append("### Bloques precedentes (resumen)")
         for idx, block in enumerate(preceding_blocks, start=1):
             block_text = _extract_block_preview(block)
             if block_text:
@@ -169,7 +185,7 @@ def _format_surrounding_blocks_section(
     if following_blocks:
         if lines:
             lines.append("")
-        lines.append("Bloques siguientes (para transición):")
+        lines.append("### Bloques siguientes (resumen)")
         for idx, block in enumerate(following_blocks, start=1):
             block_text = _extract_block_preview(block)
             if block_text:
@@ -186,13 +202,10 @@ def _extract_block_preview(block: ChapterBlockPayload, max_length: int = 200) ->
         text = block.get("text", "")
         style = block.get("style")
         prefix = f"[{style}] " if style and style != "narration" else ""
-        preview = text.replace("\n", " ").strip()
+        preview = _first_sentence(text, max_length=max_length)
         if not preview:
             return ""
-        sentence = re.split(r"(?<=[.!?])\s+", preview, maxsplit=1)[0]
-        if len(sentence) > max_length:
-            sentence = sentence[: max_length - 3] + "..."
-        return prefix + sentence
+        return prefix + preview
 
     elif block_type == "dialogue":
         turns = block.get("turns", [])
@@ -225,32 +238,23 @@ def _extract_block_preview(block: ChapterBlockPayload, max_length: int = 200) ->
 def _format_block_section(block: Optional[ParagraphBlockPayload]) -> str:
     """Format the target paragraph block with its style information."""
     if block is None:
-        return "Bloque objetivo: (sin contenido)"
+        return "### Bloque objetivo\nBloque objetivo: (sin contenido)"
 
     text = block.get("text") if block else None
     style = block.get("style")
     tags = block.get("tags", [])
 
-    lines = []
+    lines = ["### Bloque objetivo"]
 
-    # Add style information if present
     if style and style != "narration":
-        lines.append(f"Estilo del párrafo: {style}")
+        lines.append(f"- Estilo: {style}")
 
     if tags:
-        lines.append(f"Etiquetas: {', '.join(tags)}")
+        lines.append(f"- Etiquetas: {', '.join(tags)}")
 
-    # Add the actual text
-    if text:
-        lines.append(f"Bloque objetivo: {text}")
-    else:
-        lines.append("Bloque objetivo: (sin contenido)")
+    lines.append(f"- Texto: {text}" if text else "- Texto: (sin contenido)")
 
-    return (
-        "\n".join(lines)
-        if len(lines) > 1
-        else lines[0] if lines else "Bloque objetivo: (sin contenido)"
-    )
+    return "\n".join(lines)
 
 
 def build_paragraph_suggestion_prompt(
@@ -304,9 +308,10 @@ def build_paragraph_suggestion_prompt(
     )
 
     sections = [
+        "### Rol y objetivo",
         base_instruction,
+        "### Directiva actual",
         guidance,
-        "Objetivo de edición:",
         _format_block_section(block),
         _format_book_section(title=book_title, author=book_author, synopsis=book_synopsis),
         _format_chapter_section(chapter),
@@ -334,7 +339,16 @@ def build_paragraph_suggestion_prompt(
         if surrounding:
             sections.append(surrounding)
 
-    # Add response format instruction
-    sections.append('Devuelve solo un objeto JSON con la forma {"paragraph_suggestion": "texto"}.')
+    # Add response format instruction (repeated task reminder for recency)
+    sections.append(
+        "### Formato de respuesta\n"
+        'Devuelve solo un objeto JSON con la forma {"paragraph_suggestion": "texto"}. '
+        "Confirma que el párrafo respeta el tono y el contexto proporcionado."
+    )
+
+    sections.append(
+        "### Recordatorio final\n"
+        "Mantente fiel al tono del libro, no inventes datos nuevos y responde únicamente en español neutro."
+    )
 
     return "\n\n".join(section for section in sections if section)
