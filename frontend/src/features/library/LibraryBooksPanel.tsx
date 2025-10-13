@@ -31,9 +31,10 @@ export function LibraryBooksPanel({
   refreshDisabled = false,
 }: LibraryBooksPanelProps) {
   const hasBooks = books.length > 0;
+  const loadingStatus = loading && !hasBooks;
 
   const status = resolveLibraryPanelStatus({
-    loading,
+    loading: loadingStatus,
     error,
     isEmpty: false,
     config: {
@@ -67,7 +68,20 @@ export function LibraryBooksPanel({
                 "&:hover": { color: theme.palette.primary.main },
               })}
             >
-              <RefreshRoundedIcon fontSize="small" />
+              <RefreshRoundedIcon
+                fontSize="small"
+                sx={{
+                  ...(refreshDisabled
+                    ? {
+                        animation: "spin 900ms linear infinite",
+                        "@keyframes spin": {
+                          from: { transform: "rotate(0deg)" },
+                          to: { transform: "rotate(360deg)" },
+                        },
+                      }
+                    : {}),
+                }}
+              />
             </IconButton>
           </span>
         </Tooltip>
