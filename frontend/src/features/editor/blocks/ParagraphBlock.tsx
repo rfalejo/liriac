@@ -46,9 +46,8 @@ type ParagraphEditViewProps = {
 function ParagraphEditView({ blockId, editingState }: ParagraphEditViewProps) {
   const draftText = editingState.paragraph.draftText;
 
-  const handleKeyDown = createEditingShortcutHandler<HTMLDivElement>(
-    editingState,
-  );
+  const handleKeyDown =
+    createEditingShortcutHandler<HTMLDivElement>(editingState);
 
   return (
     <EditableContentField
@@ -60,7 +59,7 @@ function ParagraphEditView({ blockId, editingState }: ParagraphEditViewProps) {
       autoFocus
       focusKey={blockId}
       selectionBehavior="caret-at-end"
-  onKeyDown={handleKeyDown}
+      onKeyDown={handleKeyDown}
       spellCheck
       sx={(theme: Theme) => theme.typography.editorParagraphEditable}
     />

@@ -123,14 +123,18 @@ export function BookDialog({
             <TextField
               label="Título"
               value={formState.title}
-              onChange={(event) => handleFieldChange("title", event.target.value)}
+              onChange={(event) =>
+                handleFieldChange("title", event.target.value)
+              }
               required
               autoFocus
             />
             <TextField
               label="Autor"
               value={formState.author}
-              onChange={(event) => handleFieldChange("author", event.target.value)}
+              onChange={(event) =>
+                handleFieldChange("author", event.target.value)
+              }
             />
             <TextField
               label="Sinopsis"

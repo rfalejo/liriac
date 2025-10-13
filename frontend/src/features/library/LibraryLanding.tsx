@@ -37,12 +37,12 @@ export function LibraryLanding() {
 
   const editingBook =
     dialogState && dialogState.type === "book" && dialogState.mode === "edit"
-      ? books.find((book) => book.id === dialogState.bookId) ?? null
+      ? (books.find((book) => book.id === dialogState.bookId) ?? null)
       : null;
 
   const dialogBookForChapter =
     dialogState && dialogState.type === "chapter"
-      ? books.find((book) => book.id === dialogState.bookId) ?? null
+      ? (books.find((book) => book.id === dialogState.bookId) ?? null)
       : null;
 
   const editingChapter =
@@ -50,9 +50,9 @@ export function LibraryLanding() {
     dialogState.type === "chapter" &&
     dialogState.mode === "edit" &&
     dialogBookForChapter
-      ? dialogBookForChapter.chapters.find(
+      ? (dialogBookForChapter.chapters.find(
           (chapter) => chapter.id === dialogState.chapterId,
-        ) ?? null
+        ) ?? null)
       : null;
 
   if (editorState.open && editorState.chapterId) {

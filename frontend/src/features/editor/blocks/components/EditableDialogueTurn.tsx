@@ -1,10 +1,6 @@
 import { Stack } from "@mui/material";
 import type { Theme } from "@mui/material/styles";
-import {
-  useCallback,
-  useMemo,
-  type KeyboardEventHandler,
-} from "react";
+import { useCallback, useMemo, type KeyboardEventHandler } from "react";
 import type { DialogueField, DialogueTurn } from "../../types";
 import { DialogueEditableField } from "./DialogueEditableField";
 

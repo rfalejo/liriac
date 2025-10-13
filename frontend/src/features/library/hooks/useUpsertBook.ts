@@ -33,9 +33,7 @@ export function useUpsertBook() {
           if (variables.mode === "create") {
             const exists = currentBooks.some((item) => item.id === book.id);
             const nextBooks = exists
-              ? currentBooks.map((item) =>
-                  item.id === book.id ? book : item,
-                )
+              ? currentBooks.map((item) => (item.id === book.id ? book : item))
               : [...currentBooks, book];
 
             return { books: nextBooks };

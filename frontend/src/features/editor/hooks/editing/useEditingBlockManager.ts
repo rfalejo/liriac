@@ -76,11 +76,7 @@ export function useEditingBlockManager({
       }
 
       const start = async () => {
-        if (
-          activeBlockId &&
-          activeBlockId !== blockId &&
-          hasPendingChanges
-        ) {
+        if (activeBlockId && activeBlockId !== blockId && hasPendingChanges) {
           const confirmed = await resolveDiscardDecision(
             confirmDiscardChanges,
             "switch",

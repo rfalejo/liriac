@@ -24,7 +24,7 @@ export const DialogueEditableField = forwardRef<
   DialogueEditableFieldProps
 >(
   (
-  { value, placeholder, disabled, sx, ariaLabel, onInput, onKeyDown },
+    { value, placeholder, disabled, sx, ariaLabel, onInput, onKeyDown },
     ref,
   ) => {
     const innerRef = useRef<HTMLDivElement | null>(null);

@@ -160,7 +160,9 @@ export function ChapterDialog({
             <TextField
               label="Título"
               value={formState.title}
-              onChange={(event) => handleFieldChange("title", event.target.value)}
+              onChange={(event) =>
+                handleFieldChange("title", event.target.value)
+              }
               required
               autoFocus
             />
@@ -177,7 +179,9 @@ export function ChapterDialog({
               label="Orden"
               type="number"
               value={formState.ordinal}
-              onChange={(event) => handleFieldChange("ordinal", event.target.value)}
+              onChange={(event) =>
+                handleFieldChange("ordinal", event.target.value)
+              }
               required
               slotProps={{ htmlInput: { min: 0 } }}
             />

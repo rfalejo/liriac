@@ -14,7 +14,8 @@ export type SceneBoundaryEditingSideEffects = BlockEditingSideEffects;
 
 type SceneBoundaryBlock = ChapterBlock & { type: "scene_boundary" };
 
-type UseSceneBoundaryEditingStateParams = BlockEditingParams<SceneBoundaryBlock>;
+type UseSceneBoundaryEditingStateParams =
+  BlockEditingParams<SceneBoundaryBlock>;
 
 type SceneBoundaryEditingHandlers = {
   draft: SceneBoundaryDraft;

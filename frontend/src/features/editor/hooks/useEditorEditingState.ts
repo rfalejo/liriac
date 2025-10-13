@@ -264,11 +264,7 @@ export function useEditorEditingState({
 
       attemptStartEditing(blockId, activeSession.hasPendingChanges);
     },
-    [
-      activeSession.hasPendingChanges,
-      attemptStartEditing,
-      blockUpdatePending,
-    ],
+    [activeSession.hasPendingChanges, attemptStartEditing, blockUpdatePending],
   );
 
   return {

@@ -9,8 +9,7 @@ export type LibraryBooksResponse =
 export type LibraryBook = components["schemas"]["LibraryBook"];
 export type ChapterSummary = components["schemas"]["ChapterSummary"];
 export type BookUpsert = components["schemas"]["BookUpsert"];
-export type PatchedBookUpsert =
-  components["schemas"]["PatchedBookUpsert"];
+export type PatchedBookUpsert = components["schemas"]["PatchedBookUpsert"];
 export type ChapterUpsert = components["schemas"]["ChapterUpsert"];
 export type PatchedChapterUpsert =
   components["schemas"]["PatchedChapterUpsert"];
@@ -56,11 +55,8 @@ export async function updateLibraryChapter(
   chapterId: string,
   payload: PatchedChapterUpsert,
 ): Promise<ChapterSummary> {
-  return request<ChapterSummary>(
-    `/api/library/chapters/${chapterId}/`,
-    {
-      method: "PATCH",
-      body: JSON.stringify(payload),
-    },
-  );
+  return request<ChapterSummary>(`/api/library/chapters/${chapterId}/`, {
+    method: "PATCH",
+    body: JSON.stringify(payload),
+  });
 }

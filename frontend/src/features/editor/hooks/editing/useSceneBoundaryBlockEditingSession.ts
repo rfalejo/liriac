@@ -1,4 +1,8 @@
-import type { ChapterBlock, SceneBoundaryDraft, SceneBoundaryEditableField } from "../../types";
+import type {
+  ChapterBlock,
+  SceneBoundaryDraft,
+  SceneBoundaryEditableField,
+} from "../../types";
 import type { EditorEditingSideEffects } from "./types";
 import { useSceneBoundaryEditingState } from "../useSceneBoundaryEditingState";
 
@@ -8,7 +12,9 @@ type SceneBoundaryBlockEditingSessionParams = {
   block: SceneBoundaryBlock | null;
   isActive: boolean;
   isSaving: boolean;
-  updateBlock: Parameters<typeof useSceneBoundaryEditingState>[0]["updateBlock"];
+  updateBlock: Parameters<
+    typeof useSceneBoundaryEditingState
+  >[0]["updateBlock"];
   onComplete: Parameters<typeof useSceneBoundaryEditingState>[0]["onComplete"];
   sideEffects: Pick<EditorEditingSideEffects, "notifyUpdateFailure">;
 };

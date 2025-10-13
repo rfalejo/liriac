@@ -17,7 +17,9 @@ export function createBlockEditingSelector<TEditingState extends EditingState>(
   };
 }
 
-export function createEditingShortcutHandler<TElement extends Element = Element>(
+export function createEditingShortcutHandler<
+  TElement extends Element = Element,
+>(
   editingState: Pick<EditingState, "onSave" | "onCancel">,
 ): KeyboardEventHandler<TElement> {
   return (event) => {

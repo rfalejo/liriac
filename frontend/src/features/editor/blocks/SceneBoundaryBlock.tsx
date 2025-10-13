@@ -37,10 +37,7 @@ type SceneBoundaryViewProps = {
 function SceneBoundaryReadView({ block }: SceneBoundaryViewProps) {
   return (
     <Stack spacing={1} alignItems="center" sx={{ textAlign: "center" }}>
-      <Divider
-        flexItem
-        sx={(theme: Theme) => theme.editor.blocks.divider}
-      />
+      <Divider flexItem sx={(theme: Theme) => theme.editor.blocks.divider} />
       {(block.label || block.summary) && (
         <Typography
           variant="body2"
@@ -67,10 +64,7 @@ function SceneBoundaryEditView({ editingState }: SceneBoundaryEditViewProps) {
 
   return (
     <Stack spacing={1.25} sx={{ textAlign: "center" }}>
-      <Divider
-        flexItem
-        sx={(theme: Theme) => theme.editor.blocks.divider}
-      />
+      <Divider flexItem sx={(theme: Theme) => theme.editor.blocks.divider} />
       <EditableContentField
         value={draft.label}
         onChange={(value) => onChangeField("label", value)}

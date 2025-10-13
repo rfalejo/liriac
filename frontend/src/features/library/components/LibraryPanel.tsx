@@ -28,8 +28,8 @@ export function LibraryPanel({
   const extraSx = Array.isArray(sx)
     ? (sx as SxProps<Theme>[])
     : sx
-    ? ([sx] as SxProps<Theme>[])
-    : [];
+      ? ([sx] as SxProps<Theme>[])
+      : [];
 
   const resolvedSx: SxProps<Theme> = extraSx.length
     ? ([{ p: 3 }, ...extraSx] as SxProps<Theme>)

@@ -50,19 +50,20 @@ type SxArray = Extract<SxProps<Theme>, readonly unknown[]>;
 const isSxArray = (value: SxProps<Theme>): value is SxArray =>
   Array.isArray(value);
 
-export const LibraryListItemButton = forwardRef<HTMLDivElement, LibraryListItemButtonProps>(
-  ({ variant = "default", sx, ...props }, ref) => {
-    const baseSx = variantStyles[variant];
+export const LibraryListItemButton = forwardRef<
+  HTMLDivElement,
+  LibraryListItemButtonProps
+>(({ variant = "default", sx, ...props }, ref) => {
+  const baseSx = variantStyles[variant];
 
-    let combinedSx: SxProps<Theme> = baseSx;
-    if (sx) {
-      combinedSx = isSxArray(sx)
-        ? ([baseSx, ...sx] as SxProps<Theme>)
-        : ([baseSx, sx] as SxProps<Theme>);
-    }
+  let combinedSx: SxProps<Theme> = baseSx;
+  if (sx) {
+    combinedSx = isSxArray(sx)
+      ? ([baseSx, ...sx] as SxProps<Theme>)
+      : ([baseSx, sx] as SxProps<Theme>);
+  }
 
-    return <ListItemButton ref={ref} {...props} sx={combinedSx} />;
-  },
-);
+  return <ListItemButton ref={ref} {...props} sx={combinedSx} />;
+});
 
 LibraryListItemButton.displayName = "LibraryListItemButton";

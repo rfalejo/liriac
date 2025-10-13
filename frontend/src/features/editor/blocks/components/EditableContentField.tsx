@@ -164,7 +164,7 @@ export function EditableContentField({
 
       if (placeholder) {
         styles["&:empty:before"] = {
-          content: 'attr(data-placeholder)',
+          content: "attr(data-placeholder)",
           color: theme.palette.editor.blockMuted,
           opacity: 0.75,
         };
