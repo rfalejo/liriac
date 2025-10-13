@@ -10,13 +10,14 @@ from rest_framework.views import APIView
 from .data import (
     create_book,
     create_chapter,
+    delete_book,
     get_chapter_detail,
     get_editor_state,
     get_library_books,
     get_library_sections,
     update_book,
-    update_chapter_block,
     update_chapter,
+    update_chapter_block,
 )
 from .serializers import (
     BookUpsertSerializer,
@@ -107,6 +108,15 @@ class LibraryBookDetailView(APIView):
 
         response_serializer = LibraryBookSerializer(book)
         return Response(response_serializer.data)
+
+    @extend_schema(responses={204: None})
+    def delete(self, _request, book_id: str):
+        try:
+            delete_book(book_id)
+        except KeyError as exc:
+            raise Http404(str(exc)) from exc
+
+        return Response(status=status.HTTP_204_NO_CONTENT)
 
 
 class LibraryBookChaptersView(APIView):

@@ -58,6 +58,32 @@ class LibraryEndpointTests(TestCase):
         self.assertEqual(book.synopsis, "Nueva sinopsis")
         self.assertEqual(response["Access-Control-Allow-Origin"], ORIGIN)
 
+    def test_delete_library_book(self) -> None:
+        book = Book.objects.create(id="delete-me", title="Libro efímero", order=2)
+        Chapter.objects.create(
+            id="delete-me-chapter",
+            book=book,
+            title="Capítulo efímero",
+            ordinal=0,
+        )
+
+        response = self.client.delete(
+            reverse("library-book-detail", kwargs={"book_id": book.id}),
+            HTTP_ORIGIN=ORIGIN,
+        )
+        self.assertEqual(response.status_code, 204)
+        self.assertEqual(response["Access-Control-Allow-Origin"], ORIGIN)
+        self.assertFalse(Book.objects.filter(id=book.id).exists())
+        self.assertFalse(Chapter.objects.filter(book_id=book.id).exists())
+
+    def test_delete_library_book_not_found(self) -> None:
+        response = self.client.delete(
+            reverse("library-book-detail", kwargs={"book_id": "missing"}),
+            HTTP_ORIGIN=ORIGIN,
+        )
+        self.assertEqual(response.status_code, 404)
+        self.assertEqual(response["Access-Control-Allow-Origin"], ORIGIN)
+
 
 class ChapterEndpointTests(TestCase):
     def test_chapter_detail_endpoint(self) -> None:

@@ -157,6 +157,13 @@ def update_book(book_id: str, changes: Dict[str, Any]) -> LibraryBookPayload:
     return book.to_payload()
 
 
+def delete_book(book_id: str) -> None:
+    with transaction.atomic():
+        deleted_count, _ = Book.objects.filter(pk=book_id).delete()
+        if deleted_count == 0:
+            raise KeyError(f"Unknown book: {book_id}")
+
+
 def create_chapter(
     *,
     book_id: str,

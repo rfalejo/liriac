@@ -191,6 +191,7 @@ frontend/
 |   |   |   \-- types.ts
 |   |   \-- library/
 |   |       |-- components/
+|   |       |   |-- BookCoverCard.tsx
 |   |       |   |-- BookDialog.tsx
 |   |       |   |-- ChapterDialog.tsx
 |   |       |   |-- LibraryListItemButton.tsx
@@ -200,6 +201,7 @@ frontend/
 |   |       |-- hooks/
 |   |       |   |-- useBookLookup.ts
 |   |       |   |-- useChapterDetail.ts
+|   |       |   |-- useDeleteBook.ts
 |   |       |   |-- useLibraryBooks.ts
 |   |       |   |-- useLibraryEditor.ts
 |   |       |   |-- useLibraryResource.ts
@@ -208,8 +210,8 @@ frontend/
 |   |       |   |-- useUpsertBook.ts
 |   |       |   \-- useUpsertChapter.ts
 |   |       |-- LibraryBooksPanel.tsx
-|   |       |-- LibraryChaptersPanel.tsx
-|   |       |-- LibraryContextPanel.tsx
+|   |       |-- LibraryChaptersDialog.tsx
+|   |       |-- LibraryContextDialog.tsx
 |   |       |-- LibraryDataContext.tsx
 |   |       |-- LibraryDataProvider.tsx
 |   |       |-- LibraryLanding.tsx

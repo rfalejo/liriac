@@ -41,6 +41,13 @@ export async function updateLibraryBook(
   });
 }
 
+export async function deleteLibraryBook(bookId: string): Promise<void> {
+  await request(`/api/library/books/${bookId}/`, {
+    method: "DELETE",
+    parseJson: false,
+  });
+}
+
 export async function createLibraryChapter(
   bookId: string,
   payload: ChapterUpsert,
