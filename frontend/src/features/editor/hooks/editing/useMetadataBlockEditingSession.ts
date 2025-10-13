@@ -2,6 +2,7 @@ import type {
   ChapterBlock,
   MetadataDraft,
   MetadataEditableField,
+  MetadataKindOption,
 } from "../../types";
 import type { EditorEditingSideEffects } from "./types";
 import { useMetadataEditingState } from "../useMetadataEditingState";
@@ -20,8 +21,10 @@ type MetadataBlockEditingSessionParams = {
 export type MetadataBlockEditingSession = {
   blockId: string | null;
   isEditing: boolean;
+  kind: MetadataKindOption;
   draft: MetadataDraft;
   onChangeField: (field: MetadataEditableField, value: string) => void;
+  onChangeKind: (nextKind: MetadataKindOption) => void;
   hasPendingChanges: boolean;
   save: () => Promise<boolean>;
 };
@@ -46,8 +49,10 @@ export function useMetadataBlockEditingSession({
   return {
     blockId: block?.id ?? null,
     isEditing: Boolean(block && isActive),
+    kind: editing.kind,
     draft: editing.draft,
     onChangeField: editing.onChangeField,
+    onChangeKind: editing.onChangeKind,
     hasPendingChanges: editing.hasPendingChanges,
     save: editing.save,
   };

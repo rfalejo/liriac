@@ -1,7 +1,9 @@
-import { Stack, Typography } from "@mui/material";
+import { FormControl, InputLabel, MenuItem, Stack, Typography } from "@mui/material";
 import type { Theme } from "@mui/material/styles";
+import Select, { type SelectChangeEvent } from "@mui/material/Select";
+import { useCallback } from "react";
 import type { components } from "../../../api/schema";
-import type { MetadataEditingState } from "../types";
+import type { MetadataEditingState, MetadataKindOption } from "../types";
 import { EditableBlock } from "./components/EditableBlock";
 import { EditableContentField } from "./components/EditableContentField";
 import {
@@ -157,114 +159,127 @@ type MetadataEditViewProps = {
 
 function MetadataEditView({ block, editingState }: MetadataEditViewProps) {
   const { metadata, isSaving } = editingState;
-  const kind = metadata.kind ?? block.kind ?? "metadata";
-  const { draft, onChangeField } = metadata;
+  const kind = metadata.kind;
+  const { draft, onChangeField, onChangeKind } = metadata;
   const handleShortcuts = createEditingShortcutHandler(editingState);
+  const selectLabelId = `metadata-kind-label-${block.id}`;
+  const selectId = `metadata-kind-${block.id}`;
 
-  if (kind === "chapter_header") {
-    return (
-      <Stack spacing={1.25} textAlign="center">
-        {typeof block.ordinal === "number" && (
-          <Typography
-            variant="caption"
-            sx={(theme: Theme) => ({
-              fontFamily: theme.typography.editorBody.fontFamily,
-              letterSpacing: "0.14em",
-              textTransform: "uppercase",
-              color: theme.palette.editor.blockMuted,
-              opacity: 0.75,
-            })}
-          >
-            Capítulo {block.ordinal + 1}
-          </Typography>
-        )}
-        <EditableContentField
-          value={draft.title}
-          onChange={(value) => onChangeField("title", value)}
-          ariaLabel="Título del capítulo"
-          placeholder="Escribe el título"
-          disabled={isSaving}
-          sx={(theme: Theme) => ({
-            ...theme.typography.editorBody,
-            fontSize: theme.typography.h4.fontSize,
-            fontWeight: theme.typography.h4.fontWeight,
-            color: theme.palette.editor.blockHeading,
-            textAlign: "center",
-            ...theme.editor.blocks.interactiveField,
-          })}
-          onKeyDown={handleShortcuts}
-        />
-        <EditableContentField
-          value={draft.subtitle}
-          onChange={(value) => onChangeField("subtitle", value)}
-          ariaLabel="Subtítulo del capítulo"
-          placeholder="Agrega un subtítulo"
-          disabled={isSaving}
-          sx={(theme: Theme) => ({
-            ...theme.typography.editorBody,
-            color: theme.palette.editor.blockMuted,
-            fontWeight: 500,
-            letterSpacing: "0.04em",
-            textAlign: "center",
-            ...theme.editor.blocks.interactiveFieldDense,
-          })}
-          onKeyDown={handleShortcuts}
-        />
-        <EditableContentField
-          value={draft.epigraph}
-          onChange={(value) => onChangeField("epigraph", value)}
-          ariaLabel="Epígrafe"
-          placeholder="Añade un epígrafe"
-          disabled={isSaving}
-          multiline
-          sx={(theme: Theme) => ({
-            ...theme.typography.editorBody,
-            fontStyle: "italic",
-            marginTop: theme.spacing(1.25),
-            ...theme.editor.blocks.interactiveField,
-          })}
-          onKeyDown={handleShortcuts}
-        />
-        <EditableContentField
-          value={draft.epigraphAttribution}
-          onChange={(value) => onChangeField("epigraphAttribution", value)}
-          ariaLabel="Atribución del epígrafe"
-          placeholder="Autor o fuente"
-          disabled={isSaving}
-          sx={(theme: Theme) => ({
-            ...theme.typography.editorBody,
-            fontSize: theme.typography.caption.fontSize,
-            color: theme.palette.editor.blockMuted,
-            textAlign: "center",
-            ...theme.editor.blocks.interactiveFieldTight,
-          })}
-          onKeyDown={handleShortcuts}
-        />
-      </Stack>
-    );
-  }
+  const handleKindChange = useCallback(
+    (event: SelectChangeEvent<MetadataKindOption>) => {
+      onChangeKind(event.target.value as MetadataKindOption);
+    },
+    [onChangeKind],
+  );
 
-  if (kind === "context") {
-    return (
+  const kindOptions: Array<{ value: MetadataKindOption; label: string }> = [
+    { value: "metadata", label: "Nota" },
+    { value: "context", label: "Contexto" },
+    { value: "chapter_header", label: "Encabezado de capítulo" },
+  ];
+
+  const renderChapterHeaderFields = () => (
+    <Stack spacing={1.25} textAlign="center">
+      {typeof block.ordinal === "number" && (
+        <Typography
+          variant="caption"
+          sx={(theme: Theme) => ({
+            fontFamily: theme.typography.editorBody.fontFamily,
+            letterSpacing: "0.14em",
+            textTransform: "uppercase",
+            color: theme.palette.editor.blockMuted,
+            opacity: 0.75,
+          })}
+        >
+          Capítulo {block.ordinal + 1}
+        </Typography>
+      )}
       <EditableContentField
-        value={draft.context}
-        onChange={(value) => onChangeField("context", value)}
-        ariaLabel="Contexto"
-        placeholder="Añade notas de contexto"
+        value={draft.title}
+        onChange={(value) => onChangeField("title", value)}
+        ariaLabel="Título del capítulo"
+        placeholder="Escribe el título"
+        disabled={isSaving}
+        autoFocus
+        sx={(theme: Theme) => ({
+          ...theme.typography.editorBody,
+          fontSize: theme.typography.h4.fontSize,
+          fontWeight: theme.typography.h4.fontWeight,
+          color: theme.palette.editor.blockHeading,
+          textAlign: "center",
+          ...theme.editor.blocks.interactiveField,
+        })}
+        onKeyDown={handleShortcuts}
+      />
+      <EditableContentField
+        value={draft.subtitle}
+        onChange={(value) => onChangeField("subtitle", value)}
+        ariaLabel="Subtítulo del capítulo"
+        placeholder="Agrega un subtítulo"
+        disabled={isSaving}
+        sx={(theme: Theme) => ({
+          ...theme.typography.editorBody,
+          color: theme.palette.editor.blockMuted,
+          fontWeight: 500,
+          letterSpacing: "0.04em",
+          textAlign: "center",
+          ...theme.editor.blocks.interactiveFieldDense,
+        })}
+        onKeyDown={handleShortcuts}
+      />
+      <EditableContentField
+        value={draft.epigraph}
+        onChange={(value) => onChangeField("epigraph", value)}
+        ariaLabel="Epígrafe"
+        placeholder="Añade un epígrafe"
         disabled={isSaving}
         multiline
         sx={(theme: Theme) => ({
           ...theme.typography.editorBody,
           fontStyle: "italic",
-          color: theme.palette.editor.blockMuted,
+          marginTop: theme.spacing(1.25),
           ...theme.editor.blocks.interactiveField,
         })}
         onKeyDown={handleShortcuts}
       />
-    );
-  }
+      <EditableContentField
+        value={draft.epigraphAttribution}
+        onChange={(value) => onChangeField("epigraphAttribution", value)}
+        ariaLabel="Atribución del epígrafe"
+        placeholder="Autor o fuente"
+        disabled={isSaving}
+        sx={(theme: Theme) => ({
+          ...theme.typography.editorBody,
+          fontSize: theme.typography.caption.fontSize,
+          color: theme.palette.editor.blockMuted,
+          textAlign: "center",
+          ...theme.editor.blocks.interactiveFieldTight,
+        })}
+        onKeyDown={handleShortcuts}
+      />
+    </Stack>
+  );
 
-  return (
+  const renderContextField = () => (
+    <EditableContentField
+      value={draft.context}
+      onChange={(value) => onChangeField("context", value)}
+      ariaLabel="Contexto"
+      placeholder="Añade notas de contexto"
+      disabled={isSaving}
+      multiline
+      autoFocus
+      sx={(theme: Theme) => ({
+        ...theme.typography.editorBody,
+        fontStyle: "italic",
+        color: theme.palette.editor.blockMuted,
+        ...theme.editor.blocks.interactiveField,
+      })}
+      onKeyDown={handleShortcuts}
+    />
+  );
+
+  const renderMetadataField = () => (
     <EditableContentField
       value={draft.text}
       onChange={(value) => onChangeField("text", value)}
@@ -272,6 +287,7 @@ function MetadataEditView({ block, editingState }: MetadataEditViewProps) {
       placeholder="Escribe el contenido"
       disabled={isSaving}
       multiline
+      autoFocus
       sx={(theme: Theme) => ({
         ...theme.typography.editorBody,
         color: theme.palette.editor.blockMuted,
@@ -279,5 +295,44 @@ function MetadataEditView({ block, editingState }: MetadataEditViewProps) {
       })}
       onKeyDown={handleShortcuts}
     />
+  );
+
+  const renderFields = () => {
+    if (kind === "chapter_header") {
+      return renderChapterHeaderFields();
+    }
+
+    if (kind === "context") {
+      return renderContextField();
+    }
+
+    return renderMetadataField();
+  };
+
+  return (
+    <Stack spacing={1.5} alignItems="stretch">
+      <FormControl
+        size="small"
+        disabled={isSaving}
+        sx={{ alignSelf: "flex-start", minWidth: 220 }}
+      >
+        <InputLabel id={selectLabelId}>Tipo de metadatos</InputLabel>
+        <Select<MetadataKindOption>
+          labelId={selectLabelId}
+          id={selectId}
+          value={kind}
+          label="Tipo de metadatos"
+          onChange={handleKindChange}
+        >
+          {kindOptions.map((option) => (
+            <MenuItem key={option.value} value={option.value}>
+              {option.label}
+            </MenuItem>
+          ))}
+        </Select>
+      </FormControl>
+
+      {renderFields()}
+    </Stack>
   );
 }

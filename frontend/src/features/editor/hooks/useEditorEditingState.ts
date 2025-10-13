@@ -206,9 +206,10 @@ export function useEditorEditingState({
           blockId: activeMetadataBlock.id,
           blockType: "metadata" as const,
           metadata: {
-            kind: activeMetadataBlock.kind,
+            kind: metadataSession.kind,
             draft: metadataSession.draft,
             onChangeField: metadataSession.onChangeField,
+            onChangeKind: metadataSession.onChangeKind,
           },
           onCancel: () => {
             attemptCancelEditing(metadataSession.hasPendingChanges);
@@ -244,7 +245,9 @@ export function useEditorEditingState({
     dialogueSession.turns,
     metadataSession.draft,
     metadataSession.hasPendingChanges,
+  metadataSession.kind,
     metadataSession.onChangeField,
+  metadataSession.onChangeKind,
     metadataSession.save,
     paragraphSession.draftText,
     paragraphSession.hasPendingChanges,

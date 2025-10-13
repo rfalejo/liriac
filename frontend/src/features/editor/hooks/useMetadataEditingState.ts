@@ -4,6 +4,7 @@ import type {
   ChapterBlock,
   MetadataDraft,
   MetadataEditableField,
+  MetadataKindOption,
 } from "../types";
 
 export type MetadataEditingSideEffects = {
@@ -27,7 +28,9 @@ type UseMetadataEditingStateParams = {
 type MetadataEditingHandlers = {
   draft: MetadataDraft;
   hasPendingChanges: boolean;
+  kind: MetadataKindOption;
   onChangeField: (field: MetadataEditableField, value: string) => void;
+  onChangeKind: (nextKind: MetadataKindOption) => void;
   save: () => Promise<boolean>;
 };
 
@@ -39,6 +42,22 @@ const EMPTY_DRAFT: MetadataDraft = {
   context: "",
   text: "",
 };
+
+const SUPPORTED_KINDS: MetadataKindOption[] = [
+  "metadata",
+  "context",
+  "chapter_header",
+];
+
+function normalizeKind(
+  kind: MetadataBlock["kind"],
+): MetadataKindOption {
+  if (!kind || !SUPPORTED_KINDS.includes(kind as MetadataKindOption)) {
+    return "metadata";
+  }
+
+  return kind as MetadataKindOption;
+}
 
 function toDraft(block: MetadataBlock | null): MetadataDraft {
   if (!block) {
@@ -104,18 +123,23 @@ export function useMetadataEditingState({
 }: UseMetadataEditingStateParams): MetadataEditingHandlers {
   const [draft, setDraft] = useState<MetadataDraft>(EMPTY_DRAFT);
   const [syncedBlockId, setSyncedBlockId] = useState<string | null>(null);
+  const [kind, setKind] = useState<MetadataKindOption>(
+    normalizeKind(block?.kind ?? null),
+  );
 
   useEffect(() => {
     if (isActive && block) {
       setDraft(toDraft(block));
       setSyncedBlockId(block.id);
+      setKind(normalizeKind(block.kind ?? null));
     }
-  }, [block?.id, isActive]);
+  }, [block?.id, block?.kind, isActive]);
 
   useEffect(() => {
     if (!isActive) {
       setDraft(EMPTY_DRAFT);
       setSyncedBlockId(null);
+      setKind("metadata");
     }
   }, [isActive]);
 
@@ -126,15 +150,26 @@ export function useMetadataEditingState({
     return draft;
   }, [block, draft, isActive, syncedBlockId]);
 
+  const effectiveKind = useMemo(() => {
+    if (isActive && block && block.id !== syncedBlockId) {
+      return normalizeKind(block.kind ?? null);
+    }
+
+    return kind;
+  }, [block, isActive, kind, syncedBlockId]);
+
   const hasPendingChanges = useMemo(() => {
     if (!isActive || !block) {
       return false;
     }
-    const fields = relevantFields(block.kind ?? null);
-    return fields.some((field) => {
+    const baselineKind = normalizeKind(block.kind ?? null);
+    const fields = relevantFields(effectiveKind as MetadataBlock["kind"]);
+    const fieldChanged = fields.some((field) => {
       return effectiveDraft[field] !== readBlockField(block, field);
     });
-  }, [block, effectiveDraft, isActive]);
+
+    return baselineKind !== effectiveKind || fieldChanged;
+  }, [block, effectiveDraft, effectiveKind, isActive]);
 
   const onChangeField = useCallback(
     (field: MetadataEditableField, value: string) => {
@@ -149,6 +184,17 @@ export function useMetadataEditingState({
     [isActive],
   );
 
+  const onChangeKind = useCallback(
+    (nextKind: MetadataKindOption) => {
+      if (!isActive) {
+        return;
+      }
+
+      setKind(nextKind);
+    },
+    [isActive],
+  );
+
   const save = useCallback(async () => {
     if (!isActive || !block || isSaving) {
       return false;
@@ -159,20 +205,34 @@ export function useMetadataEditingState({
       return true;
     }
 
-    const kind = block.kind ?? null;
-    const payload: ChapterBlockUpdatePayload = {};
+    const targetKind = effectiveKind;
+    const payload: ChapterBlockUpdatePayload = {
+      kind: targetKind,
+    };
 
-    if (kind === "chapter_header") {
+    if (targetKind === "chapter_header") {
       payload.title = toNullable(effectiveDraft.title);
       payload.subtitle = toNullable(effectiveDraft.subtitle);
       payload.epigraph = toNullable(effectiveDraft.epigraph);
       payload.epigraphAttribution = toNullable(
         effectiveDraft.epigraphAttribution,
       );
-    } else if (kind === "context") {
+      payload.context = null;
+      payload.text = "";
+    } else if (targetKind === "context") {
       payload.context = toNullable(effectiveDraft.context);
+      payload.title = null;
+      payload.subtitle = null;
+      payload.epigraph = null;
+      payload.epigraphAttribution = null;
+      payload.text = "";
     } else {
       payload.text = effectiveDraft.text;
+      payload.title = null;
+      payload.subtitle = null;
+      payload.epigraph = null;
+      payload.epigraphAttribution = null;
+      payload.context = null;
     }
 
     try {
@@ -188,6 +248,7 @@ export function useMetadataEditingState({
     }
   }, [
     block,
+    effectiveKind,
     effectiveDraft.context,
     effectiveDraft.epigraph,
     effectiveDraft.epigraphAttribution,
@@ -207,5 +268,7 @@ export function useMetadataEditingState({
     hasPendingChanges,
     onChangeField,
     save,
+    kind: effectiveKind,
+    onChangeKind,
   };
 }

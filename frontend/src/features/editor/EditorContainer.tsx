@@ -73,12 +73,7 @@ function buildDefaultBlockPayload(
   return {
     id: blockId,
     type: "metadata",
-    kind: "editorial",
-    title: "",
-    subtitle: "",
-    status: "draft",
-    owner: null,
-    lastUpdated: null,
+    kind: "metadata",
     text: "",
   };
 }

@@ -60,11 +60,14 @@ export type MetadataDraft = {
   text: string;
 };
 
+export type MetadataKindOption = "metadata" | "context" | "chapter_header";
+
 export type MetadataEditingState = BaseEditingState<"metadata"> & {
   metadata: {
-    kind: ChapterBlock["kind"];
+    kind: MetadataKindOption;
     draft: MetadataDraft;
     onChangeField: (field: MetadataEditableField, value: string) => void;
+    onChangeKind: (nextKind: MetadataKindOption) => void;
   };
 };
 
