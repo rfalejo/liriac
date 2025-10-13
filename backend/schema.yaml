@@ -240,6 +240,30 @@ paths:
       responses:
         '204':
           description: No response body
+  /api/library/chapters/{chapter_id}/paragraph-suggestion/:
+    post:
+      operationId: library_chapters_paragraph_suggestion_create
+      description: Return an AI-generated suggestion for a chapter paragraph.
+      parameters:
+      - in: path
+        name: chapter_id
+        schema:
+          type: string
+        required: true
+      tags:
+      - library
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ParagraphSuggestionRequest'
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ParagraphSuggestionResponse'
+          description: ''
   /api/library/context/items/:
     patch:
       operationId: library_context_items_partial_update
@@ -727,6 +751,20 @@ components:
             $ref: '#/components/schemas/ContextSection'
       required:
       - sections
+    ParagraphSuggestionRequest:
+      type: object
+      properties:
+        blockId:
+          type: string
+        instructions:
+          type: string
+    ParagraphSuggestionResponse:
+      type: object
+      properties:
+        paragraphSuggestion:
+          type: string
+      required:
+      - paragraphSuggestion
     PatchedBookUpsert:
       type: object
       properties:

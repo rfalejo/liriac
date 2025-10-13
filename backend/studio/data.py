@@ -18,6 +18,7 @@ from .models import (
 from .payloads import (
     ChapterDetailPayload,
     ChapterSummaryPayload,
+    ContextItemPayload,
     ContextSectionPayload,
     EditorPayload,
     LibraryBookPayload,
@@ -55,11 +56,41 @@ def get_library_sections() -> List[ContextSectionPayload]:
     return [section.to_payload() for section in sections]
 
 
+def get_active_context_items() -> List[ContextItemPayload]:
+    """Retrieve all checked (active) context items from the library."""
+    items = LibraryContextItem.objects.filter(checked=True, disabled=False).order_by(
+        "section__order", "order"
+    )
+    return [item.to_payload() for item in items]
+
+
 def get_library_books() -> List[LibraryBookPayload]:
     books = Book.objects.prefetch_related("chapters").order_by("order", "title")
     if not books:
         return cast(List[LibraryBookPayload], deepcopy(SAMPLE_LIBRARY_BOOKS))
     return [book.to_payload() for book in books]
+
+
+def get_book_metadata(book_id: str) -> Optional[Dict[str, Any]]:
+    try:
+        book = Book.objects.get(pk=book_id)
+    except Book.DoesNotExist:
+        sample = next((item for item in SAMPLE_LIBRARY_BOOKS if item.get("id") == book_id), None)
+        if sample is None:
+            return None
+        return {
+            "id": sample.get("id", book_id),
+            "title": sample.get("title"),
+            "author": sample.get("author"),
+            "synopsis": sample.get("synopsis"),
+        }
+
+    return {
+        "id": book.id,
+        "title": book.title,
+        "author": book.author or None,
+        "synopsis": book.synopsis or None,
+    }
 
 
 def _build_sample_chapter_detail(chapter_id: str) -> Optional[ChapterDetailPayload]:
@@ -88,6 +119,88 @@ def get_chapter_detail(chapter_id: str) -> Optional[ChapterDetailPayload]:
     except Chapter.DoesNotExist:
         return _build_sample_chapter_detail(chapter_id)
     return chapter.to_detail_payload()
+
+
+def extract_chapter_context_for_block(
+    chapter: ChapterDetailPayload,
+    block_id: Optional[str],
+) -> Dict[str, Any]:
+    """Extract contextual blocks around a target block for AI prompting.
+
+    Returns a dictionary with:
+    - metadata_block: The chapter's metadata block (if exists)
+    - scene_block: The nearest scene boundary before the target block
+    - preceding_blocks: 2-3 blocks immediately before the target
+    - following_blocks: 1-2 blocks immediately after the target
+    """
+    blocks = chapter.get("blocks", [])
+    sorted_blocks = sorted(blocks, key=lambda b: b.get("position", 0))
+
+    # Find metadata block (usually at position 0)
+    metadata_block = None
+    for block in sorted_blocks:
+        if block.get("type") == "metadata":
+            metadata_block = block
+            break
+
+    # If no block_id specified, return just metadata and no surrounding blocks
+    if not block_id:
+        return {
+            "metadata_block": metadata_block,
+            "scene_block": None,
+            "preceding_blocks": [],
+            "following_blocks": [],
+        }
+
+    # Find target block position
+    target_index = None
+    for idx, block in enumerate(sorted_blocks):
+        if block.get("id") == block_id:
+            target_index = idx
+            break
+
+    if target_index is None:
+        return {
+            "metadata_block": metadata_block,
+            "scene_block": None,
+            "preceding_blocks": [],
+            "following_blocks": [],
+        }
+
+    # Find nearest scene boundary before target
+    scene_block = None
+    for idx in range(target_index - 1, -1, -1):
+        if sorted_blocks[idx].get("type") == "scene_boundary":
+            scene_block = sorted_blocks[idx]
+            break
+
+    # Get preceding blocks (up to 3, excluding metadata and scene boundaries in the immediate context)
+    preceding_blocks = []
+    count = 0
+    for idx in range(target_index - 1, -1, -1):
+        if count >= 3:
+            break
+        block = sorted_blocks[idx]
+        block_type = block.get("type")
+        # Skip metadata but include scene boundaries in the count
+        if block_type == "metadata":
+            continue
+        preceding_blocks.insert(0, block)
+        count += 1
+
+    # Get following blocks (up to 2)
+    following_blocks = []
+    for idx in range(target_index + 1, min(target_index + 3, len(sorted_blocks))):
+        block = sorted_blocks[idx]
+        if block.get("type") != "metadata":  # Skip metadata
+            following_blocks.append(block)
+
+    return {
+        "metadata_block": metadata_block,
+        "scene_block": scene_block,
+        "preceding_blocks": preceding_blocks,
+        "following_blocks": following_blocks,
+    }
 
 
 def _next_book_order() -> int:
@@ -344,9 +457,7 @@ def create_chapter_block(
             ).update(position=F("position") + 1)
 
         payload_updates: Dict[str, Any] = {
-            key: value
-            for key, value in payload.items()
-            if key not in {"id", "type", "position"}
+            key: value for key, value in payload.items() if key not in {"id", "type", "position"}
         }
 
         if block_type == ChapterBlockType.DIALOGUE:

@@ -201,3 +201,12 @@ class ChapterDetailSerializer(ChapterSummarySerializer):
         allow_blank=True,
         allow_null=True,
     )
+
+
+class ParagraphSuggestionRequestSerializer(serializers.Serializer):
+    blockId = serializers.CharField(required=False, allow_blank=True)
+    instructions = serializers.CharField(required=False, allow_blank=True)
+
+
+class ParagraphSuggestionResponseSerializer(serializers.Serializer):
+    paragraphSuggestion = serializers.CharField()

@@ -4,6 +4,7 @@ from .views import (
     ChapterBlockListView,
     ChapterBlockUpdateView,
     ChapterDetailView,
+    ChapterParagraphSuggestionView,
     EditorView,
     LibraryBookChaptersView,
     LibraryBookDetailView,
@@ -39,6 +40,11 @@ urlpatterns = [
         "library/chapters/<str:chapter_id>/blocks/<str:block_id>/",
         ChapterBlockUpdateView.as_view(),
         name="library-chapter-block-update",
+    ),
+    path(
+        "library/chapters/<str:chapter_id>/paragraph-suggestion/",
+        ChapterParagraphSuggestionView.as_view(),
+        name="library-chapter-paragraph-suggestion",
     ),
     path(
         "library/context/items/",

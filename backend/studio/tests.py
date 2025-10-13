@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+from unittest.mock import patch
+
 from django.test import TestCase
 from django.urls import reverse
 
@@ -200,6 +202,22 @@ class ChapterEndpointTests(TestCase):
             HTTP_ORIGIN=ORIGIN,
         )
         self.assertEqual(response.status_code, 404)
+
+    @patch("studio.views.generate_paragraph_suggestion", return_value="Una sugerencia breve.")
+    def test_paragraph_suggestion_endpoint(self, mock_generate) -> None:
+        chapter_id = "bk-karamazov-ch-01"
+        response = self.client.post(
+            reverse("library-chapter-paragraph-suggestion", kwargs={"chapter_id": chapter_id}),
+            data={"blockId": "para-ch1-001", "instructions": "Refuerza el suspenso."},
+            content_type="application/json",
+            HTTP_ORIGIN=ORIGIN,
+        )
+
+        self.assertEqual(response.status_code, 200)
+        payload = response.json()
+        self.assertIn("paragraphSuggestion", payload)
+        self.assertEqual(payload["paragraphSuggestion"], "Una sugerencia breve.")
+        mock_generate.assert_called_once()
 
 
 class EditorEndpointTests(TestCase):
