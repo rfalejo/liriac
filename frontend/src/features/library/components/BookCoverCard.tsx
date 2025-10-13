@@ -72,7 +72,7 @@ const cardShellStyles = ({
       position: "relative" as const,
       width: "100%",
       padding: theme.spacing(2.5),
-      borderRadius: theme.shape.borderRadius,
+  borderRadius: theme.spacing(1.5),
       border: baseBorder,
       borderColor,
       backgroundColor,
@@ -116,7 +116,7 @@ const cardButtonStyles: SxProps<Theme> = {
 const coverVisualStyles: SxProps<Theme> = (theme: Theme) => ({
   position: "relative" as const,
   width: "100%",
-  borderRadius: theme.shape.borderRadius,
+  borderRadius: theme.spacing(1.5),
   overflow: "hidden",
   background: `linear-gradient(135deg, ${alpha(theme.palette.primary.main, 0.28)} 0%, ${alpha(theme.palette.primary.main, 0.08)} 100%)`,
   aspectRatio: "2 / 3",
