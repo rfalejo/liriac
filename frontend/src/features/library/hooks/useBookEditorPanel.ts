@@ -15,15 +15,18 @@ import {
   buildContextFormValues,
   cloneContextFormValues,
   CONTEXT_FIELDS_BY_SECTION,
+  CONTEXT_ITEM_TYPE_BY_SECTION,
   CONTEXT_SECTION_IDS_IN_ORDER,
   makeContextKey,
   type ContextEditableField,
   type ContextItemFormValue,
+  type ContextSectionId,
 } from "../components/bookContextHelpers";
 import { useUpsertBook } from "./useUpsertBook";
 import { useDeleteBook } from "./useDeleteBook";
 import { useLibrarySections } from "./useLibrarySections";
 import { useUpdateLibraryContext } from "./useUpdateLibraryContext";
+import { useCreateLibraryContextItem } from "./useCreateLibraryContextItem";
 
 type BookEditorFormState = {
   title: string;
@@ -62,6 +65,8 @@ type UseBookEditorPanelResult = {
   deleteConfirmation: string;
   deleteErrorMessage: string | null;
   isDeleting: boolean;
+  creatingContextSection: ContextSectionId | null;
+  isCreatingContextItem: boolean;
   handleFieldChange: (
     field: keyof BookEditorFormState,
     value: string,
@@ -74,6 +79,7 @@ type UseBookEditorPanelResult = {
     field: ContextEditableField,
     value: string,
   ) => void;
+  handleAddContextItem: (sectionId: ContextSectionId) => void;
   handleSubmit: (event: FormEvent<HTMLFormElement>) => Promise<void>;
   reloadContext: () => void;
   openDeleteDialog: () => void;
@@ -104,6 +110,8 @@ export function useBookEditorPanel({
   } = useLibrarySections(book.id);
   const { mutateAsync: updateContextItems, isPending: isUpdatingContext } =
     useUpdateLibraryContext(book.id);
+  const { mutateAsync: createContextItem, isPending: isCreatingContextItem } =
+    useCreateLibraryContextItem(book.id);
 
   const [formState, setFormState] = useState<BookEditorFormState>(
     emptyFormState,
@@ -115,6 +123,8 @@ export function useBookEditorPanel({
   >({});
   const contextInitialRef = useRef<Record<string, ContextItemFormValue>>({});
   const [activeTab, setActiveTab] = useState<BookEditorTabValue>("metadata");
+  const [creatingContextSection, setCreatingContextSection] =
+    useState<ContextSectionId | null>(null);
 
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [deleteConfirmation, setDeleteConfirmation] = useState("");
@@ -148,11 +158,41 @@ export function useBookEditorPanel({
 
   useEffect(() => {
     const nextValues = buildContextFormValues(contextSections);
-    setContextFormValues(nextValues);
+    setContextFormValues((current) => {
+      const merged: Record<string, ContextItemFormValue> = {};
+
+      for (const [key, baseValue] of Object.entries(nextValues)) {
+        const existing = current[key];
+        if (!existing) {
+          merged[key] = baseValue;
+          continue;
+        }
+
+        const sectionId = CONTEXT_SECTION_IDS_IN_ORDER.find(
+          (id) => id === baseValue.sectionSlug,
+        );
+        const mergedValue: ContextItemFormValue = { ...baseValue };
+
+        if (sectionId) {
+          const descriptors = CONTEXT_FIELDS_BY_SECTION[sectionId] ?? [];
+          for (const descriptor of descriptors) {
+            const field = descriptor.field;
+            if (Object.prototype.hasOwnProperty.call(existing, field)) {
+              mergedValue[field] = existing[field];
+            }
+          }
+        }
+
+        merged[key] = mergedValue;
+      }
+
+      return merged;
+    });
     contextInitialRef.current = cloneContextFormValues(nextValues);
   }, [contextSections]);
 
-  const disableActions = isSaving || isUpdatingContext || isDeleting;
+  const disableActions =
+    isSaving || isUpdatingContext || isDeleting || isCreatingContextItem;
 
   const handleFieldChange = useCallback(
     (field: keyof BookEditorFormState, value: string) => {
@@ -399,6 +439,35 @@ export function useBookEditorPanel({
     setActiveTab(value);
   }, []);
 
+  const handleAddContextItem = useCallback(
+    (sectionId: ContextSectionId) => {
+      const itemType = CONTEXT_ITEM_TYPE_BY_SECTION[sectionId];
+      if (!itemType) {
+        return;
+      }
+
+      setErrorMessage(null);
+      setCreatingContextSection(sectionId);
+
+      void (async () => {
+        try {
+          await createContextItem({
+            sectionSlug: sectionId,
+            type: itemType,
+          });
+        } catch (error) {
+          console.error("Failed to create context item", error);
+          setErrorMessage(
+            "No se pudo crear el elemento. Intenta nuevamente.",
+          );
+        } finally {
+          setCreatingContextSection(null);
+        }
+      })();
+    },
+    [createContextItem],
+  );
+
   return {
     formState,
     activeTab,
@@ -415,8 +484,11 @@ export function useBookEditorPanel({
     deleteConfirmation,
     deleteErrorMessage,
     isDeleting,
+    creatingContextSection,
+    isCreatingContextItem,
     handleFieldChange,
     handleContextFieldChange,
+    handleAddContextItem,
     handleSubmit,
     reloadContext,
     openDeleteDialog,

@@ -12,6 +12,7 @@ from .models import (
     Chapter,
     ChapterBlock,
     ChapterBlockType,
+    ContextItemType,
     LibraryContextItem,
     LibrarySection,
 )
@@ -158,6 +159,85 @@ def get_book_context_sections(
         payloads.append(cast(ContextSectionPayload, payload))
 
     return payloads
+
+
+def _coerce_optional_text(value: Optional[str]) -> str:
+    if value in {None, ""}:
+        return ""
+    return str(value)
+
+
+def create_book_context_item(
+    book_id: str,
+    payload: Dict[str, Any],
+) -> List[ContextSectionPayload]:
+    section_slug = str(payload["sectionSlug"])
+    item_type = str(payload["type"])
+
+    if item_type not in ContextItemType.values:
+        raise ValueError("Tipo de elemento de contexto no soportado.")
+
+    with transaction.atomic():
+        try:
+            book = Book.objects.select_for_update().get(pk=book_id)
+        except Book.DoesNotExist as exc:
+            raise KeyError(f"Unknown book: {book_id}") from exc
+
+        # Ensure sections exist for the book before locating the target slug
+        _ensure_book_context_sections(book)
+
+        try:
+            section = (
+                LibrarySection.objects.select_for_update()
+                .get(book=book, slug=section_slug)
+            )
+        except LibrarySection.DoesNotExist as exc:
+            raise KeyError(f"Unknown context section: {section_slug}") from exc
+
+        chapter_id_raw = payload.get("chapterId")
+        if chapter_id_raw:
+            chapter_id = str(chapter_id_raw)
+            try:
+                chapter = Chapter.objects.get(pk=chapter_id, book=book)
+            except Chapter.DoesNotExist as exc:
+                raise KeyError(f"Unknown chapter for context item: {chapter_id}") from exc
+        else:
+            chapter = None
+
+        requested_id = payload.get("id")
+        item_id = str(requested_id) if requested_id else uuid4().hex
+
+        if LibraryContextItem.objects.filter(section=section, item_id=item_id).exists():
+            raise ValueError("Ya existe un elemento de contexto con ese identificador.")
+
+        current_max = (
+            LibraryContextItem.objects.filter(section=section).aggregate(Max("order"))
+        ).get("order__max")
+        next_order = (int(current_max) + 1) if current_max is not None else 0
+
+        tokens_raw = payload.get("tokens")
+        tokens_value = None
+        if tokens_raw not in {None, ""}:
+            tokens_value = int(tokens_raw)
+
+        LibraryContextItem.objects.create(
+            section=section,
+            chapter=chapter,
+            item_id=item_id,
+            item_type=item_type,
+            name=_coerce_optional_text(payload.get("name")),
+            role=_coerce_optional_text(payload.get("role")),
+            summary=_coerce_optional_text(payload.get("summary")),
+            title=_coerce_optional_text(payload.get("title")),
+            description=_coerce_optional_text(payload.get("description")),
+            facts=_coerce_optional_text(payload.get("facts")),
+            tokens=tokens_value,
+            checked=bool(payload.get("checked", False)),
+            disabled=bool(payload.get("disabled", False)),
+            order=next_order,
+        )
+
+    return get_book_context_sections(book_id)
 
 
 def get_active_context_items(

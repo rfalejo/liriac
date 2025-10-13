@@ -4,6 +4,7 @@ import { request } from "./client";
 export type LibraryResponse = components["schemas"]["LibraryResponse"];
 export type ContextSection = components["schemas"]["ContextSection"];
 export type ContextItem = components["schemas"]["ContextItem"];
+export type ContextItemCreate = components["schemas"]["ContextItemCreate"];
 export type ContextItemUpdate = components["schemas"]["ContextItemUpdate"];
 export type LibraryBooksResponse =
   components["schemas"]["LibraryBooksResponse"];
@@ -92,6 +93,19 @@ export async function updateBookContextItems(
     {
     method: "PATCH",
     body: JSON.stringify(payload),
+    },
+  );
+}
+
+export async function createBookContextItem(
+  bookId: string,
+  payload: ContextItemCreate,
+): Promise<LibraryResponse> {
+  return request<LibraryResponse>(
+    `/api/library/books/${bookId}/context/items/`,
+    {
+      method: "POST",
+      body: JSON.stringify(payload),
     },
   );
 }

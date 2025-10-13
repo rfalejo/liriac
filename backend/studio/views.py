@@ -11,6 +11,7 @@ from rest_framework.views import APIView
 
 from .data import (
     create_book,
+    create_book_context_item,
     create_chapter,
     create_chapter_block,
     delete_book,
@@ -23,9 +24,9 @@ from .data import (
     get_editor_state,
     get_library_books,
     update_book,
+    update_book_context_items,
     update_chapter,
     update_chapter_block,
-    update_book_context_items,
 )
 from .models import Book, ChapterBlockType
 from .payloads import ParagraphBlockPayload
@@ -37,6 +38,7 @@ from .serializers import (
     ChapterDetailSerializer,
     ChapterSummarySerializer,
     ChapterUpsertSerializer,
+    ContextItemCreateSerializer,
     ContextItemsUpdateRequestSerializer,
     EditorStateSerializer,
     LibraryBookSerializer,
@@ -263,6 +265,25 @@ class LibraryBookContextItemsView(APIView):
 
     authentication_classes: list = []
     permission_classes: list = []
+
+    @extend_schema(
+        request=ContextItemCreateSerializer,
+        responses={201: LibraryResponseSerializer},
+    )
+    def post(self, request, book_id: str):
+        serializer = ContextItemCreateSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        payload = serializer.validated_data
+
+        try:
+            sections = create_book_context_item(book_id, payload)
+        except KeyError as exc:
+            raise Http404(str(exc)) from exc
+        except ValueError as exc:
+            raise ValidationError(str(exc)) from exc
+
+        response_serializer = LibraryResponseSerializer({"sections": sections})
+        return Response(response_serializer.data, status=status.HTTP_201_CREATED)
 
     @extend_schema(
         request=ContextItemsUpdateRequestSerializer,

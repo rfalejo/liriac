@@ -133,6 +133,30 @@ paths:
                 $ref: '#/components/schemas/LibraryResponse'
           description: ''
   /api/library/books/{book_id}/context/items/:
+    post:
+      operationId: library_books_context_items_create
+      description: Update editable fields for context items belonging to a book.
+      parameters:
+      - in: path
+        name: book_id
+        schema:
+          type: string
+        required: true
+      tags:
+      - library
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ContextItemCreate'
+        required: true
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LibraryResponse'
+          description: ''
     patch:
       operationId: library_books_context_items_partial_update
       description: Update editable fields for context items belonging to a book.
@@ -629,6 +653,46 @@ components:
           nullable: true
       required:
       - id
+      - type
+    ContextItemCreate:
+      type: object
+      properties:
+        sectionSlug:
+          type: string
+        type:
+          $ref: '#/components/schemas/ContextItemTypeEnum'
+        id:
+          type: string
+        chapterId:
+          type: string
+          nullable: true
+        name:
+          type: string
+          nullable: true
+        role:
+          type: string
+          nullable: true
+        summary:
+          type: string
+          nullable: true
+        title:
+          type: string
+          nullable: true
+        description:
+          type: string
+          nullable: true
+        facts:
+          type: string
+          nullable: true
+        tokens:
+          type: integer
+          nullable: true
+        checked:
+          type: boolean
+        disabled:
+          type: boolean
+      required:
+      - sectionSlug
       - type
     ContextItemTypeEnum:
       enum:

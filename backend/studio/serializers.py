@@ -212,6 +212,24 @@ class ContextItemsUpdateRequestSerializer(serializers.Serializer):
     items = ContextItemUpdateSerializer(many=True)
 
 
+class ContextItemCreateSerializer(serializers.Serializer):
+    sectionSlug = serializers.CharField()
+    type = serializers.ChoiceField(
+        choices=("character", "world", "styleTone", "chapter"),
+    )
+    id = serializers.CharField(required=False, allow_blank=True)
+    chapterId = serializers.CharField(required=False, allow_null=True, allow_blank=True)
+    name = serializers.CharField(required=False, allow_blank=True, allow_null=True)
+    role = serializers.CharField(required=False, allow_blank=True, allow_null=True)
+    summary = serializers.CharField(required=False, allow_blank=True, allow_null=True)
+    title = serializers.CharField(required=False, allow_blank=True, allow_null=True)
+    description = serializers.CharField(required=False, allow_blank=True, allow_null=True)
+    facts = serializers.CharField(required=False, allow_blank=True, allow_null=True)
+    tokens = serializers.IntegerField(required=False, allow_null=True)
+    checked = serializers.BooleanField(required=False)
+    disabled = serializers.BooleanField(required=False)
+
+
 class EditorStateSerializer(serializers.Serializer):
     content = serializers.CharField()
     paragraphs = serializers.ListField(child=serializers.CharField())

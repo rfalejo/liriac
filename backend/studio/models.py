@@ -4,7 +4,6 @@ from typing import Any, Dict
 
 from django.core.serializers.json import DjangoJSONEncoder
 from django.db import models
-from django.db.models import F, Q
 
 from .payloads import (
     ChapterBlockPayload,

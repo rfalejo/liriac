@@ -8,6 +8,15 @@ export const CONTEXT_SECTION_IDS_IN_ORDER = [
 
 export type ContextSectionId = (typeof CONTEXT_SECTION_IDS_IN_ORDER)[number];
 
+export const CONTEXT_ITEM_TYPE_BY_SECTION: Record<
+  ContextSectionId,
+  ContextItem["type"]
+> = {
+  characters: "character",
+  world: "world",
+  styleTone: "styleTone",
+};
+
 export type ContextEditableField =
   | "name"
   | "role"

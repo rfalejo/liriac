@@ -100,7 +100,8 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        post?: never;
+        /** @description Update editable fields for context items belonging to a book. */
+        post: operations["library_books_context_items_create"];
         delete?: never;
         options?: never;
         head?: never;
@@ -301,6 +302,21 @@ export interface components {
             checked?: boolean;
             disabled?: boolean;
             chapterId?: string | null;
+        };
+        ContextItemCreate: {
+            sectionSlug: string;
+            type: components["schemas"]["ContextItemTypeEnum"];
+            id?: string;
+            chapterId?: string | null;
+            name?: string | null;
+            role?: string | null;
+            summary?: string | null;
+            title?: string | null;
+            description?: string | null;
+            facts?: string | null;
+            tokens?: number | null;
+            checked?: boolean;
+            disabled?: boolean;
         };
         /**
          * @description * `character` - character
@@ -581,6 +597,31 @@ export interface operations {
         requestBody?: never;
         responses: {
             200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["LibraryResponse"];
+                };
+            };
+        };
+    };
+    library_books_context_items_create: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                book_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ContextItemCreate"];
+            };
+        };
+        responses: {
+            201: {
                 headers: {
                     [name: string]: unknown;
                 };

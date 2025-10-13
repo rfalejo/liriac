@@ -13,6 +13,7 @@ import type {
 import {
   CONTEXT_FIELDS_BY_SECTION,
   CONTEXT_SECTION_IDS_IN_ORDER,
+  type ContextSectionId,
   getItemPrimaryText,
   makeContextKey,
   type ContextEditableField,
@@ -32,8 +33,11 @@ type BookEditorContextTabProps = {
     field: ContextEditableField,
     value: string,
   ) => void;
+  onAddItem: (sectionId: ContextSectionId) => void;
   onRetry: () => void;
   disabled: boolean;
+  creatingSectionId: ContextSectionId | null;
+  creatingItem: boolean;
 };
 
 export function BookEditorContextTab({
@@ -42,8 +46,11 @@ export function BookEditorContextTab({
   sections,
   contextValues,
   onFieldChange,
+  onAddItem,
   onRetry,
   disabled,
+  creatingSectionId,
+  creatingItem,
 }: BookEditorContextTabProps) {
   const hasSections = sections.length > 0;
 
@@ -162,6 +169,23 @@ export function BookEditorContextTab({
                   })}
                 </Stack>
               )}
+              <Button
+                variant="outlined"
+                size="small"
+                onClick={() => {
+                  onAddItem(sectionId);
+                }}
+                disabled={
+                  disabled || creatingItem || creatingSectionId === sectionId
+                }
+                startIcon={
+                  creatingSectionId === sectionId ? (
+                    <CircularProgress size={16} />
+                  ) : undefined
+                }
+              >
+                {creatingSectionId === sectionId ? "Agregando..." : "Agregar elemento"}
+              </Button>
             </Stack>
           );
         })}

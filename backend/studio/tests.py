@@ -5,7 +5,7 @@ from unittest.mock import patch
 from django.test import TestCase
 from django.urls import reverse
 
-from studio.models import Book, Chapter
+from studio.models import Book, Chapter, LibraryContextItem
 
 ORIGIN = "http://localhost:5173"
 
@@ -89,6 +89,53 @@ class LibraryEndpointTests(TestCase):
         )
         self.assertEqual(response.status_code, 404)
         self.assertEqual(response["Access-Control-Allow-Origin"], ORIGIN)
+
+    def test_create_context_item_for_book(self) -> None:
+        book_id = "bk-karamazov"
+        response = self.client.post(
+            reverse("library-book-context-items", kwargs={"book_id": book_id}),
+            data={
+                "sectionSlug": "characters",
+                "type": "character",
+                "name": "Nuevo personaje misterioso",
+            },
+            content_type="application/json",
+            HTTP_ORIGIN=ORIGIN,
+        )
+
+        self.assertEqual(response.status_code, 201)
+        output = response.json()
+        self.assertIn("sections", output)
+        characters_section = next(
+            (section for section in output["sections"] if section["id"] == "characters"),
+            None,
+        )
+        self.assertIsNotNone(characters_section)
+        items = characters_section["items"]
+        self.assertTrue(
+            any(item.get("name") == "Nuevo personaje misterioso" for item in items)
+        )
+        self.assertTrue(
+            LibraryContextItem.objects.filter(
+                section__book_id=book_id,
+                section__slug="characters",
+                name="Nuevo personaje misterioso",
+            ).exists()
+        )
+        self.assertEqual(response["Access-Control-Allow-Origin"], ORIGIN)
+
+    def test_create_context_item_unknown_section(self) -> None:
+        response = self.client.post(
+            reverse("library-book-context-items", kwargs={"book_id": "bk-karamazov"}),
+            data={
+                "sectionSlug": "desconocido",
+                "type": "character",
+            },
+            content_type="application/json",
+            HTTP_ORIGIN=ORIGIN,
+        )
+
+        self.assertEqual(response.status_code, 404)
 
 
 class ChapterEndpointTests(TestCase):
