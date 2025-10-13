@@ -113,7 +113,10 @@ export function LibraryBooksPanel({
           >
             {hasBooks ? (
               books.map((book) => (
-                <Box key={book.id} sx={{ height: "100%" }}>
+                <Box
+                  key={book.id}
+                  sx={{ height: condensed ? "auto" : "100%" }}
+                >
                   <BookCoverCard
                     title={book.title}
                     author={book.author}
@@ -121,6 +124,7 @@ export function LibraryBooksPanel({
                     chaptersCount={book.chapters.length}
                     selected={book.id === selectedBookId}
                     disabled={loading}
+                    condensed={condensed}
                     onSelect={() => onOpenBook(book.id)}
                     onEdit={() => onEditBook(book.id)}
                   />
@@ -148,11 +152,12 @@ export function LibraryBooksPanel({
                 </Typography>
               </Stack>
             )}
-            <Box sx={{ height: "100%" }}>
+            <Box sx={{ height: condensed ? "auto" : "100%" }}>
               <AddBookCoverCard
                 onClick={onCreateBook}
                 disabled={loading}
                 label="Nuevo libro"
+                condensed={condensed}
               />
             </Box>
           </Box>
