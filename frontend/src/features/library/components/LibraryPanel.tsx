@@ -29,7 +29,7 @@ export function LibraryPanel({
   const baseSx: SxProps<Theme> = (theme) => ({
     p: { xs: 2.5, md: 3 },
     backgroundColor: alpha(theme.palette.background.paper, 0.95),
-  borderRadius: theme.spacing(2),
+    borderRadius: theme.spacing(2),
     border: `1px solid ${alpha(theme.palette.primary.main, 0.14)}`,
     boxShadow: `0 18px 36px ${alpha(theme.palette.common.black, 0.05)}`,
     display: "flex",

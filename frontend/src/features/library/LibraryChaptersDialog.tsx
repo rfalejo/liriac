@@ -58,12 +58,18 @@ export function LibraryChaptersDialog({
       }}
     >
       <DialogTitle sx={{ pb: 0 }}>
-        <Stack direction="row" alignItems="center" justifyContent="space-between">
+        <Stack
+          direction="row"
+          alignItems="center"
+          justifyContent="space-between"
+        >
           <Stack spacing={0.5}>
             <Typography variant="overline" sx={{ letterSpacing: "0.18em" }}>
               Capítulos
             </Typography>
-            <Typography variant="h6">{book?.title ?? "Selecciona un libro"}</Typography>
+            <Typography variant="h6">
+              {book?.title ?? "Selecciona un libro"}
+            </Typography>
           </Stack>
           <Stack direction="row" spacing={1.5} alignItems="center">
             {book ? (
@@ -81,9 +87,17 @@ export function LibraryChaptersDialog({
           </Stack>
         </Stack>
       </DialogTitle>
-      <DialogContent dividers sx={{ px: { xs: 2.5, md: 4 }, py: { xs: 3, md: 4 } }}>
+      <DialogContent
+        dividers
+        sx={{ px: { xs: 2.5, md: 4 }, py: { xs: 3, md: 4 } }}
+      >
         {loading ? (
-          <Stack spacing={2} alignItems="center" justifyContent="center" sx={{ py: 6 }}>
+          <Stack
+            spacing={2}
+            alignItems="center"
+            justifyContent="center"
+            sx={{ py: 6 }}
+          >
             <CircularProgress size={22} />
             <Typography variant="body2" color="text.secondary">
               Cargando capítulos
@@ -111,44 +125,49 @@ export function LibraryChaptersDialog({
               </Typography>
             ) : (
               <List disablePadding>
-                {book.chapters.map((chapter: LibraryBook["chapters"][number]) => (
-                  <LibraryListItemButton
-                    key={chapter.id}
-                    variant="stacked"
-                    onClick={() => onOpenChapter(chapter.id)}
-                  >
-                    <Stack
-                      direction="row"
-                      alignItems="flex-start"
-                      justifyContent="space-between"
-                      spacing={1}
-                      sx={{ width: "100%" }}
+                {book.chapters.map(
+                  (chapter: LibraryBook["chapters"][number]) => (
+                    <LibraryListItemButton
+                      key={chapter.id}
+                      variant="stacked"
+                      onClick={() => onOpenChapter(chapter.id)}
                     >
-                      <Stack spacing={0.5} sx={{ flexGrow: 1 }}>
-                        <Typography variant="subtitle2" fontWeight={600}>
-                          {chapter.title}
-                        </Typography>
-                        {chapter.summary ? (
-                          <Typography variant="caption" color="text.secondary">
-                            {chapter.summary}
+                      <Stack
+                        direction="row"
+                        alignItems="flex-start"
+                        justifyContent="space-between"
+                        spacing={1}
+                        sx={{ width: "100%" }}
+                      >
+                        <Stack spacing={0.5} sx={{ flexGrow: 1 }}>
+                          <Typography variant="subtitle2" fontWeight={600}>
+                            {chapter.title}
                           </Typography>
-                        ) : null}
+                          {chapter.summary ? (
+                            <Typography
+                              variant="caption"
+                              color="text.secondary"
+                            >
+                              {chapter.summary}
+                            </Typography>
+                          ) : null}
+                        </Stack>
+                        <Tooltip title="Editar">
+                          <IconButton
+                            size="small"
+                            aria-label="Editar capítulo"
+                            onClick={(event) => {
+                              event.stopPropagation();
+                              onEditChapter(book.id, chapter.id);
+                            }}
+                          >
+                            <EditRoundedIcon fontSize="inherit" />
+                          </IconButton>
+                        </Tooltip>
                       </Stack>
-                      <Tooltip title="Editar">
-                        <IconButton
-                          size="small"
-                          aria-label="Editar capítulo"
-                          onClick={(event) => {
-                            event.stopPropagation();
-                            onEditChapter(book.id, chapter.id);
-                          }}
-                        >
-                          <EditRoundedIcon fontSize="inherit" />
-                        </IconButton>
-                      </Tooltip>
-                    </Stack>
-                  </LibraryListItemButton>
-                ))}
+                    </LibraryListItemButton>
+                  ),
+                )}
               </List>
             )}
           </Stack>

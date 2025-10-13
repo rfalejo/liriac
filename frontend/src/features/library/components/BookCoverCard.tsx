@@ -41,11 +41,8 @@ type CardShellOptions = {
   variant?: "default" | "add";
 };
 
-const cardShellStyles = ({
-  selected,
-  disabled,
-  variant = "default",
-}: CardShellOptions) =>
+const cardShellStyles =
+  ({ selected, disabled, variant = "default" }: CardShellOptions) =>
   (theme: Theme) => {
     const isAdd = variant === "add";
     const primary = theme.palette.primary.main;
@@ -72,7 +69,7 @@ const cardShellStyles = ({
       position: "relative" as const,
       width: "100%",
       padding: theme.spacing(2.5),
-  borderRadius: theme.spacing(1.5),
+      borderRadius: theme.spacing(1.5),
       border: baseBorder,
       borderColor,
       backgroundColor,
@@ -165,7 +162,11 @@ export function BookCoverCard({
             <Box sx={coverLetterStyles}>{initial}</Box>
           </Box>
           <Stack spacing={0.75} alignItems="flex-start">
-            <Typography variant="subtitle1" fontWeight={600} sx={{ lineHeight: 1.2 }}>
+            <Typography
+              variant="subtitle1"
+              fontWeight={600}
+              sx={{ lineHeight: 1.2 }}
+            >
               {title}
             </Typography>
             {author ? (

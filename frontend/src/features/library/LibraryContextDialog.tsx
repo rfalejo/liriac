@@ -66,7 +66,11 @@ export function LibraryContextDialog({
       }}
     >
       <DialogTitle sx={{ pb: 0 }}>
-        <Stack direction="row" alignItems="center" justifyContent="space-between">
+        <Stack
+          direction="row"
+          alignItems="center"
+          justifyContent="space-between"
+        >
           <Stack spacing={0.5}>
             <Typography variant="overline" sx={{ letterSpacing: "0.18em" }}>
               Contexto
@@ -78,9 +82,17 @@ export function LibraryContextDialog({
           </IconButton>
         </Stack>
       </DialogTitle>
-      <DialogContent dividers sx={{ px: { xs: 2.5, md: 4 }, py: { xs: 3, md: 4 } }}>
+      <DialogContent
+        dividers
+        sx={{ px: { xs: 2.5, md: 4 }, py: { xs: 3, md: 4 } }}
+      >
         {loading ? (
-          <Stack spacing={2} alignItems="center" justifyContent="center" sx={{ py: 6 }}>
+          <Stack
+            spacing={2}
+            alignItems="center"
+            justifyContent="center"
+            sx={{ py: 6 }}
+          >
             <CircularProgress size={22} />
             <Typography variant="body2" color="text.secondary">
               Cargando contexto

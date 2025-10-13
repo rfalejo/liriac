@@ -2,10 +2,7 @@ import { Box, Stack, Typography } from "@mui/material";
 import type { LibraryBook } from "../../api/library";
 import { LibraryPanel } from "./components/LibraryPanel";
 import { resolveLibraryPanelStatus } from "./components/panelStatus";
-import {
-  AddBookCoverCard,
-  BookCoverCard,
-} from "./components/BookCoverCard";
+import { AddBookCoverCard, BookCoverCard } from "./components/BookCoverCard";
 
 type LibraryBooksPanelProps = {
   books: LibraryBook[];
@@ -48,11 +45,7 @@ export function LibraryBooksPanel({
   const showContent = !status;
 
   return (
-    <LibraryPanel
-      title="Tu biblioteca"
-      status={status}
-      sx={{ flexGrow: 1 }}
-    >
+    <LibraryPanel title="Tu biblioteca" status={status} sx={{ flexGrow: 1 }}>
       {showContent && (
         <Stack spacing={2.5} alignItems="stretch">
           <Typography variant="body2" color="text.secondary">
@@ -69,43 +62,43 @@ export function LibraryBooksPanel({
               },
             }}
           >
-            {hasBooks
-              ? books.map((book) => (
-                  <Box key={book.id} sx={{ height: "100%" }}>
-                    <BookCoverCard
-                      title={book.title}
-                      author={book.author}
-                      synopsis={book.synopsis ?? undefined}
-                      chaptersCount={book.chapters.length}
-                      selected={book.id === selectedBookId}
-                      disabled={loading}
-                      onSelect={() => onOpenBook(book.id)}
-                      onEdit={() => onEditBook(book.id)}
-                    />
-                  </Box>
-                ))
-              : (
-                  <Stack
-                    spacing={2}
-                    alignItems="center"
-                    justifyContent="center"
-                    sx={{
-                      gridColumn: {
-                        xs: "1 / -1",
-                        sm: "1 / span 2",
-                        md: "1 / span 3",
-                      },
-                      textAlign: "center",
-                    }}
-                  >
-                    <Typography variant="body1" fontWeight={600}>
-                      Tu biblioteca está vacía
-                    </Typography>
-                    <Typography variant="body2" color="text.secondary">
-                      Crea tu primer libro para comenzar a organizar capítulos.
-                    </Typography>
-                  </Stack>
-                )}
+            {hasBooks ? (
+              books.map((book) => (
+                <Box key={book.id} sx={{ height: "100%" }}>
+                  <BookCoverCard
+                    title={book.title}
+                    author={book.author}
+                    synopsis={book.synopsis ?? undefined}
+                    chaptersCount={book.chapters.length}
+                    selected={book.id === selectedBookId}
+                    disabled={loading}
+                    onSelect={() => onOpenBook(book.id)}
+                    onEdit={() => onEditBook(book.id)}
+                  />
+                </Box>
+              ))
+            ) : (
+              <Stack
+                spacing={2}
+                alignItems="center"
+                justifyContent="center"
+                sx={{
+                  gridColumn: {
+                    xs: "1 / -1",
+                    sm: "1 / span 2",
+                    md: "1 / span 3",
+                  },
+                  textAlign: "center",
+                }}
+              >
+                <Typography variant="body1" fontWeight={600}>
+                  Tu biblioteca está vacía
+                </Typography>
+                <Typography variant="body2" color="text.secondary">
+                  Crea tu primer libro para comenzar a organizar capítulos.
+                </Typography>
+              </Stack>
+            )}
             <Box sx={{ height: "100%" }}>
               <AddBookCoverCard
                 onClick={onCreateBook}
