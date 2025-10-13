@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+from typing import Any, Dict
+
 from rest_framework import serializers
 
 
@@ -23,6 +25,27 @@ class DialogueTurnSerializer(serializers.Serializer):
     utterance = serializers.CharField()
     stageDirection = serializers.CharField(required=False, allow_blank=True, allow_null=True)
     tone = serializers.CharField(required=False, allow_blank=True, allow_null=True)
+
+
+class NarrativeContextSerializer(serializers.Serializer):
+    povCharacterId = serializers.CharField(required=False, allow_blank=True, allow_null=True)
+    povCharacterName = serializers.CharField(required=False, allow_blank=True, allow_null=True)
+    timelineMarker = serializers.CharField(required=False, allow_blank=True, allow_null=True)
+    locationId = serializers.CharField(required=False, allow_blank=True, allow_null=True)
+    locationName = serializers.CharField(required=False, allow_blank=True, allow_null=True)
+    themeTags = serializers.ListField(
+        child=serializers.CharField(allow_blank=True),
+        required=False,
+        allow_empty=True,
+        allow_null=True,
+    )
+
+
+class SceneDetailsSerializer(serializers.Serializer):
+    locationId = serializers.CharField(required=False, allow_blank=True, allow_null=True)
+    locationName = serializers.CharField(required=False, allow_blank=True, allow_null=True)
+    timestamp = serializers.CharField(required=False, allow_blank=True, allow_null=True)
+    mood = serializers.CharField(required=False, allow_blank=True, allow_null=True)
 
 
 class ChapterBlockSerializer(serializers.Serializer):
@@ -72,13 +95,56 @@ class ChapterBlockSerializer(serializers.Serializer):
         allow_null=True,
     )
     themeTags = serializers.ListField(
-        child=serializers.CharField(),
+        child=serializers.CharField(allow_blank=True),
         required=False,
         allow_empty=True,
     )
     status = serializers.CharField(required=False, allow_blank=True, allow_null=True)
     owner = serializers.CharField(required=False, allow_blank=True, allow_null=True)
     lastUpdated = serializers.CharField(required=False, allow_blank=True, allow_null=True)
+    narrativeContext = NarrativeContextSerializer(required=False, allow_null=True)
+    sceneDetails = SceneDetailsSerializer(required=False, allow_null=True)
+
+    def to_representation(self, instance: Any) -> Dict[str, Any]:
+        data = super().to_representation(instance)
+
+        if not isinstance(instance, dict):
+            return data
+
+        block_type = instance.get("type")
+
+        if block_type == "metadata":
+            kind = instance.get("kind")
+            context_field_names = [
+                "povCharacterId",
+                "povCharacterName",
+                "timelineMarker",
+                "locationId",
+                "locationName",
+            ]
+            context_payload: Dict[str, Any] = {
+                field: instance.get(field) for field in context_field_names
+            }
+            theme_tags = instance.get("themeTags")
+            if theme_tags is None:
+                theme_tags = data.get("themeTags")
+            if theme_tags is None or not isinstance(theme_tags, list):
+                theme_tags = []
+            context_payload["themeTags"] = theme_tags
+
+            if (
+                kind == "context"
+                or any(context_payload[field] not in (None, "") for field in context_field_names)
+                or bool(theme_tags)
+            ):
+                data["narrativeContext"] = context_payload
+
+        if block_type == "scene_boundary":
+            scene_detail_keys = ("locationId", "locationName", "timestamp", "mood")
+            if any(instance.get(key) not in (None, "") for key in scene_detail_keys):
+                data["sceneDetails"] = {key: instance.get(key) for key in scene_detail_keys}
+
+        return data
 
 
 class ChapterBlockUpdateSerializer(ChapterBlockSerializer):

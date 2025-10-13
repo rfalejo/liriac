@@ -144,6 +144,23 @@ export interface paths {
         patch: operations["library_chapters_blocks_partial_update"];
         trace?: never;
     };
+    "/api/library/chapters/{chapter_id}/paragraph-suggestion/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** @description Return an AI-generated suggestion for a chapter paragraph. */
+        post: operations["library_chapters_paragraph_suggestion_create"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/library/context/items/": {
         parameters: {
             query?: never;
@@ -200,6 +217,8 @@ export interface components {
             status?: string | null;
             owner?: string | null;
             lastUpdated?: string | null;
+            narrativeContext?: components["schemas"]["NarrativeContext"] | null;
+            sceneDetails?: components["schemas"]["SceneDetails"] | null;
         };
         ChapterBlockCreate: {
             id?: string;
@@ -229,6 +248,8 @@ export interface components {
             status?: string | null;
             owner?: string | null;
             lastUpdated?: string | null;
+            narrativeContext?: components["schemas"]["NarrativeContext"] | null;
+            sceneDetails?: components["schemas"]["SceneDetails"] | null;
         };
         /**
          * @description * `paragraph` - paragraph
@@ -336,6 +357,21 @@ export interface components {
         LibraryResponse: {
             sections: components["schemas"]["ContextSection"][];
         };
+        NarrativeContext: {
+            povCharacterId?: string | null;
+            povCharacterName?: string | null;
+            timelineMarker?: string | null;
+            locationId?: string | null;
+            locationName?: string | null;
+            themeTags?: string[] | null;
+        };
+        ParagraphSuggestionRequest: {
+            blockId?: string;
+            instructions?: string;
+        };
+        ParagraphSuggestionResponse: {
+            paragraphSuggestion: string;
+        };
         PatchedBookUpsert: {
             id?: string;
             title?: string;
@@ -371,6 +407,8 @@ export interface components {
             status?: string | null;
             owner?: string | null;
             lastUpdated?: string | null;
+            narrativeContext?: components["schemas"]["NarrativeContext"] | null;
+            sceneDetails?: components["schemas"]["SceneDetails"] | null;
         };
         PatchedChapterUpsert: {
             id?: string;
@@ -382,6 +420,12 @@ export interface components {
         };
         PatchedContextItemsUpdateRequest: {
             items?: components["schemas"]["ContextItemUpdate"][];
+        };
+        SceneDetails: {
+            locationId?: string | null;
+            locationName?: string | null;
+            timestamp?: string | null;
+            mood?: string | null;
         };
     };
     responses: never;
@@ -656,6 +700,31 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["ChapterDetail"];
+                };
+            };
+        };
+    };
+    library_chapters_paragraph_suggestion_create: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                chapter_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: {
+            content: {
+                "application/json": components["schemas"]["ParagraphSuggestionRequest"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ParagraphSuggestionResponse"];
                 };
             };
         };

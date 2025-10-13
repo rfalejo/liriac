@@ -109,6 +109,29 @@ class ChapterEndpointTests(TestCase):
             first_block["type"],
             {"paragraph", "dialogue", "scene_boundary", "metadata"},
         )
+
+        context_blocks = [
+            block
+            for block in data["blocks"]
+            if block["type"] == "metadata" and block.get("kind") == "context"
+        ]
+        self.assertGreaterEqual(len(context_blocks), 1)
+        context_block = context_blocks[0]
+        self.assertIn("narrativeContext", context_block)
+        narrative_context = context_block["narrativeContext"]
+        self.assertIsInstance(narrative_context, dict)
+        self.assertEqual(
+            narrative_context.get("povCharacterName"),
+            context_block.get("povCharacterName"),
+        )
+
+        scene_blocks = [block for block in data["blocks"] if block["type"] == "scene_boundary"]
+        self.assertGreaterEqual(len(scene_blocks), 1)
+        scene_block = scene_blocks[0]
+        self.assertIn("sceneDetails", scene_block)
+        scene_details = scene_block["sceneDetails"]
+        self.assertIsInstance(scene_details, dict)
+        self.assertEqual(scene_details.get("locationName"), scene_block.get("locationName"))
         self.assertEqual(response["Access-Control-Allow-Origin"], ORIGIN)
 
     def test_chapter_detail_not_found(self) -> None:
@@ -202,6 +225,67 @@ class ChapterEndpointTests(TestCase):
             HTTP_ORIGIN=ORIGIN,
         )
         self.assertEqual(response.status_code, 404)
+
+    def test_patch_metadata_block_accepts_narrative_context(self) -> None:
+        chapter_id = "bk-karamazov-ch-01"
+        block_id = "meta-ch1-context"
+        response = self.client.patch(
+            reverse(
+                "library-chapter-block-update",
+                kwargs={"chapter_id": chapter_id, "block_id": block_id},
+            ),
+            data={
+                "narrativeContext": {
+                    "povCharacterName": "   Narrador alterno   ",
+                    "timelineMarker": "  Madrugada  ",
+                    "locationName": " Sala principal ",
+                    "themeTags": [" tensión  ", "intriga", ""],
+                }
+            },
+            content_type="application/json",
+            HTTP_ORIGIN=ORIGIN,
+        )
+
+        self.assertEqual(response.status_code, 200)
+        payload = response.json()
+        block = next(item for item in payload["blocks"] if item["id"] == block_id)
+        context = block.get("narrativeContext")
+        self.assertIsNotNone(context)
+        self.assertEqual(context["povCharacterName"], "Narrador alterno")
+        self.assertEqual(context["timelineMarker"], "Madrugada")
+        self.assertEqual(context["locationName"], "Sala principal")
+        self.assertEqual(context["themeTags"], ["tensión", "intriga"])
+        self.assertEqual(block.get("themeTags"), ["tensión", "intriga"])
+
+    def test_patch_scene_block_accepts_scene_details(self) -> None:
+        chapter_id = "bk-karamazov-ch-01"
+        block_id = "scene-ch1-salon"
+        response = self.client.patch(
+            reverse(
+                "library-chapter-block-update",
+                kwargs={"chapter_id": chapter_id, "block_id": block_id},
+            ),
+            data={
+                "sceneDetails": {
+                    "mood": "  sereno ",
+                    "timestamp": "  Amanecer",
+                    "locationName": "Patio central",
+                }
+            },
+            content_type="application/json",
+            HTTP_ORIGIN=ORIGIN,
+        )
+
+        self.assertEqual(response.status_code, 200)
+        payload = response.json()
+        block = next(item for item in payload["blocks"] if item["id"] == block_id)
+        scene_details = block.get("sceneDetails")
+        self.assertIsNotNone(scene_details)
+        self.assertEqual(scene_details["mood"], "sereno")
+        self.assertEqual(scene_details["timestamp"], "Amanecer")
+        self.assertEqual(scene_details["locationName"], "Patio central")
+        self.assertEqual(block.get("mood"), "sereno")
+        self.assertEqual(block.get("timestamp"), "Amanecer")
 
     @patch("studio.views.generate_paragraph_suggestion", return_value="Una sugerencia breve.")
     def test_paragraph_suggestion_endpoint(self, mock_generate) -> None:

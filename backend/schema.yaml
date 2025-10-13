@@ -383,6 +383,14 @@ components:
         lastUpdated:
           type: string
           nullable: true
+        narrativeContext:
+          allOf:
+          - $ref: '#/components/schemas/NarrativeContext'
+          nullable: true
+        sceneDetails:
+          allOf:
+          - $ref: '#/components/schemas/SceneDetails'
+          nullable: true
       required:
       - id
       - position
@@ -469,6 +477,14 @@ components:
           nullable: true
         lastUpdated:
           type: string
+          nullable: true
+        narrativeContext:
+          allOf:
+          - $ref: '#/components/schemas/NarrativeContext'
+          nullable: true
+        sceneDetails:
+          allOf:
+          - $ref: '#/components/schemas/SceneDetails'
           nullable: true
       required:
       - type
@@ -751,6 +767,29 @@ components:
             $ref: '#/components/schemas/ContextSection'
       required:
       - sections
+    NarrativeContext:
+      type: object
+      properties:
+        povCharacterId:
+          type: string
+          nullable: true
+        povCharacterName:
+          type: string
+          nullable: true
+        timelineMarker:
+          type: string
+          nullable: true
+        locationId:
+          type: string
+          nullable: true
+        locationName:
+          type: string
+          nullable: true
+        themeTags:
+          type: array
+          items:
+            type: string
+          nullable: true
     ParagraphSuggestionRequest:
       type: object
       properties:
@@ -862,6 +901,14 @@ components:
         lastUpdated:
           type: string
           nullable: true
+        narrativeContext:
+          allOf:
+          - $ref: '#/components/schemas/NarrativeContext'
+          nullable: true
+        sceneDetails:
+          allOf:
+          - $ref: '#/components/schemas/SceneDetails'
+          nullable: true
     PatchedChapterUpsert:
       type: object
       properties:
@@ -890,3 +937,18 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/ContextItemUpdate'
+    SceneDetails:
+      type: object
+      properties:
+        locationId:
+          type: string
+          nullable: true
+        locationName:
+          type: string
+          nullable: true
+        timestamp:
+          type: string
+          nullable: true
+        mood:
+          type: string
+          nullable: true

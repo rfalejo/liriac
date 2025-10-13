@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import cast
+from typing import Any, Dict, Iterable, Optional, cast
 
 from django.http import Http404
 from drf_spectacular.utils import extend_schema
@@ -27,6 +27,7 @@ from .data import (
     update_chapter_block,
     update_context_items,
 )
+from .models import ChapterBlockType
 from .payloads import ParagraphBlockPayload
 from .prompts import build_paragraph_suggestion_prompt
 from .serializers import (
@@ -46,6 +47,92 @@ from .serializers import (
 )
 from .services import generate_paragraph_suggestion
 from .services.gemini import GeminiServiceError
+
+
+def _coerce_optional_text(value: Optional[str]) -> Optional[str]:
+    if value is None:
+        return None
+    text = str(value).strip()
+    return text if text else None
+
+
+def _normalize_theme_tags(tags: Optional[Iterable[str]]) -> Optional[list[str]]:
+    if tags is None:
+        return None
+    normalized = []
+    for item in tags:
+        if item is None:
+            continue
+        text = str(item).strip()
+        if text:
+            normalized.append(text)
+    return normalized
+
+
+def _flatten_structured_block_fields(
+    payload: Dict[str, Any],
+    *,
+    block_type: Optional[str],
+    block_kind: Optional[str],
+) -> Dict[str, Any]:
+    """Expand structured objects like narrativeContext into flat payload fields."""
+
+    if not payload:
+        return payload
+
+    flattened = dict(payload)
+    block_type_value = str(block_type) if block_type is not None else None
+    block_kind_value = str(block_kind) if block_kind is not None else None
+
+    narrative_context = flattened.pop("narrativeContext", None)
+    if (
+        narrative_context is not None
+        and block_type_value == ChapterBlockType.METADATA
+        and (
+            block_kind_value == "context"
+            or block_kind_value is None
+            or isinstance(narrative_context, dict)
+        )
+    ):
+        if isinstance(narrative_context, dict):
+            if "povCharacterId" in narrative_context:
+                flattened["povCharacterId"] = _coerce_optional_text(
+                    narrative_context.get("povCharacterId")
+                )
+            if "povCharacterName" in narrative_context:
+                flattened["povCharacterName"] = _coerce_optional_text(
+                    narrative_context.get("povCharacterName")
+                )
+            if "timelineMarker" in narrative_context:
+                flattened["timelineMarker"] = _coerce_optional_text(
+                    narrative_context.get("timelineMarker")
+                )
+            if "locationId" in narrative_context:
+                flattened["locationId"] = _coerce_optional_text(narrative_context.get("locationId"))
+            if "locationName" in narrative_context:
+                flattened["locationName"] = _coerce_optional_text(
+                    narrative_context.get("locationName")
+                )
+            if "themeTags" in narrative_context:
+                tags = _normalize_theme_tags(narrative_context.get("themeTags"))
+                if tags is None:
+                    flattened["themeTags"] = []
+                else:
+                    flattened["themeTags"] = tags
+
+    scene_details = flattened.pop("sceneDetails", None)
+    if scene_details is not None and block_type_value == ChapterBlockType.SCENE_BOUNDARY:
+        if isinstance(scene_details, dict):
+            if "locationId" in scene_details:
+                flattened["locationId"] = _coerce_optional_text(scene_details.get("locationId"))
+            if "locationName" in scene_details:
+                flattened["locationName"] = _coerce_optional_text(scene_details.get("locationName"))
+            if "timestamp" in scene_details:
+                flattened["timestamp"] = _coerce_optional_text(scene_details.get("timestamp"))
+            if "mood" in scene_details:
+                flattened["mood"] = _coerce_optional_text(scene_details.get("mood"))
+
+    return flattened
 
 
 class LibraryView(APIView):
@@ -258,6 +345,12 @@ class ChapterBlockUpdateView(APIView):
         serializer.is_valid(raise_exception=True)
         payload = serializer.validated_data
 
+        payload = _flatten_structured_block_fields(
+            payload,
+            block_type=existing_block.get("type"),
+            block_kind=existing_block.get("kind"),
+        )
+
         if not payload:
             raise ValidationError("No se enviaron cambios para actualizar.")
 
@@ -304,6 +397,12 @@ class ChapterBlockListView(APIView):
         serializer = ChapterBlockCreateSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         payload = serializer.validated_data
+
+        payload = _flatten_structured_block_fields(
+            payload,
+            block_type=payload.get("type"),
+            block_kind=payload.get("kind"),
+        )
 
         try:
             updated_chapter = create_chapter_block(chapter_id, payload)
