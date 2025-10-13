@@ -84,6 +84,8 @@ class Migration(migrations.Migration):
         ),
         migrations.AddConstraint(
             model_name="librarysection",
-            constraint=models.UniqueConstraint(fields=("book", "slug"), name="uniq_section_book_slug"),
+            constraint=models.UniqueConstraint(
+                fields=("book", "slug"), name="uniq_section_book_slug"
+            ),
         ),
     ]

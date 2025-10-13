@@ -101,22 +101,43 @@ backend/
 |   |-- urls.py
 |   \-- wsgi.py
 |-- studio/
+|   |-- data/
+|   |   |-- __init__.py
+|   |   |-- blocks.py
+|   |   |-- books.py
+|   |   |-- bootstrap.py
+|   |   |-- chapters.py
+|   |   |-- context.py
+|   |   \-- editor.py
 |   |-- migrations/
 |   |   |-- 0001_initial.py
 |   |   |-- 0002_load_sample_data.py
+|   |   |-- 0003_book_context_scope.py
+|   |   |-- 0004_alter_librarysection_options.py
 |   |   \-- __init__.py
+|   |-- prompts/
+|   |   |-- __init__.py
+|   |   \-- paragraph_suggestion.py
+|   |-- services/
+|   |   |-- __init__.py
+|   |   \-- gemini.py
+|   |-- views/
+|   |   |-- __init__.py
+|   |   |-- chapters.py
+|   |   |-- editor.py
+|   |   |-- library.py
+|   |   |-- suggestions.py
+|   |   \-- utils.py
 |   |-- __init__.py
 |   |-- admin.py
 |   |-- apps.py
-|   |-- data.py
 |   |-- middleware.py
 |   |-- models.py
 |   |-- payloads.py
 |   |-- sample_data.py
 |   |-- serializers.py
 |   |-- tests.py
-|   |-- urls.py
-|   \-- views.py
+|   \-- urls.py
 |-- manage.py
 |-- pyproject.toml
 |-- schema.yaml
@@ -196,15 +217,22 @@ frontend/
 |   |   \-- library/
 |   |       |-- components/
 |   |       |   |-- BookCoverCard.tsx
+|   |       |   |-- BookDeleteDialog.tsx
 |   |       |   |-- BookDialog.tsx
+|   |       |   |-- BookEditorContextTab.tsx
+|   |       |   |-- BookEditorMetadataTab.tsx
+|   |       |   |-- BookEditorPanel.tsx
 |   |       |   |-- ChapterDialog.tsx
 |   |       |   |-- LibraryListItemButton.tsx
 |   |       |   |-- LibraryPanel.tsx
 |   |       |   |-- LibraryPanelStatus.tsx
+|   |       |   |-- bookContextHelpers.ts
 |   |       |   \-- panelStatus.ts
 |   |       |-- hooks/
+|   |       |   |-- useBookEditorPanel.ts
 |   |       |   |-- useBookLookup.ts
 |   |       |   |-- useChapterDetail.ts
+|   |       |   |-- useCreateLibraryContextItem.ts
 |   |       |   |-- useDeleteBook.ts
 |   |       |   |-- useLibraryBooks.ts
 |   |       |   |-- useLibraryEditor.ts

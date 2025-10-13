@@ -112,9 +112,7 @@ class LibraryEndpointTests(TestCase):
         )
         self.assertIsNotNone(characters_section)
         items = characters_section["items"]
-        self.assertTrue(
-            any(item.get("name") == "Nuevo personaje misterioso" for item in items)
-        )
+        self.assertTrue(any(item.get("name") == "Nuevo personaje misterioso" for item in items))
         self.assertTrue(
             LibraryContextItem.objects.filter(
                 section__book_id=book_id,
