@@ -227,6 +227,7 @@ frontend/
 |   |       |   |-- BookEditorMetadataTab.tsx
 |   |       |   |-- BookEditorPanel.tsx
 |   |       |   |-- ChapterDialog.tsx
+|   |       |   |-- ConfirmDeleteDialog.tsx
 |   |       |   |-- LibraryListItemButton.tsx
 |   |       |   |-- LibraryPanel.tsx
 |   |       |   |-- LibraryPanelStatus.tsx
