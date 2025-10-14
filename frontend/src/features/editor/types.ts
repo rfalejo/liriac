@@ -34,6 +34,7 @@ export type ParagraphSuggestionState = {
   isRequesting: boolean;
   error?: string | null;
   result: ParagraphSuggestionResultState | null;
+  usesDraftAsPrompt: boolean;
 };
 
 export type ParagraphEditingState = BaseEditingState<"paragraph"> & {

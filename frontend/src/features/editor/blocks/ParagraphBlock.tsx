@@ -13,6 +13,7 @@ import {
 } from "./utils/blockEditingHelpers";
 import { ParagraphSuggestionPreview } from "./suggestions/ParagraphSuggestionPreview";
 import { ParagraphSuggestionPrompt } from "./suggestions/ParagraphSuggestionPrompt";
+import { ParagraphSuggestionInlineControls } from "./suggestions/ParagraphSuggestionInlineControls";
 
 type ChapterBlock = components["schemas"]["ChapterBlock"];
 
@@ -51,30 +52,56 @@ type ParagraphEditViewProps = {
 function ParagraphEditView({ blockId, editingState }: ParagraphEditViewProps) {
   const draftText = editingState.paragraph.draftText;
   const suggestion = editingState.paragraph.suggestion;
+  const usesDraftAsPrompt = suggestion?.usesDraftAsPrompt ?? false;
 
   const handleKeyDown =
     createEditingShortcutHandler<HTMLDivElement>(editingState);
+
+  const placeholder = usesDraftAsPrompt
+    ? "Describe qué necesitas que sugiera la IA"
+    : "Añade texto para este párrafo";
+
+  const ariaLabel = usesDraftAsPrompt
+    ? "Instrucciones para la sugerencia"
+    : "Editor de párrafo";
 
   return (
     <Stack spacing={1.75} alignItems="stretch">
       <EditableContentField
         value={draftText}
         onChange={editingState.paragraph.onChangeDraft}
-        ariaLabel="Editor de párrafo"
-        placeholder="Añade texto para este párrafo"
+        ariaLabel={ariaLabel}
+        placeholder={placeholder}
         multiline
         autoFocus
         focusKey={blockId}
         selectionBehavior="caret-at-end"
         onKeyDown={handleKeyDown}
         spellCheck
-        sx={(theme: Theme) => theme.typography.editorParagraphEditable}
+        sx={(theme: Theme) => (
+          usesDraftAsPrompt
+            ? {
+                ...theme.typography.editorBody,
+                ...theme.editor.blocks.interactiveField,
+                backgroundColor: theme.palette.editor.suggestionPromptBg,
+                borderRadius: theme.editor.blockRadius,
+                border: `1px solid ${theme.palette.editor.suggestionPromptBorder}`,
+                boxShadow: theme.palette.editor.suggestionPromptShadow,
+                padding: theme.spacing(1.25, 5, 1.25, 1.5),
+                minHeight: theme.spacing(9),
+              }
+            : theme.typography.editorParagraphEditable
+        )}
       />
       {suggestion?.result ? (
         <ParagraphSuggestionPreview suggestion={suggestion} />
       ) : null}
       {suggestion ? (
-        <ParagraphSuggestionPrompt blockId={blockId} suggestion={suggestion} />
+        suggestion.usesDraftAsPrompt ? (
+          <ParagraphSuggestionInlineControls suggestion={suggestion} />
+        ) : (
+          <ParagraphSuggestionPrompt blockId={blockId} suggestion={suggestion} />
+        )
       ) : null}
     </Stack>
   );
