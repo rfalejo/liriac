@@ -9,6 +9,7 @@ import {
   useCallback,
   useMemo,
   useState,
+  useEffect,
 } from "react";
 import EditRoundedIcon from "@mui/icons-material/EditRounded";
 import type { components } from "../../../api/schema";
@@ -43,6 +44,15 @@ export function EditorBlockFrame({
     () => isActive || focusWithin || hovered || touchRevealed,
     [focusWithin, hovered, touchRevealed, isActive],
   );
+
+  useEffect(() => {
+    if (isActive) {
+      return;
+    }
+    setFocusWithin(false);
+    setHovered(false);
+    setTouchRevealed(false);
+  }, [isActive]);
 
   const handlePointerDown = useCallback<PointerEventHandler<HTMLDivElement>>(
     (event) => {
