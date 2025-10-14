@@ -1,9 +1,14 @@
+@import url("https://fonts.googleapis.com/css2?family=Literata:wght@400;500;600;700&family=Work+Sans:wght@400;500;600;700&display=swap");
+
 :root {
-  font-family: system-ui, sans-serif;
+  font-family: "Work Sans", "Inter", "Segoe UI", system-ui, sans-serif;
   line-height: 1.5;
   font-weight: 400;
+  background-color: #f7f3ea;
+  color: #2f281d;
 }
 
 body {
   margin: 0;
+  background-color: transparent;
 }

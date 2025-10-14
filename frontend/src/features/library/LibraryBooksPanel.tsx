@@ -3,7 +3,7 @@ import IconButton from "@mui/material/IconButton";
 import Stack from "@mui/material/Stack";
 import Tooltip from "@mui/material/Tooltip";
 import Typography from "@mui/material/Typography";
-import { keyframes } from "@mui/material/styles";
+import { alpha, keyframes } from "@mui/material/styles";
 import RefreshRoundedIcon from "@mui/icons-material/RefreshRounded";
 import type { LibraryBook } from "../../api/library";
 import { LibraryPanel } from "./components/LibraryPanel";
@@ -81,7 +81,18 @@ export function LibraryBooksPanel({
               disabled={refreshDisabled}
               sx={(theme) => ({
                 color: theme.palette.text.secondary,
-                "&:hover": { color: theme.palette.primary.main },
+                border: `1px solid ${alpha(theme.palette.text.primary, 0.12)}`,
+                borderRadius: theme.spacing(1.5),
+                transition: theme.transitions.create([
+                  "color",
+                  "background-color",
+                  "transform",
+                ]),
+                "&:hover": {
+                  color: theme.palette.primary.main,
+                  backgroundColor: alpha(theme.palette.primary.main, 0.08),
+                  transform: "translateY(-1px)",
+                },
               })}
             >
               <RefreshRoundedIcon
@@ -98,8 +109,15 @@ export function LibraryBooksPanel({
       }
     >
       {showContent && (
-        <Stack spacing={2.5} alignItems="stretch">
-          <Typography variant="body2" color="text.secondary">
+        <Stack spacing={2.75} alignItems="stretch">
+          <Typography
+            variant="caption"
+            sx={{
+              letterSpacing: "0.18em",
+              textTransform: "uppercase",
+              color: "text.secondary",
+            }}
+          >
             {books.length} {books.length === 1 ? "libro" : "libros"}
           </Typography>
           <Box
@@ -114,8 +132,7 @@ export function LibraryBooksPanel({
                   }
                 : {
                     xs: "repeat(1, minmax(0, 1fr))",
-                    sm: "repeat(2, minmax(0, 1fr))",
-                    md: "repeat(3, minmax(0, 1fr))",
+                    sm: "repeat(auto-fit, minmax(220px, 1fr))",
                   },
             }}
           >

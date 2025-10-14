@@ -128,7 +128,7 @@ export function LibraryLanding() {
           >
             <Stack spacing={0.75}>
               <Typography variant="h4" sx={{ fontWeight: 600 }}>
-                Biblioteca
+                Liriac
               </Typography>
               <Typography variant="body2" color="text.secondary">
                 Gestiona tus historias y accede a sus capítulos en un toque.

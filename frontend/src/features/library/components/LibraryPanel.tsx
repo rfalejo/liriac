@@ -29,11 +29,12 @@ export function LibraryPanel({
   ...paperProps
 }: LibraryPanelProps) {
   const baseSx: SxProps<Theme> = (theme) => ({
-    p: { xs: 2.5, md: 3 },
-    backgroundColor: alpha(theme.palette.background.paper, 0.95),
-    borderRadius: theme.spacing(2),
-    border: `1px solid ${alpha(theme.palette.primary.main, 0.14)}`,
-    boxShadow: `0 18px 36px ${alpha(theme.palette.common.black, 0.05)}`,
+    p: { xs: 2.25, md: 3 },
+    backgroundColor: alpha(theme.palette.background.paper, 0.88),
+    backgroundImage: `linear-gradient(165deg, ${alpha(theme.palette.background.paper, 0.98)} 0%, ${alpha(theme.palette.background.paper, 0.74)} 100%)`,
+    borderRadius: theme.spacing(2.5),
+    border: `1px solid ${alpha(theme.palette.text.primary, 0.08)}`,
+    boxShadow: `0 22px 40px ${alpha(theme.palette.common.black, 0.04)}`,
     display: "flex",
     flexDirection: "column",
     gap: 2,
@@ -67,7 +68,7 @@ export function LibraryPanel({
         <Typography
           variant="overline"
           sx={{
-            letterSpacing: "0.18em",
+            letterSpacing: "0.24em",
             textTransform: "uppercase",
             color: "text.secondary",
           }}

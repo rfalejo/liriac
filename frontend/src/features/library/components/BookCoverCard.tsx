@@ -47,34 +47,30 @@ const cardShellStyles =
   (theme: Theme) => {
     const isAdd = variant === "add";
     const primary = theme.palette.primary.main;
-    const baseBorder = isAdd
-      ? `1px dashed ${alpha(primary, 0.35)}`
-      : "1px solid";
-    const borderColor = isAdd
-      ? alpha(primary, 0.35)
-      : selected
-        ? alpha(primary, 0.4)
-        : alpha(theme.palette.common.black, 0.08);
+    const borderColor = selected
+      ? alpha(primary, 0.45)
+      : alpha(theme.palette.text.primary, isAdd ? 0.2 : 0.12);
     const backgroundColor = isAdd
-      ? alpha(primary, 0.04)
+      ? alpha(primary, 0.06)
+      : alpha(theme.palette.background.paper, 0.86);
+    const restingShadow = isAdd
+      ? `0 0 0 1px ${alpha(primary, 0.18)}`
       : selected
-        ? alpha(primary, 0.08)
-        : theme.palette.background.paper;
-    const boxShadow = isAdd
-      ? "none"
-      : selected
-        ? `0 6px 18px ${alpha(primary, 0.18)}`
-        : `0 4px 12px ${alpha(theme.palette.common.black, 0.06)}`;
+        ? `0 18px 36px ${alpha(primary, 0.16)}`
+        : `0 14px 32px ${alpha(theme.palette.common.black, 0.05)}`;
+    const hoverShadow = isAdd
+      ? `0 0 0 1px ${alpha(primary, 0.26)}`
+      : `0 22px 40px ${alpha(theme.palette.common.black, 0.08)}`;
 
     return {
       position: "relative" as const,
       width: "100%",
-  padding: theme.spacing(condensed ? 1.75 : 2.5),
-      borderRadius: theme.spacing(1.5),
-      border: baseBorder,
+      padding: theme.spacing(condensed ? 1.75 : 2.25),
+      borderRadius: theme.spacing(2),
+      border: `1px ${isAdd ? "dashed" : "solid"} ${borderColor}`,
       borderColor,
       backgroundColor,
-      boxShadow,
+      boxShadow: restingShadow,
       transition: theme.transitions.create([
         "transform",
         "box-shadow",
@@ -92,15 +88,13 @@ const cardShellStyles =
         ? { opacity: 0.8 }
         : {
             "&:hover": {
-              transform: "translateY(-4px)",
-              boxShadow: isAdd
-                ? "none"
-                : `0 10px 24px ${alpha(theme.palette.common.black, 0.12)}`,
+              transform: "translateY(-3px)",
+              boxShadow: hoverShadow,
             },
           }),
-      "&:focus-within": {
-        outline: `2px solid ${primary}`,
-        outlineOffset: 2,
+      "&:focus-visible, &:focus-within": {
+        outline: `2px solid ${alpha(primary, 0.6)}`,
+        outlineOffset: 4,
       },
     };
   };
@@ -115,11 +109,12 @@ const coverVisualStyles = (condensed: boolean): SxProps<Theme> =>
   (theme: Theme) => ({
     position: "relative" as const,
     width: condensed ? 72 : "100%",
-    height: condensed ? 108 : "auto",
-    borderRadius: theme.spacing(1.5),
+    height: condensed ? 104 : "auto",
+    borderRadius: theme.spacing(condensed ? 1.5 : 2.25),
     overflow: "hidden",
-    background: `linear-gradient(135deg, ${alpha(theme.palette.primary.main, 0.28)} 0%, ${alpha(theme.palette.primary.main, 0.08)} 100%)`,
-    boxShadow: `inset 0 0 0 1px ${alpha(theme.palette.common.black, 0.06)}`,
+    background: `radial-gradient(circle at 20% 20%, ${alpha(theme.palette.primary.main, 0.22)} 0%, ${alpha(theme.palette.primary.main, 0.08)} 70%)`,
+    border: `1px solid ${alpha(theme.palette.primary.main, 0.2)}`,
+    boxShadow: `inset 0 0 0 1px ${alpha(theme.palette.common.black, 0.04)}`,
     aspectRatio: condensed ? undefined : "2 / 3",
     flexShrink: condensed ? 0 : undefined,
     alignSelf: condensed ? "stretch" : undefined,
@@ -131,10 +126,10 @@ const coverLetterStyles: SxProps<Theme> = (theme: Theme) => ({
   display: "flex",
   alignItems: "center",
   justifyContent: "center",
-  fontSize: "2.2rem",
-  fontWeight: 700,
-  letterSpacing: "0.08em",
-  color: alpha(theme.palette.common.black, 0.5),
+  fontSize: "2.25rem",
+  fontWeight: 600,
+  letterSpacing: "0.06em",
+  color: alpha(theme.palette.text.primary, 0.55),
 });
 
 export function BookCoverCard({
@@ -152,7 +147,7 @@ export function BookCoverCard({
   const chapterLabel = `${chaptersCount} ${chaptersCount === 1 ? "capítulo" : "capítulos"}`;
 
   return (
-  <Box sx={cardShellStyles({ selected, disabled, condensed })}>
+    <Box sx={cardShellStyles({ selected, disabled, condensed })}>
       <ButtonBase
         onClick={() => {
           if (onSelect) {
@@ -164,7 +159,7 @@ export function BookCoverCard({
         sx={cardButtonStyles}
       >
         <Stack
-          spacing={condensed ? 1.5 : 2}
+          spacing={condensed ? 1.5 : 2.25}
           alignItems={condensed ? "center" : "stretch"}
           direction={condensed ? "row" : "column"}
         >
@@ -178,8 +173,8 @@ export function BookCoverCard({
           >
             <Typography
               variant="subtitle1"
-              fontWeight={600}
               sx={{
+                fontWeight: 600,
                 lineHeight: 1.2,
                 display: "-webkit-box",
                 WebkitLineClamp: condensed ? 1 : 2,
@@ -198,7 +193,7 @@ export function BookCoverCard({
             <Typography variant="caption" color="text.secondary">
               {chapterLabel}
             </Typography>
-            {synopsis ? (
+            {synopsis && !condensed ? (
               <Typography
                 variant="body2"
                 color="text.secondary"
@@ -228,10 +223,12 @@ export function BookCoverCard({
               top: theme.spacing(1.5),
               right: theme.spacing(1.5),
               color: theme.palette.primary.main,
-              backgroundColor: alpha(theme.palette.common.white, 0.72),
+              backgroundColor: alpha(theme.palette.background.paper, 0.76),
+              border: `1px solid ${alpha(theme.palette.primary.main, 0.24)}`,
+              boxShadow: `0 8px 16px ${alpha(theme.palette.common.black, 0.08)}`,
               zIndex: 1,
               "&:hover": {
-                backgroundColor: alpha(theme.palette.common.white, 0.92),
+                backgroundColor: alpha(theme.palette.background.paper, 0.92),
               },
             })}
           >
@@ -268,9 +265,9 @@ export function AddBookCoverCard({
         }}
       >
         <Stack
-          direction={condensed ? "row" : "row"}
-          alignItems={condensed ? "center" : "center"}
-          spacing={condensed ? 1 : 1.5}
+          direction="row"
+          alignItems="center"
+          spacing={condensed ? 1 : 1.25}
         >
           <Box
             sx={(theme) => ({
@@ -280,7 +277,7 @@ export function AddBookCoverCard({
               display: "flex",
               alignItems: "center",
               justifyContent: "center",
-              backgroundColor: alpha(theme.palette.primary.main, 0.12),
+              backgroundColor: alpha(theme.palette.primary.main, 0.14),
               color: theme.palette.primary.main,
             })}
           >
