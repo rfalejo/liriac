@@ -1,9 +1,10 @@
 import { useCallback, useEffect, useState, type FormEvent } from "react";
 import type { ContextSection, LibraryBook } from "../../../api/library";
-import type {
-  ContextEditableField,
-  ContextItemFormValue,
-  ContextSectionId,
+import {
+  makeContextKey,
+  type ContextEditableField,
+  type ContextItemFormValue,
+  type ContextSectionId,
 } from "../components/bookContextHelpers";
 import { useUpsertBook } from "./useUpsertBook";
 import { useDeleteBook } from "./useDeleteBook";
@@ -54,11 +55,9 @@ type UseBookEditorPanelResult = {
     value: string,
   ) => void;
   handleAddContextItem: (sectionId: ContextSectionId) => void;
-  handleDeleteContextItem: (
-    sectionSlug: string,
-    itemId: string,
-    chapterId: string | null,
-  ) => void;
+  requestContextItemDeletion: (details: PendingContextDeletion) => void;
+  cancelContextItemDeletion: () => void;
+  confirmContextItemDeletion: () => Promise<void>;
   handleSubmit: (event: FormEvent<HTMLFormElement>) => Promise<void>;
   reloadContext: () => void;
   openDeleteDialog: () => void;
@@ -66,6 +65,16 @@ type UseBookEditorPanelResult = {
   handleDeleteConfirmationChange: (value: string) => void;
   handleConfirmDelete: (event: FormEvent<HTMLFormElement>) => Promise<void>;
   deletingContextItems: Record<string, boolean>;
+  pendingContextDeletion: PendingContextDeletion | null;
+  pendingContextDeletionKey: string | null;
+  isDeletingContextMutation: boolean;
+};
+
+type PendingContextDeletion = {
+  sectionSlug: string;
+  itemId: string;
+  chapterId: string | null;
+  label: string;
 };
 
 export function useBookEditorPanel({
@@ -108,19 +117,56 @@ export function useBookEditorPanel({
     contextHasChanges,
     handleContextFieldChange,
     handleAddContextItem,
-    handleDeleteContextItem,
+    deleteContextItem,
     submitContextUpdates,
     reloadContext,
     creatingContextSection,
     isCreatingContextItem,
     isUpdatingContext,
     deletingContextItems,
-    isDeletingContextItem,
+    isDeletingContextMutation,
   } = useBookContextEditor({
     bookId: book.id,
     onClearError: clearError,
     onMutationError: setErrorMessage,
   });
+
+  const [pendingContextDeletion, setPendingContextDeletion] = useState<
+    PendingContextDeletion | null
+  >(null);
+
+  const pendingContextDeletionKey = pendingContextDeletion
+    ? makeContextKey(
+        pendingContextDeletion.sectionSlug,
+        pendingContextDeletion.itemId,
+        pendingContextDeletion.chapterId,
+      )
+    : null;
+
+  const requestContextItemDeletion = useCallback(
+    (details: PendingContextDeletion) => {
+      setPendingContextDeletion(details);
+    },
+    [],
+  );
+
+  const cancelContextItemDeletion = useCallback(() => {
+    setPendingContextDeletion(null);
+  }, []);
+
+  const confirmContextItemDeletion = useCallback(async () => {
+    if (!pendingContextDeletion) {
+      return;
+    }
+    const success = await deleteContextItem(
+      pendingContextDeletion.sectionSlug,
+      pendingContextDeletion.itemId,
+      pendingContextDeletion.chapterId,
+    );
+    if (success) {
+      setPendingContextDeletion(null);
+    }
+  }, [deleteContextItem, pendingContextDeletion]);
 
   const {
     deleteDialogOpen,
@@ -148,7 +194,7 @@ export function useBookEditorPanel({
     isUpdatingContext ||
     isDeleting ||
     isCreatingContextItem ||
-    isDeletingContextItem;
+  isDeletingContextMutation;
 
   const handleSubmit = useCallback(
     async (event: FormEvent<HTMLFormElement>) => {
@@ -188,7 +234,9 @@ export function useBookEditorPanel({
     handleFieldChange,
     handleContextFieldChange,
     handleAddContextItem,
-    handleDeleteContextItem,
+    requestContextItemDeletion,
+    cancelContextItemDeletion,
+    confirmContextItemDeletion,
     handleSubmit,
     reloadContext,
     openDeleteDialog,
@@ -196,5 +244,8 @@ export function useBookEditorPanel({
     handleDeleteConfirmationChange,
     handleConfirmDelete,
     deletingContextItems,
+    pendingContextDeletion,
+    pendingContextDeletionKey,
+    isDeletingContextMutation,
   };
 }

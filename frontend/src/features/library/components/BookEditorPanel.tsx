@@ -11,6 +11,7 @@ import Typography from "@mui/material/Typography";
 import type { LibraryBook } from "../../../api/library";
 import { LibraryPanel } from "./LibraryPanel";
 import { BookDeleteDialog } from "./BookDeleteDialog";
+import { ConfirmDeleteDialog } from "./ConfirmDeleteDialog";
 import { BookEditorContextTab } from "./BookEditorContextTab";
 import { BookEditorMetadataTab } from "./BookEditorMetadataTab";
 import {
@@ -51,8 +52,10 @@ export function BookEditorPanel({
   isCreatingContextItem,
     handleFieldChange,
     handleContextFieldChange,
-  handleAddContextItem,
-    handleDeleteContextItem,
+    handleAddContextItem,
+    requestContextItemDeletion,
+    cancelContextItemDeletion,
+    confirmContextItemDeletion,
     handleSubmit,
     reloadContext,
     openDeleteDialog,
@@ -60,6 +63,9 @@ export function BookEditorPanel({
     handleDeleteConfirmationChange,
     handleConfirmDelete,
     deletingContextItems,
+    pendingContextDeletion,
+    pendingContextDeletionKey,
+    isDeletingContextMutation,
   } = useBookEditorPanel({
     book,
     onClose,
@@ -163,7 +169,7 @@ export function BookEditorPanel({
               contextValues={contextFormValues}
               onFieldChange={handleContextFieldChange}
               onAddItem={handleAddContextItem}
-              onDeleteItem={handleDeleteContextItem}
+              onRequestDeleteItem={requestContextItemDeletion}
               onRetry={reloadContext}
               disabled={disableActions || contextLoading}
               creatingSectionId={creatingContextSection}
@@ -202,6 +208,26 @@ export function BookEditorPanel({
           void handleConfirmDelete(event);
         }}
         disabled={isDeleting}
+      />
+
+      <ConfirmDeleteDialog
+        open={Boolean(pendingContextDeletion)}
+        title="Eliminar elemento de contexto"
+        message={
+          pendingContextDeletion
+            ? `¿Estás seguro de eliminar "${pendingContextDeletion.label}"? Esta acción no se puede deshacer.`
+            : ""
+        }
+        loading={
+          Boolean(
+            pendingContextDeletionKey &&
+              (deletingContextItems[pendingContextDeletionKey] || isDeletingContextMutation),
+          )
+        }
+        onClose={cancelContextItemDeletion}
+        onConfirm={() => {
+          void confirmContextItemDeletion();
+        }}
       />
     </>
   );

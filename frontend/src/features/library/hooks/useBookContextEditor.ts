@@ -251,53 +251,50 @@ export function useBookContextEditor({
   );
 
   const handleDeleteContextItem = useCallback(
-    (sectionSlug: string, itemId: string, chapterId: string | null) => {
+    async (sectionSlug: string, itemId: string, chapterId: string | null) => {
       const normalizedChapterId = chapterId ?? null;
       const key = makeContextKey(sectionSlug, itemId, normalizedChapterId);
 
       onClearError();
       setDeletingContextItems((current) => ({ ...current, [key]: true }));
 
-      void (async () => {
-        try {
-          await deleteContextItem({
-            sectionSlug,
-            itemId,
-            chapterId: normalizedChapterId ?? undefined,
-          });
+      try {
+        await deleteContextItem({
+          sectionSlug,
+          itemId,
+          chapterId: normalizedChapterId ?? undefined,
+        });
 
-          setContextFormValues((current) => {
-            if (!current[key]) {
-              return current;
-            }
-            const next = { ...current };
-            delete next[key];
-            return next;
-          });
+        setContextFormValues((current) => {
+          if (!current[key]) {
+            return current;
+          }
+          const next = { ...current };
+          delete next[key];
+          return next;
+        });
 
-          const nextInitial = { ...contextInitialRef.current };
-          delete nextInitial[key];
-          contextInitialRef.current = nextInitial;
-        } catch (error) {
-          console.error("Failed to delete context item", error);
-          onMutationError("No se pudo eliminar el elemento. Intenta nuevamente.");
-        } finally {
-          setDeletingContextItems((current) => {
-            if (!current[key]) {
-              return current;
-            }
-            const next = { ...current };
-            delete next[key];
-            return next;
-          });
-        }
-      })();
+        const nextInitial = { ...contextInitialRef.current };
+        delete nextInitial[key];
+        contextInitialRef.current = nextInitial;
+        return true;
+      } catch (error) {
+        console.error("Failed to delete context item", error);
+        onMutationError("No se pudo eliminar el elemento. Intenta nuevamente.");
+        return false;
+      } finally {
+        setDeletingContextItems((current) => {
+          if (!current[key]) {
+            return current;
+          }
+          const next = { ...current };
+          delete next[key];
+          return next;
+        });
+      }
     },
     [deleteContextItem, onClearError, onMutationError],
   );
-
-  const isDeletingContextItem =
-    isDeletingContextMutation || Object.keys(deletingContextItems).length > 0;
 
   return {
     contextSections,
@@ -307,13 +304,13 @@ export function useBookContextEditor({
     contextHasChanges,
     handleContextFieldChange,
     handleAddContextItem,
-    handleDeleteContextItem,
+    deleteContextItem: handleDeleteContextItem,
     submitContextUpdates,
     reloadContext,
     creatingContextSection,
     isCreatingContextItem,
     isUpdatingContext,
     deletingContextItems,
-    isDeletingContextItem,
+    isDeletingContextMutation,
   };
 }

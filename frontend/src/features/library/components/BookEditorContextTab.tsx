@@ -34,11 +34,12 @@ type BookEditorContextTabProps = {
     value: string,
   ) => void;
   onAddItem: (sectionId: ContextSectionId) => void;
-  onDeleteItem: (
-    sectionSlug: ContextSection["id"],
-    itemId: ContextItem["id"],
-    chapterId: string | null,
-  ) => void;
+  onRequestDeleteItem: (details: {
+    sectionSlug: ContextSection["id"];
+    itemId: ContextItem["id"];
+    chapterId: string | null;
+    label: string;
+  }) => void;
   onRetry: () => void;
   disabled: boolean;
   creatingSectionId: ContextSectionId | null;
@@ -53,7 +54,7 @@ export function BookEditorContextTab({
   contextValues,
   onFieldChange,
   onAddItem,
-  onDeleteItem,
+  onRequestDeleteItem,
   onRetry,
   disabled,
   creatingSectionId,
@@ -161,11 +162,15 @@ export function BookEditorContextTab({
                             aria-label="Eliminar elemento de contexto"
                             size="small"
                             onClick={() => {
-                              onDeleteItem(
-                                section.id,
-                                item.id,
-                                item.chapterId ?? null,
-                              );
+                              if (disabled || deleting) {
+                                return;
+                              }
+                              onRequestDeleteItem({
+                                sectionSlug: section.id,
+                                itemId: item.id,
+                                chapterId: item.chapterId ?? null,
+                                label: itemLabel,
+                              });
                             }}
                             disabled={disabled || deleting}
                             sx={(theme) => ({
