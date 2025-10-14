@@ -180,10 +180,7 @@ export function EditorContainer({
     [chapter, createBlock, mutationPending, notifyUpdateFailure],
   );
   const leftPanelControls = usePinnedHoverPanel({ enabled: open });
-  const rightPanelControls = usePinnedHoverPanel({
-    enabled: open,
-    initialPinned: true,
-  });
+  const rightPanelControls = usePinnedHoverPanel({ enabled: open });
 
   const selectedChapterId = chapter?.id ?? activeChapterId;
 

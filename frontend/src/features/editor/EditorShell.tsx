@@ -82,6 +82,7 @@ const contentWrapperSx = (theme: Theme) => ({
   display: "flex",
   flexDirection: { xs: "column", lg: "row" },
   alignItems: { xs: "stretch", lg: "flex-start" },
+  justifyContent: { xs: "flex-start", lg: "center" },
   gap: { xs: theme.spacing(3), lg: theme.spacing(4.5) },
   py: { xs: 0, lg: 1 },
 });
