@@ -160,6 +160,9 @@ frontend/
 |   |   |   |   |   |-- EditableDialogueTurn.tsx
 |   |   |   |   |   |-- MetadataEditView.tsx
 |   |   |   |   |   \-- MetadataReadView.tsx
+|   |   |   |   |-- suggestions/
+|   |   |   |   |   |-- ParagraphSuggestionPreview.tsx
+|   |   |   |   |   \-- ParagraphSuggestionPrompt.tsx
 |   |   |   |   |-- utils/
 |   |   |   |   |   \-- blockEditingHelpers.ts
 |   |   |   |   |-- BlockInsertMenu.tsx
@@ -189,6 +192,7 @@ frontend/
 |   |   |   |   |   |-- useEditingBlockManager.ts
 |   |   |   |   |   |-- useMetadataBlockEditingSession.ts
 |   |   |   |   |   |-- useParagraphBlockEditingSession.ts
+|   |   |   |   |   |-- useParagraphSuggestionController.ts
 |   |   |   |   |   \-- useSceneBoundaryBlockEditingSession.ts
 |   |   |   |   |-- useChapterBlockSelectors.ts
 |   |   |   |   |-- useChapterBlocks.ts
@@ -201,6 +205,7 @@ frontend/
 |   |   |   |   |-- useEditorScrollbar.ts
 |   |   |   |   |-- useMetadataEditingState.ts
 |   |   |   |   |-- useParagraphEditingState.ts
+|   |   |   |   |-- useParagraphSuggestionRequest.ts
 |   |   |   |   |-- useSceneBoundaryEditingState.ts
 |   |   |   |   |-- useSidebarHover.ts
 |   |   |   |   \-- useUpdateChapterBlock.ts
