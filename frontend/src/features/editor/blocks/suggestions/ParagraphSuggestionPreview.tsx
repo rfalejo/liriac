@@ -68,8 +68,9 @@ export function ParagraphSuggestionPreview({
             onClick={() => {
               result.onApply();
             }}
+            disabled={result.isApplied}
           >
-            Aplicar sugerencia
+            {result.isApplied ? "Sugerencia aplicada" : "Aplicar sugerencia"}
           </Button>
           <Button
             variant="text"

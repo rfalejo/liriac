@@ -20,6 +20,7 @@ type BaseEditingState<TType extends ChapterBlock["type"]> = {
 export type ParagraphSuggestionResultState = {
   instructions: string;
   text: string;
+  isApplied: boolean;
   onApply: () => void;
   onDismiss: () => void;
 };

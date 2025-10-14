@@ -7,6 +7,7 @@ type ParagraphBlock = ChapterBlock & { type: "paragraph" };
 type SuggestionResult = {
   instructions: string;
   text: string;
+  isApplied: boolean;
 };
 
 type ParagraphSuggestionControllerParams = {
@@ -34,6 +35,7 @@ export function useParagraphSuggestionController({
   const [instructions, setInstructions] = useState("");
   const [result, setResult] = useState<SuggestionResult | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [draftSnapshot, setDraftSnapshot] = useState<string | null>(null);
 
   const openPrompt = useCallback(() => {
     if (!block || !isActive) {
@@ -63,6 +65,8 @@ export function useParagraphSuggestionController({
       return;
     }
 
+    setDraftSnapshot(draftText);
+
     try {
       const response = await requestSuggestion({
         blockId: block.id,
@@ -72,6 +76,7 @@ export function useParagraphSuggestionController({
       setResult({
         instructions: trimmed,
         text: response.paragraphSuggestion,
+        isApplied: false,
       });
       setPromptOpen(false);
       setInstructions("");
@@ -79,46 +84,45 @@ export function useParagraphSuggestionController({
     } catch (suggestionError) {
       setError("No pudimos generar la sugerencia. Inténtalo de nuevo.");
       notifyUpdateFailure(suggestionError);
+      setDraftSnapshot(null);
     }
-  }, [block, instructions, isActive, notifyUpdateFailure, requestSuggestion]);
+  }, [
+    block,
+    draftText,
+    instructions,
+    isActive,
+    notifyUpdateFailure,
+    requestSuggestion,
+  ]);
 
   const handleDismissResult = useCallback(() => {
+    const wasApplied = result?.isApplied ?? false;
+
     setResult(null);
     setError(null);
-  }, []);
+
+    if (wasApplied && draftSnapshot !== null) {
+      onChangeDraft(draftSnapshot);
+    }
+
+    setDraftSnapshot(null);
+  }, [draftSnapshot, onChangeDraft, result]);
 
   const handleApplyResult = useCallback(() => {
     if (!result) {
       return;
     }
 
-    const suggestionContent = result.text.trim();
-    if (suggestionContent.length === 0) {
-      setResult(null);
-      setError(null);
-      return;
-    }
+    const suggestionContent = result.text;
 
-    const currentValue = draftText;
-    const hasDoubleBreak = /\n\n$/.test(currentValue);
-    const hasSingleBreak = /\n$/.test(currentValue);
-
-    let nextValue = currentValue;
-
-    if (currentValue.length === 0) {
-      nextValue = suggestionContent;
-    } else if (hasDoubleBreak) {
-      nextValue = `${currentValue}${suggestionContent}`;
-    } else if (hasSingleBreak) {
-      nextValue = `${currentValue}\n${suggestionContent}`;
-    } else {
-      nextValue = `${currentValue}\n\n${suggestionContent}`;
-    }
-
-    onChangeDraft(nextValue);
-    setResult(null);
+    onChangeDraft(suggestionContent);
+    setResult({
+      instructions: result.instructions,
+      text: result.text,
+      isApplied: true,
+    });
     setError(null);
-  }, [draftText, onChangeDraft, result]);
+  }, [onChangeDraft, result]);
 
   useEffect(() => {
     if (!block) {
@@ -126,11 +130,13 @@ export function useParagraphSuggestionController({
       setInstructions("");
       setResult(null);
       setError(null);
+      setDraftSnapshot(null);
       return;
     }
 
     setInstructions("");
     setError(null);
+    setDraftSnapshot(null);
   }, [block?.id]);
 
   useEffect(() => {
@@ -150,7 +156,9 @@ export function useParagraphSuggestionController({
       error,
       result: result
         ? {
-            ...result,
+            instructions: result.instructions,
+            text: result.text,
+            isApplied: result.isApplied,
             onApply: handleApplyResult,
             onDismiss: handleDismissResult,
           }
