@@ -8,6 +8,8 @@ import Stack from "@mui/material/Stack";
 import Tab from "@mui/material/Tab";
 import Tabs from "@mui/material/Tabs";
 import Typography from "@mui/material/Typography";
+import Tooltip from "@mui/material/Tooltip";
+import { alpha } from "@mui/material/styles";
 import type { LibraryBook } from "../../../api/library";
 import { LibraryPanel } from "./LibraryPanel";
 import { BookDeleteDialog } from "./BookDeleteDialog";
@@ -87,12 +89,12 @@ export function BookEditorPanel({
               sx={(theme) => ({
                 color: disableActions
                   ? theme.palette.error.light
-                  : theme.palette.error.main,
-                opacity: disableActions ? 0.5 : 0.7,
+                  : alpha(theme.palette.error.main, 0.8),
+                opacity: disableActions ? 0.4 : 0.85,
                 "&:hover": {
                   opacity: 1,
                   color: theme.palette.error.main,
-                  backgroundColor: theme.palette.error.main + "11",
+                  backgroundColor: alpha(theme.palette.error.main, 0.12),
                 },
               })}
             >
@@ -181,18 +183,40 @@ export function BookEditorPanel({
           <Divider />
 
           <Stack direction="row" justifyContent="flex-end">
-            <Button
-              type="submit"
-              variant="contained"
-              disabled={
+            <Tooltip
+              title={
                 disableActions ||
                 (activeTab === "metadata"
                   ? !metadataHasChanges
                   : !contextHasChanges)
+                  ? "Realiza cambios para activar el guardado."
+                  : ""
+              }
+              placement="top"
+              disableHoverListener={
+                !(
+                  disableActions ||
+                  (activeTab === "metadata"
+                    ? !metadataHasChanges
+                    : !contextHasChanges)
+                )
               }
             >
-              Guardar
-            </Button>
+              <span>
+                <Button
+                  type="submit"
+                  variant="contained"
+                  disabled={
+                    disableActions ||
+                    (activeTab === "metadata"
+                      ? !metadataHasChanges
+                      : !contextHasChanges)
+                  }
+                >
+                  Guardar
+                </Button>
+              </span>
+            </Tooltip>
           </Stack>
         </Stack>
       </LibraryPanel>
