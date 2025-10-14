@@ -5,12 +5,17 @@ import type { Theme } from "@mui/material/styles";
 import CheckRoundedIcon from "@mui/icons-material/CheckRounded";
 import CloseRoundedIcon from "@mui/icons-material/CloseRounded";
 import DeleteRoundedIcon from "@mui/icons-material/DeleteRounded";
+import AutoFixHighRoundedIcon from "@mui/icons-material/AutoFixHighRounded";
 
 type BlockEditControlsProps = {
   onConfirm?: () => void;
   onCancel?: () => void;
   onDelete?: () => void;
   disabled?: boolean;
+  supportsSuggestions?: boolean;
+  onRequestSuggestion?: () => void;
+  suggestionPending?: boolean;
+  suggestionDisabled?: boolean;
 };
 
 export function BlockEditControls({
@@ -18,9 +23,49 @@ export function BlockEditControls({
   onCancel,
   onDelete,
   disabled = false,
+  supportsSuggestions = false,
+  onRequestSuggestion,
+  suggestionPending = false,
+  suggestionDisabled = false,
 }: BlockEditControlsProps) {
+  const showSuggestionButton = supportsSuggestions && Boolean(onRequestSuggestion);
+  const suggestionButtonDisabled =
+    disabled || suggestionDisabled || suggestionPending;
+
   return (
     <Stack direction="row" spacing={0.5} alignItems="center">
+      {showSuggestionButton ? (
+        <IconButton
+          size="small"
+          onClick={() => {
+            if (suggestionPending) {
+              return;
+            }
+            onRequestSuggestion?.();
+          }}
+          disabled={suggestionButtonDisabled}
+          aria-label="Pedir sugerencia para este bloque"
+          sx={(theme: Theme) => ({
+            backgroundColor: theme.palette.editor.controlSuggestBg,
+            transition: theme.editor.iconButtonTransition,
+            color: theme.palette.editor.blockIcon,
+            "&:hover": {
+              backgroundColor: theme.palette.editor.controlSuggestHoverBg,
+              color: theme.palette.editor.blockIconHover,
+            },
+            "&.Mui-disabled": {
+              backgroundColor: theme.palette.editor.controlSuggestDisabledBg,
+              color: theme.palette.editor.controlGhostDisabledText,
+            },
+          })}
+        >
+          {suggestionPending ? (
+            <CircularProgress size={16} thickness={5} color="inherit" />
+          ) : (
+            <AutoFixHighRoundedIcon sx={{ fontSize: "1.1rem" }} />
+          )}
+        </IconButton>
+      ) : null}
       <IconButton
         size="small"
         color="success"

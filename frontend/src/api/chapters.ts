@@ -6,6 +6,8 @@ export type ChapterBlockUpdatePayload =
   components["schemas"]["PatchedChapterBlockUpdate"];
 export type ChapterBlockCreatePayload =
   components["schemas"]["ChapterBlockCreate"];
+export type ParagraphSuggestionResponse =
+  components["schemas"]["ParagraphSuggestionResponse"];
 
 export async function fetchChapterDetail(
   chapterId: string,
@@ -73,6 +75,31 @@ export async function deleteChapterBlock({
     `/api/library/chapters/${encodedChapter}/blocks/${encodedBlock}/`,
     {
       method: "DELETE",
+    },
+  );
+}
+
+type ParagraphSuggestionParams = {
+  chapterId: string;
+  blockId: string;
+  instructions: string;
+};
+
+export async function requestParagraphSuggestion({
+  chapterId,
+  blockId,
+  instructions,
+}: ParagraphSuggestionParams): Promise<ParagraphSuggestionResponse> {
+  const encodedChapter = encodeURIComponent(chapterId);
+
+  return request<ParagraphSuggestionResponse>(
+    `/api/library/chapters/${encodedChapter}/paragraph-suggestion/`,
+    {
+      method: "POST",
+      body: JSON.stringify({
+        blockId,
+        instructions,
+      }),
     },
   );
 }

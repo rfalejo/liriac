@@ -79,6 +79,16 @@ declare module "@mui/material/styles" {
     controlAddColor: string;
     controlAddHoverColor: string;
     controlAddDisabledColor: string;
+    controlSuggestBg: string;
+    controlSuggestHoverBg: string;
+    controlSuggestDisabledBg: string;
+    suggestionPromptBg: string;
+    suggestionPromptBorder: string;
+    suggestionPromptShadow: string;
+    suggestionHighlightBg: string;
+    suggestionHighlightBorder: string;
+    suggestionHighlightText: string;
+    suggestionErrorText: string;
   }
 
   interface Palette {

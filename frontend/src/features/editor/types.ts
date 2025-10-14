@@ -12,12 +12,34 @@ type BaseEditingState<TType extends ChapterBlock["type"]> = {
   onDelete?: () => void;
   isSaving: boolean;
   hasPendingChanges: boolean;
+  supportsSuggestions?: boolean;
+  onRequestSuggestion?: () => void;
+  isSuggestionPending?: boolean;
+};
+
+export type ParagraphSuggestionResultState = {
+  instructions: string;
+  text: string;
+  onApply: () => void;
+  onDismiss: () => void;
+};
+
+export type ParagraphSuggestionState = {
+  promptOpen: boolean;
+  instructions: string;
+  onChangeInstructions: (value: string) => void;
+  onSubmit: () => Promise<void>;
+  onClosePrompt: () => void;
+  isRequesting: boolean;
+  error?: string | null;
+  result: ParagraphSuggestionResultState | null;
 };
 
 export type ParagraphEditingState = BaseEditingState<"paragraph"> & {
   paragraph: {
     draftText: string;
     onChangeDraft: (value: string) => void;
+    suggestion?: ParagraphSuggestionState;
   };
 };
 

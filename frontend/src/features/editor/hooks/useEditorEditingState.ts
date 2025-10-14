@@ -82,6 +82,7 @@ export function useEditorEditingState({
     block: activeParagraphBlock,
     isActive: Boolean(activeParagraphBlock),
     isSaving: blockMutationPending,
+    chapterId: chapter?.id ?? null,
     updateBlock,
     onComplete: clearEditing,
     sideEffects: {
@@ -165,20 +166,29 @@ export function useEditorEditingState({
         editingState: {
           blockId: activeParagraphBlock.id,
           blockType: "paragraph" as const,
+          supportsSuggestions: true,
+          onRequestSuggestion: () => {
+            paragraphSession.openSuggestionPrompt();
+          },
+          isSuggestionPending: paragraphSession.isSuggestionPending,
           paragraph: {
             draftText: paragraphSession.draftText,
             onChangeDraft: paragraphSession.onChangeDraft,
+            suggestion: paragraphSession.suggestion,
           },
           onCancel: () => {
+            paragraphSession.closeSuggestionPrompt();
             attemptCancelEditing(paragraphSession.hasPendingChanges);
           },
           onSave: () => {
             if (blockMutationPending) {
               return;
             }
+            paragraphSession.closeSuggestionPrompt();
             void paragraphSession.save();
           },
           onDelete: () => {
+            paragraphSession.closeSuggestionPrompt();
             handleDeleteBlock(activeParagraphBlock.id);
           },
           isSaving: blockMutationPending,
@@ -285,25 +295,28 @@ export function useEditorEditingState({
     activeSceneBoundaryBlock,
     activeMetadataBlock,
     attemptCancelEditing,
-    blockUpdatePending,
-  blockMutationPending,
+    blockMutationPending,
     dialogueSession.hasPendingChanges,
     dialogueSession.onAddTurn,
     dialogueSession.onChangeTurn,
     dialogueSession.onRemoveTurn,
     dialogueSession.save,
     dialogueSession.turns,
-  handleDeleteBlock,
+    handleDeleteBlock,
     metadataSession.draft,
     metadataSession.hasPendingChanges,
-  metadataSession.kind,
+    metadataSession.kind,
     metadataSession.onChangeField,
-  metadataSession.onChangeKind,
+    metadataSession.onChangeKind,
     metadataSession.save,
+    paragraphSession.closeSuggestionPrompt,
     paragraphSession.draftText,
     paragraphSession.hasPendingChanges,
+    paragraphSession.isSuggestionPending,
     paragraphSession.onChangeDraft,
+    paragraphSession.openSuggestionPrompt,
     paragraphSession.save,
+    paragraphSession.suggestion,
     sceneBoundarySession.draft,
     sceneBoundarySession.hasPendingChanges,
     sceneBoundarySession.onChangeField,
