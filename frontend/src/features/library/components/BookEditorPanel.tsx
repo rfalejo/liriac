@@ -52,12 +52,14 @@ export function BookEditorPanel({
     handleFieldChange,
     handleContextFieldChange,
   handleAddContextItem,
+    handleDeleteContextItem,
     handleSubmit,
     reloadContext,
     openDeleteDialog,
     closeDeleteDialog,
     handleDeleteConfirmationChange,
     handleConfirmDelete,
+    deletingContextItems,
   } = useBookEditorPanel({
     book,
     onClose,
@@ -161,10 +163,12 @@ export function BookEditorPanel({
               contextValues={contextFormValues}
               onFieldChange={handleContextFieldChange}
               onAddItem={handleAddContextItem}
+              onDeleteItem={handleDeleteContextItem}
               onRetry={reloadContext}
               disabled={disableActions || contextLoading}
               creatingSectionId={creatingContextSection}
               creatingItem={isCreatingContextItem}
+              deletingItemKeys={deletingContextItems}
             />
           ) : null}
 

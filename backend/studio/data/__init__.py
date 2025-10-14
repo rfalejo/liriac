@@ -16,6 +16,7 @@ from .bootstrap import bootstrap_sample_data
 from .chapters import create_chapter, get_chapter_detail, update_chapter
 from .context import (
     create_book_context_item,
+    delete_book_context_item,
     get_active_context_items,
     get_book_context_sections,
     update_book_context_items,
@@ -37,6 +38,7 @@ __all__ = [
     "update_chapter_block",
     "ensure_turn_identifiers",
     "create_book_context_item",
+    "delete_book_context_item",
     "get_active_context_items",
     "get_book_context_sections",
     "update_book_context_items",

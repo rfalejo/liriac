@@ -12,6 +12,7 @@ from ..data import (
     create_book_context_item,
     create_chapter,
     delete_book,
+    delete_book_context_item,
     get_book_context_sections,
     get_library_books,
     update_book,
@@ -34,6 +35,7 @@ __all__ = [
     "LibraryBooksView",
     "LibraryBookDetailView",
     "LibraryBookContextItemsView",
+    "LibraryBookContextItemDetailView",
     "LibraryBookChaptersView",
 ]
 
@@ -158,6 +160,33 @@ class LibraryBookChaptersView(APIView):
 
         response_serializer = ChapterSummarySerializer(chapter)
         return Response(response_serializer.data, status=status.HTTP_201_CREATED)
+
+
+class LibraryBookContextItemDetailView(APIView):
+    """Delete a single context item belonging to a book."""
+
+    authentication_classes: list = []
+    permission_classes: list = []
+
+    @extend_schema(responses=LibraryResponseSerializer)
+    def delete(self, request, book_id: str, section_slug: str, item_id: str):
+        chapter_id = request.query_params.get("chapterId")
+
+        if not Book.objects.filter(pk=book_id).exists():
+            raise Http404("Book not found")
+
+        try:
+            sections = delete_book_context_item(
+                book_id,
+                section_slug=section_slug,
+                item_id=item_id,
+                chapter_id=chapter_id if chapter_id else None,
+            )
+        except KeyError as exc:
+            raise Http404(str(exc)) from exc
+
+        response_serializer = LibraryResponseSerializer({"sections": sections})
+        return Response(response_serializer.data)
 
 
 class LibraryBookContextItemsView(APIView):

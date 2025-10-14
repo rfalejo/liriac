@@ -7,6 +7,7 @@ from .views import (
     ChapterParagraphSuggestionView,
     EditorView,
     LibraryBookChaptersView,
+    LibraryBookContextItemDetailView,
     LibraryBookContextItemsView,
     LibraryBookContextView,
     LibraryBookDetailView,
@@ -29,6 +30,11 @@ urlpatterns = [
         "library/books/<str:book_id>/context/items/",
         LibraryBookContextItemsView.as_view(),
         name="library-book-context-items",
+    ),
+    path(
+        "library/books/<str:book_id>/context/items/<str:section_slug>/<str:item_id>/",
+        LibraryBookContextItemDetailView.as_view(),
+        name="library-book-context-item-detail",
     ),
     path(
         "library/books/<str:book_id>/chapters/",

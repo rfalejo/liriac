@@ -16,6 +16,7 @@ __all__ = [
     "ensure_book_context_sections",
     "get_book_context_sections",
     "create_book_context_item",
+    "delete_book_context_item",
     "get_active_context_items",
     "update_book_context_items",
 ]
@@ -199,6 +200,38 @@ def create_book_context_item(
             disabled=bool(payload.get("disabled", False)),
             order=next_order,
         )
+
+    return get_book_context_sections(book_id)
+
+
+def delete_book_context_item(
+    book_id: str,
+    *,
+    section_slug: str,
+    item_id: str,
+    chapter_id: Optional[str] = None,
+) -> List[ContextSectionPayload]:
+    with transaction.atomic():
+        try:
+            item = (
+                LibraryContextItem.objects.select_for_update()
+                .select_related("section")
+                .get(
+                    section__book_id=book_id,
+                    section__slug=section_slug,
+                    item_id=item_id,
+                    **(
+                        {"chapter_id": str(chapter_id)}
+                        if chapter_id is not None
+                        else {"chapter__isnull": True}
+                    ),
+                )
+            )
+        except LibraryContextItem.DoesNotExist as exc:
+            scope = section_slug if chapter_id is None else f"{section_slug}:{chapter_id}"
+            raise KeyError(f"Unknown context item: {scope}:{item_id}") from exc
+
+        item.delete()
 
     return get_book_context_sections(book_id)
 

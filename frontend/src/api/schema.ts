@@ -109,6 +109,23 @@ export interface paths {
         patch: operations["library_books_context_items_partial_update"];
         trace?: never;
     };
+    "/api/library/books/{book_id}/context/items/{section_slug}/{item_id}/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        /** @description Delete a single context item belonging to a book. */
+        delete: operations["library_books_context_items_destroy"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/library/chapters/{chapter_id}/": {
         parameters: {
             query?: never;
@@ -653,6 +670,28 @@ export interface operations {
                 content: {
                     "application/json": components["schemas"]["LibraryResponse"];
                 };
+            };
+        };
+    };
+    library_books_context_items_destroy: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                book_id: string;
+                item_id: string;
+                section_slug: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description No response body */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
             };
         };
     };

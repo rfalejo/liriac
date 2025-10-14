@@ -15,6 +15,7 @@ import {
 import { useLibrarySections } from "./useLibrarySections";
 import { useUpdateLibraryContext } from "./useUpdateLibraryContext";
 import { useCreateLibraryContextItem } from "./useCreateLibraryContextItem";
+import { useDeleteLibraryContextItem } from "./useDeleteLibraryContextItem";
 import type { ContextItemUpdate, ContextSection } from "../../../api/library";
 
 type UseBookContextEditorArgs = {
@@ -99,6 +100,8 @@ export function useBookContextEditor({
     useUpdateLibraryContext(bookId);
   const { mutateAsync: createContextItem, isPending: isCreatingContextItem } =
     useCreateLibraryContextItem(bookId);
+  const { mutateAsync: deleteContextItem, isPending: isDeletingContextMutation } =
+    useDeleteLibraryContextItem(bookId);
 
   const [contextFormValues, setContextFormValues] = useState<
     Record<string, ContextItemFormValue>
@@ -106,6 +109,9 @@ export function useBookContextEditor({
   const contextInitialRef = useRef<Record<string, ContextItemFormValue>>({});
   const [creatingContextSection, setCreatingContextSection] =
     useState<ContextSectionId | null>(null);
+  const [deletingContextItems, setDeletingContextItems] = useState<
+    Record<string, boolean>
+  >({});
 
   const contextSections = useMemo(() => {
     const sectionsById = new Map<string, ContextSection>();
@@ -159,7 +165,7 @@ export function useBookContextEditor({
       itemId: string,
       chapterId: string | null,
       type: ContextItemFormValue["type"],
-  field: ContextEditableField,
+      field: ContextEditableField,
       value: string,
     ) => {
       const key = makeContextKey(sectionSlug, itemId, chapterId);
@@ -244,6 +250,55 @@ export function useBookContextEditor({
     [createContextItem, onClearError, onMutationError],
   );
 
+  const handleDeleteContextItem = useCallback(
+    (sectionSlug: string, itemId: string, chapterId: string | null) => {
+      const normalizedChapterId = chapterId ?? null;
+      const key = makeContextKey(sectionSlug, itemId, normalizedChapterId);
+
+      onClearError();
+      setDeletingContextItems((current) => ({ ...current, [key]: true }));
+
+      void (async () => {
+        try {
+          await deleteContextItem({
+            sectionSlug,
+            itemId,
+            chapterId: normalizedChapterId ?? undefined,
+          });
+
+          setContextFormValues((current) => {
+            if (!current[key]) {
+              return current;
+            }
+            const next = { ...current };
+            delete next[key];
+            return next;
+          });
+
+          const nextInitial = { ...contextInitialRef.current };
+          delete nextInitial[key];
+          contextInitialRef.current = nextInitial;
+        } catch (error) {
+          console.error("Failed to delete context item", error);
+          onMutationError("No se pudo eliminar el elemento. Intenta nuevamente.");
+        } finally {
+          setDeletingContextItems((current) => {
+            if (!current[key]) {
+              return current;
+            }
+            const next = { ...current };
+            delete next[key];
+            return next;
+          });
+        }
+      })();
+    },
+    [deleteContextItem, onClearError, onMutationError],
+  );
+
+  const isDeletingContextItem =
+    isDeletingContextMutation || Object.keys(deletingContextItems).length > 0;
+
   return {
     contextSections,
     contextFormValues,
@@ -252,10 +307,13 @@ export function useBookContextEditor({
     contextHasChanges,
     handleContextFieldChange,
     handleAddContextItem,
+    handleDeleteContextItem,
     submitContextUpdates,
     reloadContext,
     creatingContextSection,
     isCreatingContextItem,
     isUpdatingContext,
+    deletingContextItems,
+    isDeletingContextItem,
   };
 }

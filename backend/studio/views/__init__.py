@@ -7,6 +7,7 @@ from .chapters import (
 from .editor import EditorView
 from .library import (
     LibraryBookChaptersView,
+    LibraryBookContextItemDetailView,
     LibraryBookContextItemsView,
     LibraryBookContextView,
     LibraryBookDetailView,
@@ -21,6 +22,7 @@ __all__ = [
     "ChapterParagraphSuggestionView",
     "EditorView",
     "LibraryBookChaptersView",
+    "LibraryBookContextItemDetailView",
     "LibraryBookContextItemsView",
     "LibraryBookContextView",
     "LibraryBookDetailView",

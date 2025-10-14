@@ -109,3 +109,25 @@ export async function createBookContextItem(
     },
   );
 }
+
+export async function deleteBookContextItem(
+  bookId: string,
+  sectionSlug: string,
+  itemId: string,
+  params?: { chapterId?: string | null },
+): Promise<LibraryResponse> {
+  const search = new URLSearchParams();
+  const chapterId = params?.chapterId ?? null;
+  if (chapterId) {
+    search.set("chapterId", chapterId);
+  }
+  const query = search.toString();
+  const suffix = query ? `?${query}` : "";
+
+  return request<LibraryResponse>(
+    `/api/library/books/${bookId}/context/items/${sectionSlug}/${itemId}/${suffix}`,
+    {
+      method: "DELETE",
+    },
+  );
+}

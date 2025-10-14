@@ -241,6 +241,7 @@ frontend/
 |   |       |   |-- useChapterDetail.ts
 |   |       |   |-- useCreateLibraryContextItem.ts
 |   |       |   |-- useDeleteBook.ts
+|   |       |   |-- useDeleteLibraryContextItem.ts
 |   |       |   |-- useLibraryBooks.ts
 |   |       |   |-- useLibraryEditor.ts
 |   |       |   |-- useLibraryResource.ts

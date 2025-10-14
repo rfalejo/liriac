@@ -1,5 +1,7 @@
+import DeleteRoundedIcon from "@mui/icons-material/DeleteRounded";
 import Button from "@mui/material/Button";
 import CircularProgress from "@mui/material/CircularProgress";
+import IconButton from "@mui/material/IconButton";
 import Stack from "@mui/material/Stack";
 import TextField from "@mui/material/TextField";
 import Typography from "@mui/material/Typography";
@@ -32,10 +34,16 @@ type BookEditorContextTabProps = {
     value: string,
   ) => void;
   onAddItem: (sectionId: ContextSectionId) => void;
+  onDeleteItem: (
+    sectionSlug: ContextSection["id"],
+    itemId: ContextItem["id"],
+    chapterId: string | null,
+  ) => void;
   onRetry: () => void;
   disabled: boolean;
   creatingSectionId: ContextSectionId | null;
   creatingItem: boolean;
+  deletingItemKeys: Record<string, boolean>;
 };
 
 export function BookEditorContextTab({
@@ -45,10 +53,12 @@ export function BookEditorContextTab({
   contextValues,
   onFieldChange,
   onAddItem,
+  onDeleteItem,
   onRetry,
   disabled,
   creatingSectionId,
   creatingItem,
+  deletingItemKeys,
 }: BookEditorContextTabProps) {
   const hasSections = sections.length > 0;
 
@@ -125,6 +135,7 @@ export function BookEditorContextTab({
                     );
                     const formValue = contextValues[key];
                     const itemLabel = getItemPrimaryText(item);
+                    const deleting = Boolean(deletingItemKeys[key]);
 
                     return (
                       <Stack
@@ -137,9 +148,47 @@ export function BookEditorContextTab({
                           p: 1.5,
                         }}
                       >
-                        <Typography variant="body2" fontWeight={600}>
-                          {itemLabel}
-                        </Typography>
+                        <Stack
+                          direction="row"
+                          alignItems="center"
+                          justifyContent="space-between"
+                          spacing={1}
+                        >
+                          <Typography variant="body2" fontWeight={600}>
+                            {itemLabel}
+                          </Typography>
+                          <IconButton
+                            aria-label="Eliminar elemento de contexto"
+                            size="small"
+                            onClick={() => {
+                              onDeleteItem(
+                                section.id,
+                                item.id,
+                                item.chapterId ?? null,
+                              );
+                            }}
+                            disabled={disabled || deleting}
+                            sx={(theme) => ({
+                              color:
+                                disabled || deleting
+                                  ? theme.palette.error.light
+                                  : theme.palette.error.main,
+                              opacity: disabled || deleting ? 0.5 : 0.7,
+                              alignSelf: "flex-start",
+                              "&:hover": {
+                                opacity: 1,
+                                color: theme.palette.error.main,
+                                backgroundColor: theme.palette.error.main + "11",
+                              },
+                            })}
+                          >
+                            {deleting ? (
+                              <CircularProgress size={16} />
+                            ) : (
+                              <DeleteRoundedIcon fontSize="small" />
+                            )}
+                          </IconButton>
+                        </Stack>
                         <Stack spacing={1.25}>
                           {descriptors.map((descriptor) => (
                             <TextField

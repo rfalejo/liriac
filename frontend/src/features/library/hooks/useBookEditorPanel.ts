@@ -54,12 +54,18 @@ type UseBookEditorPanelResult = {
     value: string,
   ) => void;
   handleAddContextItem: (sectionId: ContextSectionId) => void;
+  handleDeleteContextItem: (
+    sectionSlug: string,
+    itemId: string,
+    chapterId: string | null,
+  ) => void;
   handleSubmit: (event: FormEvent<HTMLFormElement>) => Promise<void>;
   reloadContext: () => void;
   openDeleteDialog: () => void;
   closeDeleteDialog: () => void;
   handleDeleteConfirmationChange: (value: string) => void;
   handleConfirmDelete: (event: FormEvent<HTMLFormElement>) => Promise<void>;
+  deletingContextItems: Record<string, boolean>;
 };
 
 export function useBookEditorPanel({
@@ -102,11 +108,14 @@ export function useBookEditorPanel({
     contextHasChanges,
     handleContextFieldChange,
     handleAddContextItem,
+    handleDeleteContextItem,
     submitContextUpdates,
     reloadContext,
     creatingContextSection,
     isCreatingContextItem,
     isUpdatingContext,
+    deletingContextItems,
+    isDeletingContextItem,
   } = useBookContextEditor({
     bookId: book.id,
     onClearError: clearError,
@@ -135,7 +144,11 @@ export function useBookEditorPanel({
   }, [focusTab, focusRequest]);
 
   const disableActions =
-    isSaving || isUpdatingContext || isDeleting || isCreatingContextItem;
+    isSaving ||
+    isUpdatingContext ||
+    isDeleting ||
+    isCreatingContextItem ||
+    isDeletingContextItem;
 
   const handleSubmit = useCallback(
     async (event: FormEvent<HTMLFormElement>) => {
@@ -175,11 +188,13 @@ export function useBookEditorPanel({
     handleFieldChange,
     handleContextFieldChange,
     handleAddContextItem,
+    handleDeleteContextItem,
     handleSubmit,
     reloadContext,
     openDeleteDialog,
     closeDeleteDialog,
     handleDeleteConfirmationChange,
     handleConfirmDelete,
+    deletingContextItems,
   };
 }
