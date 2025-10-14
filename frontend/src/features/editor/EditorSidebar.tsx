@@ -1,8 +1,8 @@
 import Box from "@mui/material/Box";
+import Stack from "@mui/material/Stack";
 import type { ChapterSummary } from "../../api/library";
 import { SidebarChapterList } from "./sidebar/SidebarChapterList";
 import { SidebarHeader } from "./sidebar/SidebarHeader";
-import { SidebarShell } from "./sidebar/SidebarShell";
 
 type EditorSidebarProps = {
   activeChapterId: string | null;
@@ -10,11 +10,8 @@ type EditorSidebarProps = {
   chapters: ChapterSummary[];
   error: Error | null;
   loading: boolean;
-  onClose: () => void;
-  onEnter: () => void;
-  onLeave: () => void;
   onSelectChapter: (chapterId: string) => void;
-  visible: boolean;
+  onReturnToLibrary: () => void;
 };
 
 export function EditorSidebar({
@@ -23,15 +20,16 @@ export function EditorSidebar({
   chapters,
   error,
   loading,
-  onClose,
-  onEnter,
-  onLeave,
   onSelectChapter,
-  visible,
+  onReturnToLibrary,
 }: EditorSidebarProps) {
   return (
-    <SidebarShell onEnter={onEnter} onLeave={onLeave} visible={visible}>
-      <SidebarHeader bookTitle={bookTitle} onClose={onClose} />
+    <Stack spacing={2.5} sx={{ height: "100%" }}>
+      <SidebarHeader
+        bookTitle={bookTitle}
+        onClose={onReturnToLibrary}
+        hideTitle
+      />
       <Box sx={{ flex: 1, overflowY: "auto", pr: 1 }}>
         <SidebarChapterList
           activeChapterId={activeChapterId}
@@ -41,6 +39,6 @@ export function EditorSidebar({
           onSelectChapter={onSelectChapter}
         />
       </Box>
-    </SidebarShell>
+    </Stack>
   );
 }

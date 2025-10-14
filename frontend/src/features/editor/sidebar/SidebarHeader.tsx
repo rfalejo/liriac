@@ -5,22 +5,29 @@ import type { Theme } from "@mui/material/styles";
 export type SidebarHeaderProps = {
   bookTitle: string | null;
   onClose: () => void;
+  hideTitle?: boolean;
 };
 
-export function SidebarHeader({ bookTitle, onClose }: SidebarHeaderProps) {
+export function SidebarHeader({
+  bookTitle,
+  onClose,
+  hideTitle = false,
+}: SidebarHeaderProps) {
   return (
     <>
-      <Typography
-        id="editor-container-heading"
-        variant="subtitle2"
-        sx={(theme: Theme) => ({
-          letterSpacing: "0.08em",
-          textTransform: "uppercase",
-          color: theme.palette.editor.sidebarHeading,
-        })}
-      >
-        {bookTitle ?? "Capítulos"}
-      </Typography>
+      {hideTitle ? null : (
+        <Typography
+          id="editor-container-heading"
+          variant="subtitle2"
+          sx={(theme: Theme) => ({
+            letterSpacing: "0.08em",
+            textTransform: "uppercase",
+            color: theme.palette.editor.sidebarHeading,
+          })}
+        >
+          {bookTitle ?? "Capítulos"}
+        </Typography>
+      )}
       <Button
         variant="text"
         color="inherit"

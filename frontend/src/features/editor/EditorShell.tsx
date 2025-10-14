@@ -1,14 +1,15 @@
 import Box from "@mui/material/Box";
-import type { SxProps, Theme } from "@mui/material/styles";
+import type { Theme } from "@mui/material/styles";
 import type { ComponentProps, ReactNode } from "react";
 import { EditorChapterView } from "./EditorChapterView";
 import { EditorSidebar } from "./EditorSidebar";
+import { HoverableSidePanel } from "./components/HoverableSidePanel";
 import type {
   EditorScrollbarHandlers,
   ScrollbarState,
 } from "./hooks/useEditorScrollbar";
 
-const shellSx: SxProps<Theme> = (theme) => ({
+const shellSx = (theme: Theme) => ({
   minHeight: "100vh",
   position: "relative",
   bgcolor: theme.palette.editor.shellBg,
@@ -17,7 +18,7 @@ const shellSx: SxProps<Theme> = (theme) => ({
   flexDirection: "column",
 });
 
-const pageSx: SxProps<Theme> = (theme) => ({
+const pageSx = (theme: Theme) => ({
   flex: 1,
   display: "flex",
   justifyContent: "center",
@@ -59,7 +60,7 @@ const pageSx: SxProps<Theme> = (theme) => ({
   },
 });
 
-const blockStackSx: SxProps<Theme> = (theme) => ({
+const blockStackSx = (theme: Theme) => ({
   width: "100%",
   maxWidth: 760,
   bgcolor: theme.palette.editor.blockSurface,
@@ -75,7 +76,7 @@ const blockStackSx: SxProps<Theme> = (theme) => ({
   ...theme.typography.editorBody,
 });
 
-const contentWrapperSx: SxProps<Theme> = (theme) => ({
+const contentWrapperSx = (theme: Theme) => ({
   width: "100%",
   maxWidth: 1240,
   display: "flex",
@@ -85,40 +86,82 @@ const contentWrapperSx: SxProps<Theme> = (theme) => ({
   py: { xs: 0, lg: 1 },
 });
 
-const rightPanelSx: SxProps<Theme> = (theme) => ({
-  flex: { xs: "1 1 100%", lg: "0 0 320px" },
-  maxWidth: { xs: "100%", lg: 360 },
-  width: "100%",
-  position: { xs: "static", lg: "sticky" },
-  top: { lg: theme.spacing(6) },
-});
+type SidePanelConfig = {
+  title: string;
+  pinned: boolean;
+  visible: boolean;
+  onTogglePin: () => void;
+  onClose: () => void;
+  onEnter: () => void;
+  onLeave: () => void;
+  width?: number;
+  triggerWidth?: number;
+};
 
 type EditorShellProps = {
   sidebarProps: ComponentProps<typeof EditorSidebar>;
+  leftPanel: SidePanelConfig;
+  rightPanel?: SidePanelConfig & { content: ReactNode };
   chapterViewProps: ComponentProps<typeof EditorChapterView>;
   scrollAreaRef: React.RefObject<HTMLDivElement>;
   scrollHandlers: EditorScrollbarHandlers;
   scrollbarState: ScrollbarState;
   children?: ReactNode;
-  rightPanel?: ReactNode;
 };
 
 export function EditorShell({
   sidebarProps,
+  leftPanel,
+  rightPanel,
   chapterViewProps,
   scrollAreaRef,
   scrollHandlers,
   scrollbarState,
   children,
-  rightPanel,
 }: EditorShellProps) {
+  const leftPinnedOffset = leftPanel.pinned ? leftPanel.width ?? 320 : 0;
+  const rightPinnedOffset = rightPanel?.pinned ? rightPanel.width ?? 320 : 0;
+  const leftMarginLg = leftPinnedOffset ? `${leftPinnedOffset + 24}px` : undefined;
+  const rightMarginLg = rightPinnedOffset
+    ? `${rightPinnedOffset + 24}px`
+    : undefined;
+
   return (
     <Box
       component="section"
       aria-labelledby="editor-container-heading"
       sx={shellSx}
     >
-      <EditorSidebar {...sidebarProps} />
+      <HoverableSidePanel
+        side="left"
+        title={leftPanel.title}
+        visible={leftPanel.visible}
+        pinned={leftPanel.pinned}
+        onTogglePin={leftPanel.onTogglePin}
+        onClose={leftPanel.onClose}
+        onEnter={leftPanel.onEnter}
+        onLeave={leftPanel.onLeave}
+        width={leftPanel.width}
+        triggerWidth={leftPanel.triggerWidth}
+      >
+        <EditorSidebar {...sidebarProps} />
+      </HoverableSidePanel>
+      {rightPanel ? (
+        <HoverableSidePanel
+          side="right"
+          title={rightPanel.title}
+          visible={rightPanel.visible}
+          pinned={rightPanel.pinned}
+          onTogglePin={rightPanel.onTogglePin}
+          onClose={rightPanel.onClose}
+          onEnter={rightPanel.onEnter}
+          onLeave={rightPanel.onLeave}
+          width={rightPanel.width}
+          triggerWidth={rightPanel.triggerWidth}
+        >
+          {rightPanel.content}
+        </HoverableSidePanel>
+      ) : null}
       <Box
         ref={scrollAreaRef}
         sx={pageSx}
@@ -126,11 +169,26 @@ export function EditorShell({
         data-scrollbar-scrollable={scrollbarState.scrollable}
         {...scrollHandlers}
       >
-        <Box sx={contentWrapperSx}>
+        <Box
+          sx={(theme) => {
+            const responsiveAdjustments = leftMarginLg || rightMarginLg
+              ? {
+                  [theme.breakpoints.up("lg")]: {
+                    ...(leftMarginLg ? { marginLeft: leftMarginLg } : {}),
+                    ...(rightMarginLg ? { marginRight: rightMarginLg } : {}),
+                  },
+                }
+              : {};
+
+            return {
+              ...contentWrapperSx(theme),
+              ...responsiveAdjustments,
+            };
+          }}
+        >
           <Box sx={blockStackSx}>
             <EditorChapterView {...chapterViewProps} />
           </Box>
-          {rightPanel ? <Box sx={rightPanelSx}>{rightPanel}</Box> : null}
         </Box>
       </Box>
       {children}

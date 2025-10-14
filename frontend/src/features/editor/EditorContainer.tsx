@@ -2,7 +2,6 @@ import { useCallback, useEffect, useRef } from "react";
 import type { components } from "../../api/schema";
 import { useEditorScrollbar } from "./hooks/useEditorScrollbar";
 import { useEditorChapterNavigation } from "./hooks/useEditorChapterNavigation";
-import { useSidebarHover } from "./hooks/useSidebarHover";
 import { EditorShell } from "./EditorShell";
 import { useUpdateChapterBlock } from "./hooks/useUpdateChapterBlock";
 import { useCreateChapterBlock } from "./hooks/useCreateChapterBlock";
@@ -21,6 +20,7 @@ import {
   generateBlockId,
 } from "./utils/blockCreation";
 import { ContextConfigurationPanel } from "./contextPanel";
+import { usePinnedHoverPanel } from "./hooks/usePinnedHoverPanel";
 
 type ChapterBlockType = components["schemas"]["ChapterBlockTypeEnum"];
 
@@ -179,8 +179,11 @@ export function EditorContainer({
     },
     [chapter, createBlock, mutationPending, notifyUpdateFailure],
   );
-  const { sidebarVisible, handleSidebarEnter, handleSidebarLeave } =
-    useSidebarHover({ open });
+  const leftPanelControls = usePinnedHoverPanel({ enabled: open });
+  const rightPanelControls = usePinnedHoverPanel({
+    enabled: open,
+    initialPinned: true,
+  });
 
   const selectedChapterId = chapter?.id ?? activeChapterId;
 
@@ -192,11 +195,19 @@ export function EditorContainer({
         chapters: chapterOptions,
         error: booksError,
         loading: booksLoading,
-        onClose,
-        onEnter: handleSidebarEnter,
-        onLeave: handleSidebarLeave,
         onSelectChapter: handleSelectChapter,
-        visible: sidebarVisible,
+        onReturnToLibrary: onClose,
+      }}
+      leftPanel={{
+        title: "Capítulos",
+        pinned: leftPanelControls.pinned,
+        visible: leftPanelControls.visible,
+        onTogglePin: leftPanelControls.togglePinned,
+        onClose: leftPanelControls.close,
+        onEnter: leftPanelControls.handleEnter,
+        onLeave: leftPanelControls.handleLeave,
+        width: 300,
+        triggerWidth: 28,
       }}
       chapterViewProps={{
         loading,
@@ -210,12 +221,24 @@ export function EditorContainer({
       scrollAreaRef={scrollAreaRef}
       scrollHandlers={handlers}
       scrollbarState={scrollbarState}
-      rightPanel={
-        <ContextConfigurationPanel
-          chapterId={chapter?.id ?? null}
-          bookTitle={bookTitle ?? null}
-        />
-      }
+      rightPanel={{
+        title: "Configuración de contexto",
+        pinned: rightPanelControls.pinned,
+        visible: rightPanelControls.visible,
+        onTogglePin: rightPanelControls.togglePinned,
+        onClose: rightPanelControls.close,
+        onEnter: rightPanelControls.handleEnter,
+        onLeave: rightPanelControls.handleLeave,
+        width: 340,
+        triggerWidth: 32,
+        content: (
+          <ContextConfigurationPanel
+            chapterId={chapter?.id ?? null}
+            bookTitle={bookTitle ?? null}
+            showHeading={false}
+          />
+        ),
+      }}
     >
       <ConfirmationDialog
         open={Boolean(confirmDialog)}

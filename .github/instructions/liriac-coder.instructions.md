@@ -182,7 +182,8 @@ frontend/
 |   |   |   |   |-- ChapterHeading.tsx
 |   |   |   |   \-- ChapterLoadingState.tsx
 |   |   |   |-- components/
-|   |   |   |   \-- ConfirmationDialog.tsx
+|   |   |   |   |-- ConfirmationDialog.tsx
+|   |   |   |   \-- HoverableSidePanel.tsx
 |   |   |   |-- context/
 |   |   |   |   \-- EditorBlockEditingContext.tsx
 |   |   |   |-- contextPanel/
@@ -212,8 +213,8 @@ frontend/
 |   |   |   |   |-- useMetadataEditingState.ts
 |   |   |   |   |-- useParagraphEditingState.ts
 |   |   |   |   |-- useParagraphSuggestionRequest.ts
+|   |   |   |   |-- usePinnedHoverPanel.ts
 |   |   |   |   |-- useSceneBoundaryEditingState.ts
-|   |   |   |   |-- useSidebarHover.ts
 |   |   |   |   \-- useUpdateChapterBlock.ts
 |   |   |   |-- sidebar/
 |   |   |   |   |-- SidebarChapterList.tsx

@@ -58,6 +58,7 @@ const switchContainerSx = {
 type ContextConfigurationPanelProps = {
   chapterId: string | null;
   bookTitle: string | null;
+  showHeading?: boolean;
 };
 
 type SectionWithItems = {
@@ -68,6 +69,7 @@ type SectionWithItems = {
 export function ContextConfigurationPanel({
   chapterId,
   bookTitle,
+  showHeading = true,
 }: ContextConfigurationPanelProps) {
   const [pendingKeys, setPendingKeys] = useState<Record<string, boolean>>({});
   const [mutationError, setMutationError] = useState<string | null>(null);
@@ -132,9 +134,11 @@ export function ContextConfigurationPanel({
   return (
     <Box sx={panelContainerSx} component="aside" aria-label="Configuración de contexto">
       <Stack spacing={0.5}>
-        <Typography variant="h6" component="h2" fontWeight={600}>
-          Configuración de contexto
-        </Typography>
+        {showHeading ? (
+          <Typography variant="h6" component="h2" fontWeight={600}>
+            Configuración de contexto
+          </Typography>
+        ) : null}
         <Typography variant="body2" color="text.secondary">
           Elige qué elementos del universo se enviarán a las solicitudes de IA para este capítulo.
         </Typography>
