@@ -183,6 +183,7 @@ class ContextItemSerializer(serializers.Serializer):
     checked = serializers.BooleanField(required=False)
     disabled = serializers.BooleanField(required=False)
     chapterId = serializers.CharField(required=False, allow_null=True, allow_blank=True)
+    visibleForChapter = serializers.BooleanField(required=False)
 
 
 class ContextSectionSerializer(serializers.Serializer):
@@ -228,6 +229,16 @@ class ContextItemCreateSerializer(serializers.Serializer):
     tokens = serializers.IntegerField(required=False, allow_null=True)
     checked = serializers.BooleanField(required=False)
     disabled = serializers.BooleanField(required=False)
+
+
+class ChapterContextVisibilityUpdateItemSerializer(serializers.Serializer):
+    id = serializers.CharField()
+    sectionSlug = serializers.CharField()
+    visible = serializers.BooleanField()
+
+
+class ChapterContextVisibilityUpdateRequestSerializer(serializers.Serializer):
+    items = ChapterContextVisibilityUpdateItemSerializer(many=True)
 
 
 class EditorStateSerializer(serializers.Serializer):

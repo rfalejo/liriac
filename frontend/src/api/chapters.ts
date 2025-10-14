@@ -8,6 +8,10 @@ export type ChapterBlockCreatePayload =
   components["schemas"]["ChapterBlockCreate"];
 export type ParagraphSuggestionResponse =
   components["schemas"]["ParagraphSuggestionResponse"];
+export type ChapterContextVisibilityResponse =
+  components["schemas"]["LibraryResponse"];
+export type ChapterContextVisibilityUpdatePayload =
+  components["schemas"]["PatchedChapterContextVisibilityUpdateRequest"];
 
 export async function fetchChapterDetail(
   chapterId: string,
@@ -100,6 +104,36 @@ export async function requestParagraphSuggestion({
         blockId,
         instructions,
       }),
+    },
+  );
+}
+
+export async function fetchChapterContextVisibility(
+  chapterId: string,
+): Promise<ChapterContextVisibilityResponse> {
+  const encodedChapter = encodeURIComponent(chapterId);
+
+  return request<ChapterContextVisibilityResponse>(
+    `/api/library/chapters/${encodedChapter}/context-visibility/`,
+  );
+}
+
+type UpdateChapterContextVisibilityParams = {
+  chapterId: string;
+  payload: ChapterContextVisibilityUpdatePayload;
+};
+
+export async function updateChapterContextVisibility({
+  chapterId,
+  payload,
+}: UpdateChapterContextVisibilityParams): Promise<ChapterContextVisibilityResponse> {
+  const encodedChapter = encodeURIComponent(chapterId);
+
+  return request<ChapterContextVisibilityResponse>(
+    `/api/library/chapters/${encodedChapter}/context-visibility/`,
+    {
+      method: "PATCH",
+      body: JSON.stringify(payload),
     },
   );
 }

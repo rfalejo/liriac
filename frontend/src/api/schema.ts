@@ -179,6 +179,24 @@ export interface paths {
         patch: operations["library_chapters_blocks_partial_update"];
         trace?: never;
     };
+    "/api/library/chapters/{chapter_id}/context-visibility/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** @description Return or update the per-chapter visibility of context items. */
+        get: operations["library_chapters_context_visibility_retrieve"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        /** @description Return or update the per-chapter visibility of context items. */
+        patch: operations["library_chapters_context_visibility_partial_update"];
+        trace?: never;
+    };
     "/api/library/chapters/{chapter_id}/paragraph-suggestion/": {
         parameters: {
             query?: never;
@@ -277,6 +295,11 @@ export interface components {
          * @enum {string}
          */
         ChapterBlockTypeEnum: "paragraph" | "dialogue" | "scene_boundary" | "metadata";
+        ChapterContextVisibilityUpdateItem: {
+            id: string;
+            sectionSlug: string;
+            visible: boolean;
+        };
         ChapterDetail: {
             id: string;
             title: string;
@@ -319,6 +342,7 @@ export interface components {
             checked?: boolean;
             disabled?: boolean;
             chapterId?: string | null;
+            visibleForChapter?: boolean;
         };
         ContextItemCreate: {
             sectionSlug: string;
@@ -444,6 +468,9 @@ export interface components {
             lastUpdated?: string | null;
             narrativeContext?: components["schemas"]["NarrativeContext"] | null;
             sceneDetails?: components["schemas"]["SceneDetails"] | null;
+        };
+        PatchedChapterContextVisibilityUpdateRequest: {
+            items?: components["schemas"]["ChapterContextVisibilityUpdateItem"][];
         };
         PatchedChapterUpsert: {
             id?: string;
@@ -809,6 +836,52 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["ChapterDetail"];
+                };
+            };
+        };
+    };
+    library_chapters_context_visibility_retrieve: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                chapter_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["LibraryResponse"];
+                };
+            };
+        };
+    };
+    library_chapters_context_visibility_partial_update: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                chapter_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: {
+            content: {
+                "application/json": components["schemas"]["PatchedChapterContextVisibilityUpdateRequest"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["LibraryResponse"];
                 };
             };
         };

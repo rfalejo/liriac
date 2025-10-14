@@ -114,6 +114,7 @@ backend/
 |   |   |-- 0002_load_sample_data.py
 |   |   |-- 0003_book_context_scope.py
 |   |   |-- 0004_alter_librarysection_options.py
+|   |   |-- 0005_chaptercontextvisibility.py
 |   |   \-- __init__.py
 |   |-- prompts/
 |   |   |-- __init__.py
@@ -161,6 +162,7 @@ frontend/
 |   |   |   |   |   |-- MetadataEditView.tsx
 |   |   |   |   |   \-- MetadataReadView.tsx
 |   |   |   |   |-- suggestions/
+|   |   |   |   |   |-- ParagraphSuggestionInlineControls.tsx
 |   |   |   |   |   |-- ParagraphSuggestionPreview.tsx
 |   |   |   |   |   \-- ParagraphSuggestionPrompt.tsx
 |   |   |   |   |-- utils/
@@ -183,6 +185,9 @@ frontend/
 |   |   |   |   \-- ConfirmationDialog.tsx
 |   |   |   |-- context/
 |   |   |   |   \-- EditorBlockEditingContext.tsx
+|   |   |   |-- contextPanel/
+|   |   |   |   |-- ContextConfigurationPanel.tsx
+|   |   |   |   \-- index.ts
 |   |   |   |-- hooks/
 |   |   |   |   |-- editing/
 |   |   |   |   |   |-- constants.ts
@@ -196,6 +201,7 @@ frontend/
 |   |   |   |   |   \-- useSceneBoundaryBlockEditingSession.ts
 |   |   |   |   |-- useChapterBlockSelectors.ts
 |   |   |   |   |-- useChapterBlocks.ts
+|   |   |   |   |-- useChapterContextVisibility.ts
 |   |   |   |   |-- useCreateChapterBlock.ts
 |   |   |   |   |-- useDeleteChapterBlock.ts
 |   |   |   |   |-- useDialogueEditingState.ts
@@ -222,6 +228,7 @@ frontend/
 |   |   |   |-- EditorContainer.tsx
 |   |   |   |-- EditorShell.tsx
 |   |   |   |-- EditorSidebar.tsx
+|   |   |   |-- editorQueryKeys.ts
 |   |   |   \-- types.ts
 |   |   \-- library/
 |   |       |-- components/

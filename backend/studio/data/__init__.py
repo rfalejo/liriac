@@ -20,6 +20,7 @@ from .context import (
     get_active_context_items,
     get_book_context_sections,
     update_book_context_items,
+    update_chapter_context_visibility,
 )
 from .editor import get_editor_state
 
@@ -42,6 +43,7 @@ __all__ = [
     "get_active_context_items",
     "get_book_context_sections",
     "update_book_context_items",
+    "update_chapter_context_visibility",
     "get_editor_state",
     "bootstrap_sample_data",
 ]

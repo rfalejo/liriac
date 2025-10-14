@@ -320,6 +320,48 @@ paths:
       responses:
         '204':
           description: No response body
+  /api/library/chapters/{chapter_id}/context-visibility/:
+    get:
+      operationId: library_chapters_context_visibility_retrieve
+      description: Return or update the per-chapter visibility of context items.
+      parameters:
+      - in: path
+        name: chapter_id
+        schema:
+          type: string
+        required: true
+      tags:
+      - library
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LibraryResponse'
+          description: ''
+    patch:
+      operationId: library_chapters_context_visibility_partial_update
+      description: Return or update the per-chapter visibility of context items.
+      parameters:
+      - in: path
+        name: chapter_id
+        schema:
+          type: string
+        required: true
+      tags:
+      - library
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PatchedChapterContextVisibilityUpdateRequest'
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LibraryResponse'
+          description: ''
   /api/library/chapters/{chapter_id}/paragraph-suggestion/:
     post:
       operationId: library_chapters_paragraph_suggestion_create
@@ -562,6 +604,19 @@ components:
         * `dialogue` - dialogue
         * `scene_boundary` - scene_boundary
         * `metadata` - metadata
+    ChapterContextVisibilityUpdateItem:
+      type: object
+      properties:
+        id:
+          type: string
+        sectionSlug:
+          type: string
+        visible:
+          type: boolean
+      required:
+      - id
+      - sectionSlug
+      - visible
     ChapterDetail:
       type: object
       properties:
@@ -676,6 +731,8 @@ components:
         chapterId:
           type: string
           nullable: true
+        visibleForChapter:
+          type: boolean
       required:
       - id
       - type
@@ -1017,6 +1074,13 @@ components:
           allOf:
           - $ref: '#/components/schemas/SceneDetails'
           nullable: true
+    PatchedChapterContextVisibilityUpdateRequest:
+      type: object
+      properties:
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/ChapterContextVisibilityUpdateItem'
     PatchedChapterUpsert:
       type: object
       properties:

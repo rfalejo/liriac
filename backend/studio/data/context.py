@@ -7,7 +7,14 @@ from uuid import uuid4
 from django.db import transaction
 from django.db.models import Max, Q
 
-from ..models import Book, Chapter, ContextItemType, LibraryContextItem, LibrarySection
+from ..models import (
+    Book,
+    Chapter,
+    ChapterContextVisibility,
+    ContextItemType,
+    LibraryContextItem,
+    LibrarySection,
+)
 from ..payloads import ContextItemPayload, ContextSectionPayload
 from ..sample_data import SAMPLE_LIBRARY_BOOKS, SAMPLE_LIBRARY_SECTIONS
 
@@ -19,6 +26,7 @@ __all__ = [
     "delete_book_context_item",
     "get_active_context_items",
     "update_book_context_items",
+    "update_chapter_context_visibility",
 ]
 
 
@@ -97,6 +105,10 @@ def _coerce_optional_text(value: Optional[str]) -> str:
     return str(value)
 
 
+def _visibility_key(section_slug: str, item_id: str) -> str:
+    return f"{section_slug}::{item_id}"
+
+
 def get_book_context_sections(
     book_id: str,
     *,
@@ -110,6 +122,7 @@ def get_book_context_sections(
     sections = ensure_book_context_sections(book)
 
     chapter_specific_items: Dict[str, List[ContextItemPayload]] = {}
+    visibility_overrides: Dict[str, bool] = {}
     if chapter_id:
         chapter_specific_items = {}
         for item in LibraryContextItem.objects.filter(
@@ -118,13 +131,27 @@ def get_book_context_sections(
         ).order_by("section__order", "order"):
             chapter_specific_items.setdefault(item.section.slug, []).append(item.to_payload())
 
+        visibility_overrides = {
+            _visibility_key(entry.context_item.section.slug, entry.context_item.item_id): entry.visible
+            for entry in ChapterContextVisibility.objects.filter(
+                chapter_id=chapter_id,
+                context_item__section__book=book,
+            ).select_related("context_item__section")
+        }
+
     payloads: List[ContextSectionPayload] = []
     for section in sections:
         base_items = [item.to_payload() for item in section.items.all() if item.chapter_id is None]
 
         if chapter_id:
             extra_items = chapter_specific_items.get(section.slug, [])
-            items = base_items + extra_items
+            items: List[ContextItemPayload] = []
+            for item in base_items:
+                key = _visibility_key(section.slug, item["id"])
+                default_visible = bool(item.get("checked", False))
+                item["visibleForChapter"] = visibility_overrides.get(key, default_visible)
+                items.append(item)
+            items.extend(extra_items)
         else:
             items = base_items
 
@@ -241,14 +268,35 @@ def get_active_context_items(
     book_id: str,
     chapter_id: Optional[str] = None,
 ) -> List[ContextItemPayload]:
-    filters = Q(section__book_id=book_id, checked=True, disabled=False)
+    filters = Q(section__book_id=book_id, disabled=False)
     if chapter_id:
         filters &= Q(Q(chapter__isnull=True) | Q(chapter_id=chapter_id))
     else:
-        filters &= Q(chapter__isnull=True)
+        filters &= Q(chapter__isnull=True, checked=True)
 
-    items = LibraryContextItem.objects.filter(filters).order_by("section__order", "order")
-    return [item.to_payload() for item in items]
+    visibility_overrides: Dict[str, bool] = {}
+    if chapter_id:
+        visibility_overrides = {
+            entry.context_item_id: entry.visible
+            for entry in ChapterContextVisibility.objects.filter(
+                chapter_id=chapter_id,
+                context_item__section__book_id=book_id,
+            )
+        }
+
+    active_items: List[ContextItemPayload] = []
+    for item in LibraryContextItem.objects.filter(filters).order_by("section__order", "order"):
+        default_visible = bool(item.checked)
+        if chapter_id and item.chapter_id is None:
+            visible = visibility_overrides.get(item.id, default_visible)
+            if not visible:
+                continue
+        elif not chapter_id and not default_visible:
+            continue
+
+        active_items.append(item.to_payload())
+
+    return active_items
 
 
 def update_book_context_items(
@@ -307,3 +355,54 @@ def update_book_context_items(
                 item.save(update_fields=fields_to_update + ["updated_at"])
 
     return get_book_context_sections(book_id)
+
+
+def update_chapter_context_visibility(
+    chapter_id: str,
+    updates: List[Dict[str, Any]],
+) -> List[ContextSectionPayload]:
+    with transaction.atomic():
+        try:
+            chapter = Chapter.objects.select_for_update().select_related("book").get(pk=chapter_id)
+        except Chapter.DoesNotExist as exc:
+            raise KeyError(f"Unknown chapter: {chapter_id}") from exc
+
+        book = chapter.book
+
+        if updates:
+            for update in updates:
+                section_slug = str(update["sectionSlug"])
+                item_id = str(update["id"])
+                visible = bool(update["visible"])
+
+                try:
+                    context_item = (
+                        LibraryContextItem.objects.select_for_update()
+                        .select_related("section")
+                        .get(
+                            section__book=book,
+                            section__slug=section_slug,
+                            item_id=item_id,
+                            chapter__isnull=True,
+                        )
+                    )
+                except LibraryContextItem.DoesNotExist as exc:
+                    raise KeyError(
+                        f"Unknown book-scoped context item: {section_slug}:{item_id}"
+                    ) from exc
+
+                default_visible = bool(context_item.checked)
+
+                if visible == default_visible:
+                    ChapterContextVisibility.objects.filter(
+                        chapter=chapter,
+                        context_item=context_item,
+                    ).delete()
+                else:
+                    ChapterContextVisibility.objects.update_or_create(
+                        chapter=chapter,
+                        context_item=context_item,
+                        defaults={"visible": visible},
+                    )
+
+        return get_book_context_sections(book.id, chapter_id=chapter_id)

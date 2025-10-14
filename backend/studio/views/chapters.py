@@ -10,16 +10,20 @@ from rest_framework.views import APIView
 from ..data import (
     create_chapter_block,
     delete_chapter_block,
+    get_book_context_sections,
     get_chapter_detail,
     update_chapter,
     update_chapter_block,
+    update_chapter_context_visibility,
 )
 from ..serializers import (
     ChapterBlockCreateSerializer,
     ChapterBlockUpdateSerializer,
+    ChapterContextVisibilityUpdateRequestSerializer,
     ChapterDetailSerializer,
     ChapterSummarySerializer,
     ChapterUpsertSerializer,
+    LibraryResponseSerializer,
 )
 from .utils import flatten_structured_block_fields
 
@@ -27,6 +31,7 @@ __all__ = [
     "ChapterDetailView",
     "ChapterBlockListView",
     "ChapterBlockUpdateView",
+    "ChapterContextVisibilityView",
 ]
 
 
@@ -166,3 +171,53 @@ class ChapterBlockListView(APIView):
 
         response_serializer = ChapterDetailSerializer(updated_chapter)
         return Response(response_serializer.data, status=status.HTTP_201_CREATED)
+
+
+class ChapterContextVisibilityView(APIView):
+    """Return or update the per-chapter visibility of context items."""
+
+    authentication_classes: list = []
+    permission_classes: list = []
+
+    @extend_schema(responses=LibraryResponseSerializer)
+    def get(self, _request, chapter_id: str):
+        chapter = get_chapter_detail(chapter_id)
+        if chapter is None:
+            raise Http404("Chapter not found")
+
+        book_id = chapter.get("bookId")
+        if not book_id:
+            serializer = LibraryResponseSerializer({"sections": []})
+            return Response(serializer.data)
+
+        sections = get_book_context_sections(book_id, chapter_id=chapter_id)
+        filtered_sections = _filter_book_scoped_items(sections)
+
+        serializer = LibraryResponseSerializer({"sections": filtered_sections})
+        return Response(serializer.data)
+
+    @extend_schema(
+        request=ChapterContextVisibilityUpdateRequestSerializer,
+        responses=LibraryResponseSerializer,
+    )
+    def patch(self, request, chapter_id: str):
+        serializer = ChapterContextVisibilityUpdateRequestSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        updates = serializer.validated_data["items"]
+
+        try:
+            sections = update_chapter_context_visibility(chapter_id, updates)
+        except KeyError as exc:
+            raise Http404(str(exc)) from exc
+
+        filtered_sections = _filter_book_scoped_items(sections)
+        response_serializer = LibraryResponseSerializer({"sections": filtered_sections})
+        return Response(response_serializer.data)
+
+
+def _filter_book_scoped_items(sections):
+    filtered = []
+    for section in sections:
+        items = [item for item in section.get("items", []) if not item.get("chapterId")]
+        filtered.append({**section, "items": items})
+    return filtered

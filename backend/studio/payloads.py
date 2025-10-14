@@ -110,6 +110,7 @@ class ContextItemPayload(TypedDict, total=False):
     checked: bool
     disabled: bool
     chapterId: Optional[str]
+    visibleForChapter: bool
 
 
 class ContextSectionPayload(TypedDict, total=False):

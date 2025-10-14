@@ -235,3 +235,29 @@ class ChapterBlock(TimeStampedModel):
         extras: Dict[str, Any] = dict(self.payload or {})
         data.update(extras)
         return data
+
+
+class ChapterContextVisibility(TimeStampedModel):
+    chapter = models.ForeignKey(
+        Chapter,
+        related_name="context_visibilities",
+        on_delete=models.CASCADE,
+    )
+    context_item = models.ForeignKey(
+        LibraryContextItem,
+        related_name="chapter_visibilities",
+        on_delete=models.CASCADE,
+    )
+    visible = models.BooleanField(default=True)
+
+    class Meta:
+        ordering = ["chapter", "context_item__section__order", "context_item__order", "id"]
+        constraints = [
+            models.UniqueConstraint(
+                fields=["chapter", "context_item"],
+                name="uniq_chapter_context_visibility",
+            )
+        ]
+
+    def __str__(self) -> str:
+        return f"{self.chapter_id}:{self.context_item_id}:{'on' if self.visible else 'off'}"

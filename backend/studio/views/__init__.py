@@ -3,6 +3,7 @@ from .chapters import (
     ChapterBlockListView,
     ChapterBlockUpdateView,
     ChapterDetailView,
+    ChapterContextVisibilityView,
 )
 from .editor import EditorView
 from .library import (
@@ -19,6 +20,7 @@ __all__ = [
     "ChapterBlockListView",
     "ChapterBlockUpdateView",
     "ChapterDetailView",
+    "ChapterContextVisibilityView",
     "ChapterParagraphSuggestionView",
     "EditorView",
     "LibraryBookChaptersView",

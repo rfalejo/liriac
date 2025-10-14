@@ -75,6 +75,24 @@ const blockStackSx: SxProps<Theme> = (theme) => ({
   ...theme.typography.editorBody,
 });
 
+const contentWrapperSx: SxProps<Theme> = (theme) => ({
+  width: "100%",
+  maxWidth: 1240,
+  display: "flex",
+  flexDirection: { xs: "column", lg: "row" },
+  alignItems: { xs: "stretch", lg: "flex-start" },
+  gap: { xs: theme.spacing(3), lg: theme.spacing(4.5) },
+  py: { xs: 0, lg: 1 },
+});
+
+const rightPanelSx: SxProps<Theme> = (theme) => ({
+  flex: { xs: "1 1 100%", lg: "0 0 320px" },
+  maxWidth: { xs: "100%", lg: 360 },
+  width: "100%",
+  position: { xs: "static", lg: "sticky" },
+  top: { lg: theme.spacing(6) },
+});
+
 type EditorShellProps = {
   sidebarProps: ComponentProps<typeof EditorSidebar>;
   chapterViewProps: ComponentProps<typeof EditorChapterView>;
@@ -82,6 +100,7 @@ type EditorShellProps = {
   scrollHandlers: EditorScrollbarHandlers;
   scrollbarState: ScrollbarState;
   children?: ReactNode;
+  rightPanel?: ReactNode;
 };
 
 export function EditorShell({
@@ -91,6 +110,7 @@ export function EditorShell({
   scrollHandlers,
   scrollbarState,
   children,
+  rightPanel,
 }: EditorShellProps) {
   return (
     <Box
@@ -106,11 +126,14 @@ export function EditorShell({
         data-scrollbar-scrollable={scrollbarState.scrollable}
         {...scrollHandlers}
       >
-        <Box sx={blockStackSx}>
-          <EditorChapterView {...chapterViewProps} />
-          {children}
+        <Box sx={contentWrapperSx}>
+          <Box sx={blockStackSx}>
+            <EditorChapterView {...chapterViewProps} />
+          </Box>
+          {rightPanel ? <Box sx={rightPanelSx}>{rightPanel}</Box> : null}
         </Box>
       </Box>
+      {children}
     </Box>
   );
 }

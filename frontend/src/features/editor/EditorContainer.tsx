@@ -20,6 +20,7 @@ import {
   buildDefaultBlockPayload,
   generateBlockId,
 } from "./utils/blockCreation";
+import { ContextConfigurationPanel } from "./contextPanel";
 
 type ChapterBlockType = components["schemas"]["ChapterBlockTypeEnum"];
 
@@ -209,6 +210,12 @@ export function EditorContainer({
       scrollAreaRef={scrollAreaRef}
       scrollHandlers={handlers}
       scrollbarState={scrollbarState}
+      rightPanel={
+        <ContextConfigurationPanel
+          chapterId={chapter?.id ?? null}
+          bookTitle={bookTitle ?? null}
+        />
+      }
     >
       <ConfirmationDialog
         open={Boolean(confirmDialog)}
