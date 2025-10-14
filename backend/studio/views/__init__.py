@@ -14,7 +14,10 @@ from .library import (
     LibraryBookDetailView,
     LibraryBooksView,
 )
-from .suggestions import ChapterParagraphSuggestionView
+from .suggestions import (
+    ChapterParagraphSuggestionPromptView,
+    ChapterParagraphSuggestionView,
+)
 
 __all__ = [
     "ChapterBlockListView",
@@ -22,6 +25,7 @@ __all__ = [
     "ChapterDetailView",
     "ChapterContextVisibilityView",
     "ChapterParagraphSuggestionView",
+    "ChapterParagraphSuggestionPromptView",
     "EditorView",
     "LibraryBookChaptersView",
     "LibraryBookContextItemDetailView",

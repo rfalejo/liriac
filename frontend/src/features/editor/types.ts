@@ -32,6 +32,9 @@ export type ParagraphSuggestionState = {
   onSubmit: () => Promise<void>;
   onClosePrompt: () => void;
   isRequesting: boolean;
+  onCopyPrompt: () => Promise<void>;
+  isCopyingPrompt: boolean;
+  copyStatus: "idle" | "copied";
   error?: string | null;
   result: ParagraphSuggestionResultState | null;
   usesDraftAsPrompt: boolean;

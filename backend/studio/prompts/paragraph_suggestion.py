@@ -257,7 +257,7 @@ def _format_block_section(block: Optional[ParagraphBlockPayload]) -> str:
     return "\n".join(lines)
 
 
-def build_paragraph_suggestion_prompt(
+def _build_paragraph_suggestion_sections(
     *,
     chapter: ChapterDetailPayload,
     book_title: Optional[str],
@@ -270,25 +270,8 @@ def build_paragraph_suggestion_prompt(
     scene_block: Optional[SceneBoundaryBlockPayload] = None,
     preceding_blocks: Optional[List[ChapterBlockPayload]] = None,
     following_blocks: Optional[List[ChapterBlockPayload]] = None,
-) -> str:
-    """Compose the Spanish prompt used to request a paragraph suggestion.
-
-    Args:
-        chapter: The chapter detail containing title, summary, and paragraphs
-        book_title: Title of the book
-        book_author: Author of the book
-        book_synopsis: Synopsis/description of the book
-        block: The target paragraph block to improve or generate
-        user_instructions: Custom instructions from the user
-        context_items: Active library context items (characters, world, style)
-        metadata_block: Current chapter metadata (POV, location, timeline, themes)
-        scene_block: Current scene boundary (mood, setting, summary)
-        preceding_blocks: 2-3 blocks before the target for continuity
-        following_blocks: 1-2 blocks after the target for transitions
-
-    Returns:
-        A formatted prompt string in Spanish for the AI model
-    """
+) -> List[str]:
+    """Build the common prompt sections used for paragraph suggestions."""
 
     base_instruction = dedent(
         """
@@ -339,7 +322,77 @@ def build_paragraph_suggestion_prompt(
         if surrounding:
             sections.append(surrounding)
 
-    # Add response format instruction (repeated task reminder for recency)
+    return [section for section in sections if section]
+
+
+def build_paragraph_suggestion_prompt_base(
+    *,
+    chapter: ChapterDetailPayload,
+    book_title: Optional[str],
+    book_author: Optional[str],
+    book_synopsis: Optional[str],
+    block: Optional[ParagraphBlockPayload],
+    user_instructions: Optional[str] = None,
+    context_items: Optional[List[ContextItemPayload]] = None,
+    metadata_block: Optional[MetadataBlockPayload] = None,
+    scene_block: Optional[SceneBoundaryBlockPayload] = None,
+    preceding_blocks: Optional[List[ChapterBlockPayload]] = None,
+    following_blocks: Optional[List[ChapterBlockPayload]] = None,
+) -> str:
+    """Compose the base prompt without response-format instructions."""
+
+    sections = _build_paragraph_suggestion_sections(
+        chapter=chapter,
+        book_title=book_title,
+        book_author=book_author,
+        book_synopsis=book_synopsis,
+        block=block,
+        user_instructions=user_instructions,
+        context_items=context_items,
+        metadata_block=metadata_block,
+        scene_block=scene_block,
+        preceding_blocks=preceding_blocks,
+        following_blocks=following_blocks,
+    )
+
+    sections.append(
+        "### Recordatorio final\n"
+        "Mantente fiel al tono del libro, no inventes datos nuevos y responde únicamente en español neutro."
+    )
+
+    return "\n\n".join(sections)
+
+
+def build_paragraph_suggestion_prompt(
+    *,
+    chapter: ChapterDetailPayload,
+    book_title: Optional[str],
+    book_author: Optional[str],
+    book_synopsis: Optional[str],
+    block: Optional[ParagraphBlockPayload],
+    user_instructions: Optional[str] = None,
+    context_items: Optional[List[ContextItemPayload]] = None,
+    metadata_block: Optional[MetadataBlockPayload] = None,
+    scene_block: Optional[SceneBoundaryBlockPayload] = None,
+    preceding_blocks: Optional[List[ChapterBlockPayload]] = None,
+    following_blocks: Optional[List[ChapterBlockPayload]] = None,
+) -> str:
+    """Compose the full prompt including response-format instructions."""
+
+    sections = _build_paragraph_suggestion_sections(
+        chapter=chapter,
+        book_title=book_title,
+        book_author=book_author,
+        book_synopsis=book_synopsis,
+        block=block,
+        user_instructions=user_instructions,
+        context_items=context_items,
+        metadata_block=metadata_block,
+        scene_block=scene_block,
+        preceding_blocks=preceding_blocks,
+        following_blocks=following_blocks,
+    )
+
     sections.append(
         "### Formato de respuesta\n"
         'Devuelve solo un objeto JSON con la forma {"paragraph_suggestion": "texto"}. '
@@ -351,4 +404,4 @@ def build_paragraph_suggestion_prompt(
         "Mantente fiel al tono del libro, no inventes datos nuevos y responde únicamente en español neutro."
     )
 
-    return "\n\n".join(section for section in sections if section)
+    return "\n\n".join(sections)

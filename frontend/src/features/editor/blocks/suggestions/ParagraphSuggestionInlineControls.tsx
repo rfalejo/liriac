@@ -17,6 +17,12 @@ export function ParagraphSuggestionInlineControls({
   }
 
   const trimmedInstructions = suggestion.instructions.trim();
+  const isCopyingPrompt = suggestion.isCopyingPrompt;
+  const isCopied = suggestion.copyStatus === "copied";
+  const copyButtonDisabled =
+    suggestion.isRequesting ||
+    isCopyingPrompt ||
+    trimmedInstructions.length === 0;
 
   return (
     <Stack spacing={1} alignItems="flex-start">
@@ -42,6 +48,40 @@ export function ParagraphSuggestionInlineControls({
         </Typography>
       ) : null}
       <Stack direction="row" spacing={1} justifyContent="flex-end" width="100%">
+        <Button
+          variant={isCopied ? "contained" : "outlined"}
+          color={isCopied ? "success" : "inherit"}
+          onClick={() => {
+            void suggestion.onCopyPrompt();
+          }}
+          disabled={copyButtonDisabled}
+          endIcon={
+            isCopyingPrompt ? (
+              <CircularProgress size={16} color="inherit" />
+            ) : undefined
+          }
+          sx={(theme: Theme) =>
+            isCopied
+              ? {
+                backgroundColor: theme.palette.success.main,
+                color: theme.palette.success.contrastText,
+                borderColor: theme.palette.success.main,
+                "&:hover": {
+                  backgroundColor: theme.palette.success.dark,
+                  borderColor: theme.palette.success.dark,
+                },
+              }
+              : {
+                borderColor: theme.palette.editor.suggestionPromptBorder,
+                color: theme.palette.editor.blockMuted,
+                "&:hover": {
+                  borderColor: theme.palette.editor.blockMuted,
+                  backgroundColor: theme.palette.editor.suggestionPromptBg,
+                },
+              }}
+        >
+          {isCopied ? "Copiado" : "Copiar"}
+        </Button>
         <Button
           variant="text"
           color="secondary"

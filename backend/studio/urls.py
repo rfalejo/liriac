@@ -6,6 +6,7 @@ from .views import (
     ChapterDetailView,
     ChapterContextVisibilityView,
     ChapterParagraphSuggestionView,
+    ChapterParagraphSuggestionPromptView,
     EditorView,
     LibraryBookChaptersView,
     LibraryBookContextItemDetailView,
@@ -66,6 +67,11 @@ urlpatterns = [
         "library/chapters/<str:chapter_id>/paragraph-suggestion/",
         ChapterParagraphSuggestionView.as_view(),
         name="library-chapter-paragraph-suggestion",
+    ),
+    path(
+        "library/chapters/<str:chapter_id>/paragraph-suggestion/prompt/",
+        ChapterParagraphSuggestionPromptView.as_view(),
+        name="library-chapter-paragraph-suggestion-prompt",
     ),
     path("editor/", EditorView.as_view(), name="editor"),
 ]

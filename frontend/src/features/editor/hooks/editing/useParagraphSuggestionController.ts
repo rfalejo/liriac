@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import type { ChapterBlock, ParagraphSuggestionState } from "../../types";
 import { useParagraphSuggestionRequest } from "../useParagraphSuggestionRequest";
+import { useParagraphSuggestionPromptRequest } from "../useParagraphSuggestionPromptRequest";
 
 type ParagraphBlock = ChapterBlock & { type: "paragraph" };
 
@@ -9,6 +10,8 @@ type SuggestionResult = {
 	text: string;
 	isApplied: boolean;
 };
+
+type CopyState = "idle" | "pending" | "copied";
 
 type ParagraphSuggestionControllerParams = {
 	block: ParagraphBlock | null;
@@ -30,6 +33,9 @@ export function useParagraphSuggestionController({
 	const { requestSuggestion, isPending } = useParagraphSuggestionRequest({
 		chapterId,
 	});
+	const { requestPrompt } = useParagraphSuggestionPromptRequest({
+		chapterId,
+	});
 
 	const [promptOpen, setPromptOpen] = useState(false);
 	const [usesDraftAsPrompt, setUsesDraftAsPrompt] = useState(false);
@@ -37,6 +43,7 @@ export function useParagraphSuggestionController({
 	const [result, setResult] = useState<SuggestionResult | null>(null);
 	const [error, setError] = useState<string | null>(null);
 	const [draftSnapshot, setDraftSnapshot] = useState<string | null>(null);
+	const [copyState, setCopyState] = useState<CopyState>("idle");
 
 	const openPrompt = useCallback(() => {
 		if (!block || !isActive) {
@@ -49,6 +56,7 @@ export function useParagraphSuggestionController({
 		setUsesDraftAsPrompt(shouldUseDraftAsPrompt);
 		setPromptOpen(true);
 		setError(null);
+		setCopyState("idle");
 
 		if (shouldUseDraftAsPrompt) {
 			setInstructions(draftText);
@@ -56,7 +64,7 @@ export function useParagraphSuggestionController({
 	}, [block, draftText, isActive]);
 
 	const closePrompt = useCallback(() => {
-		if (isPending) {
+		if (isPending || copyState === "pending") {
 			return;
 		}
 
@@ -65,7 +73,8 @@ export function useParagraphSuggestionController({
 		setInstructions("");
 		setError(null);
 		setDraftSnapshot(null);
-	}, [isPending]);
+		setCopyState("idle");
+	}, [copyState, isPending]);
 
 	const handleSubmit = useCallback(async () => {
 		if (!block || !isActive) {
@@ -97,6 +106,7 @@ export function useParagraphSuggestionController({
 			setInstructions(trimmed);
 			setError(null);
 			setUsesDraftAsPrompt(false);
+			setCopyState("idle");
 		} catch (suggestionError) {
 			setError("No pudimos generar la sugerencia. Inténtalo de nuevo.");
 			notifyUpdateFailure(suggestionError);
@@ -118,6 +128,7 @@ export function useParagraphSuggestionController({
 		setResult(null);
 		setError(null);
 		setUsesDraftAsPrompt(false);
+		setCopyState("idle");
 
 		if (wasApplied && draftSnapshot !== null) {
 			onChangeDraft(draftSnapshot);
@@ -139,7 +150,53 @@ export function useParagraphSuggestionController({
 		});
 		setError(null);
 		setUsesDraftAsPrompt(false);
+		setCopyState("idle");
 	}, [onChangeDraft, result]);
+
+	const handleCopyPrompt = useCallback(async () => {
+		if (!block || !isActive || copyState === "pending") {
+			return;
+		}
+
+		const currentInstructions = usesDraftAsPrompt ? draftText : instructions;
+		const trimmed = currentInstructions.trim();
+		if (!trimmed) {
+			return;
+		}
+
+		setCopyState("pending");
+		try {
+			const { prompt } = await requestPrompt({
+				blockId: block.id,
+				instructions: trimmed,
+			});
+			if (!prompt) {
+				throw new Error("Empty prompt response");
+			}
+
+			if (typeof navigator === "undefined" || !navigator.clipboard?.writeText) {
+				throw new Error("Clipboard API unavailable");
+			}
+
+			await navigator.clipboard.writeText(prompt);
+
+			setCopyState("copied");
+			setError(null);
+		} catch (copyError) {
+			setCopyState("idle");
+			setError("No pudimos copiar el prompt. Inténtalo de nuevo.");
+			notifyUpdateFailure(copyError);
+		}
+	}, [
+		block,
+		copyState,
+		draftText,
+		instructions,
+		isActive,
+		notifyUpdateFailure,
+		requestPrompt,
+		usesDraftAsPrompt,
+	]);
 
 	useEffect(() => {
 		if (usesDraftAsPrompt) {
@@ -155,6 +212,7 @@ export function useParagraphSuggestionController({
 			setResult(null);
 			setError(null);
 			setDraftSnapshot(null);
+			setCopyState("idle");
 			return;
 		}
 
@@ -162,14 +220,20 @@ export function useParagraphSuggestionController({
 		setError(null);
 		setDraftSnapshot(null);
 		setUsesDraftAsPrompt(false);
+		setCopyState("idle");
 	}, [block?.id]);
 
 	useEffect(() => {
 		if (!isActive) {
 			setPromptOpen(false);
 			setUsesDraftAsPrompt(false);
+			setCopyState("idle");
 		}
 	}, [isActive]);
+
+	useEffect(() => {
+		setCopyState("idle");
+	}, [instructions, promptOpen]);
 
 	const suggestionState: ParagraphSuggestionState = useMemo(
 		() => ({
@@ -179,6 +243,7 @@ export function useParagraphSuggestionController({
 			onSubmit: handleSubmit,
 			onClosePrompt: closePrompt,
 			isRequesting: isPending,
+			isCopyingPrompt: copyState === "pending",
 			error,
 			result: result
 				? {
@@ -190,12 +255,16 @@ export function useParagraphSuggestionController({
 					}
 				: null,
 			usesDraftAsPrompt,
+			onCopyPrompt: handleCopyPrompt,
+			copyStatus: copyState === "copied" ? "copied" : "idle",
 		}),
 		[
+			copyState,
 			closePrompt,
 			error,
 			handleApplyResult,
 			handleDismissResult,
+			handleCopyPrompt,
 			handleSubmit,
 			instructions,
 			isPending,

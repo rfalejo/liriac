@@ -8,6 +8,8 @@ export type ChapterBlockCreatePayload =
   components["schemas"]["ChapterBlockCreate"];
 export type ParagraphSuggestionResponse =
   components["schemas"]["ParagraphSuggestionResponse"];
+export type ParagraphSuggestionPromptResponse =
+  components["schemas"]["ParagraphSuggestionPromptResponse"];
 export type ChapterContextVisibilityResponse =
   components["schemas"]["LibraryResponse"];
 export type ChapterContextVisibilityUpdatePayload =
@@ -106,6 +108,35 @@ export async function requestParagraphSuggestion({
       }),
     },
   );
+}
+
+type ParagraphSuggestionPromptParams = {
+  chapterId: string;
+  blockId: string;
+  instructions: string;
+};
+
+export async function fetchParagraphSuggestionPrompt({
+  chapterId,
+  blockId,
+  instructions,
+}: ParagraphSuggestionPromptParams): Promise<ParagraphSuggestionPromptResponse> {
+  const encodedChapter = encodeURIComponent(chapterId);
+  const searchParams = new URLSearchParams();
+
+  if (blockId) {
+    searchParams.set("blockId", blockId);
+  }
+
+  if (instructions) {
+    searchParams.set("instructions", instructions);
+  }
+
+  const query = searchParams.toString();
+  const baseUrl = `/api/library/chapters/${encodedChapter}/paragraph-suggestion/prompt/`;
+  const url = query ? `${baseUrl}?${query}` : baseUrl;
+
+  return request<ParagraphSuggestionPromptResponse>(url);
 }
 
 export async function fetchChapterContextVisibility(

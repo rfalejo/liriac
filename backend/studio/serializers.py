@@ -307,3 +307,7 @@ class ParagraphSuggestionRequestSerializer(serializers.Serializer):
 
 class ParagraphSuggestionResponseSerializer(serializers.Serializer):
     paragraphSuggestion = serializers.CharField()
+
+
+class ParagraphSuggestionPromptResponseSerializer(serializers.Serializer):
+    prompt = serializers.CharField()

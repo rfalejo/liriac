@@ -386,6 +386,35 @@ paths:
               schema:
                 $ref: '#/components/schemas/ParagraphSuggestionResponse'
           description: ''
+  /api/library/chapters/{chapter_id}/paragraph-suggestion/prompt/:
+    get:
+      operationId: library_chapters_paragraph_suggestion_prompt_retrieve
+      description: Return the raw prompt used for paragraph suggestions.
+      parameters:
+      - in: query
+        name: blockId
+        schema:
+          type: string
+        description: Identificador del bloque de párrafo para contextualizar el prompt.
+      - in: path
+        name: chapter_id
+        schema:
+          type: string
+        required: true
+      - in: query
+        name: instructions
+        schema:
+          type: string
+        description: Instrucciones personalizadas que se incluirán en el prompt.
+      tags:
+      - library
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ParagraphSuggestionPromptResponse'
+          description: ''
 components:
   schemas:
     BookUpsert:
@@ -955,6 +984,13 @@ components:
           items:
             type: string
           nullable: true
+    ParagraphSuggestionPromptResponse:
+      type: object
+      properties:
+        prompt:
+          type: string
+      required:
+      - prompt
     ParagraphSuggestionRequest:
       type: object
       properties:
