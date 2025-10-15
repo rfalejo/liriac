@@ -10,8 +10,10 @@ import { SceneBoundaryBlock } from "./SceneBoundaryBlock";
 
 type ChapterBlockType = components["schemas"]["ChapterBlockTypeEnum"];
 
-type BlockRenderContext = {
+export type BlockRenderContext = {
   block: ChapterBlock;
+  index: number;
+  isFirstParagraph: boolean;
 };
 
 type BlockRenderer = (context: BlockRenderContext) => ReactNode | null;
@@ -25,18 +27,25 @@ type BlockByType<TType extends ChapterBlockType> = Extract<
 
 type BlockComponent<TType extends ChapterBlockType> = (props: {
   block: BlockByType<TType>;
+  context: BlockRenderContext;
 }) => ReactNode;
 
 function createBlockRenderer<TType extends ChapterBlockType>(
   type: TType,
   Component: BlockComponent<TType>,
 ): BlockRenderer {
-  return ({ block }) => {
+  return (context) => {
+    const { block } = context;
     if (block.type !== type) {
       return null;
     }
 
-    return <Component block={block as BlockByType<TType>} />;
+    return (
+      <Component
+        block={block as BlockByType<TType>}
+        context={context}
+      />
+    );
   };
 }
 

@@ -5,6 +5,7 @@ import Typography from "@mui/material/Typography";
 import type { Theme } from "@mui/material/styles";
 import AddCircleOutlineRoundedIcon from "@mui/icons-material/AddCircleOutlineRounded";
 import DeleteOutlineRoundedIcon from "@mui/icons-material/DeleteOutlineRounded";
+import type { BlockRenderContext } from "./blockRegistry";
 import type { ChapterBlock, DialogueEditingState } from "../types";
 import { EditableDialogueTurn } from "./components/EditableDialogueTurn";
 import { EditableBlock } from "./components/EditableBlock";
@@ -15,6 +16,7 @@ import {
 
 type DialogueBlockProps = {
   block: ChapterBlock;
+  context: BlockRenderContext;
 };
 
 export function DialogueBlock({ block }: DialogueBlockProps) {

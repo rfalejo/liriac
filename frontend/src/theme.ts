@@ -6,8 +6,8 @@ const serifStack =
   '"Literata", "Merriweather", Georgia, Cambria, "Times New Roman", Times, serif';
 
 const editorTokens = {
-  blockPaddingX: { xs: 1.75, sm: 2.5 },
-  blockPaddingY: { xs: 1.75, sm: 2.25 },
+  blockPaddingX: { xs: 1.6, sm: 2.25 },
+  blockPaddingY: { xs: 1.35, sm: 1.8 },
   blockRadius: 2,
   blockTransition:
     "background-color 160ms ease, box-shadow 160ms ease, border-color 160ms ease",
@@ -28,7 +28,7 @@ const baseTheme = createTheme({
     },
     background: {
       default: "#f7f3ea",
-      paper: "#fbf8f1",
+      paper: "#f9f2e4",
     },
     text: {
       primary: "#2f281d",
@@ -48,13 +48,13 @@ const baseTheme = createTheme({
       sidebarSelectedText: "rgba(47, 40, 29, 0.92)",
       sidebarHoverBg: "rgba(164, 113, 51, 0.08)",
       sidebarErrorText: "rgba(191, 74, 52, 0.82)",
-      blockSurface: "#f9f5ec",
-      blockText: "#2f281d",
-      blockHeading: "#2a2319",
-      blockMuted: "rgba(47, 40, 29, 0.64)",
-      blockPlaceholderText: "rgba(47, 40, 29, 0.42)",
-      blockDisabledText: "rgba(47, 40, 29, 0.48)",
-      blockDivider: "rgba(47, 40, 29, 0.18)",
+  blockSurface: "#fdf8ee",
+  blockText: "#241c12",
+  blockHeading: "#21170c",
+  blockMuted: "rgba(36, 28, 18, 0.62)",
+  blockPlaceholderText: "rgba(36, 28, 18, 0.4)",
+  blockDisabledText: "rgba(36, 28, 18, 0.46)",
+  blockDivider: "rgba(36, 28, 18, 0.16)",
       blockMenuIcon: "rgba(47, 40, 29, 0.6)",
       blockMenuIconHover: "rgba(47, 40, 29, 0.8)",
       blockMenuHoverBg: "rgba(164, 113, 51, 0.08)",
@@ -156,9 +156,9 @@ const baseTheme = createTheme({
     },
     editorBody: {
       fontFamily: serifStack,
-      lineHeight: 1.7,
-      fontSize: "1.05rem",
-      letterSpacing: "0.006em",
+      lineHeight: 1.6,
+      fontSize: "1.04rem",
+      letterSpacing: "0.004em",
     },
   },
 });
@@ -206,6 +206,9 @@ export const theme = createTheme(baseTheme, {
       paddingBottom: 0,
       color: baseTheme.palette.editor.blockHeading,
       textIndent: editorTokens.paragraphIndent,
+      textAlign: "justify",
+      hyphens: "auto",
+      lineHeight: 1.6,
     },
     editorParagraphEditable: {
       ...baseTheme.typography.editorBody,
@@ -213,6 +216,8 @@ export const theme = createTheme(baseTheme, {
       paddingBottom: 0,
       color: baseTheme.palette.editor.blockHeading,
       textIndent: editorTokens.paragraphIndent,
+      textAlign: "left",
+      hyphens: "auto",
       outline: "none",
       border: "none",
       whiteSpace: "pre-wrap",
@@ -227,8 +232,9 @@ export const theme = createTheme(baseTheme, {
       display: "block",
       fontSize: "0.85rem",
       fontWeight: 600,
-      letterSpacing: "0.04em",
+      letterSpacing: "0.08em",
       textTransform: "uppercase",
+      fontVariant: "small-caps",
       color: baseTheme.palette.editor.blockMuted,
     },
     editorStageDirection: {

@@ -26,12 +26,14 @@ export function useChapterBlocks(
     }
 
     let hasHeader = false;
+    const blockEntries: ChapterBlockEntry[] = [];
+    let hasFirstParagraph = false;
 
-  const blockEntries: ChapterBlockEntry[] = [];
+    const chapterBlocks = chapter.blocks ?? [];
 
-    for (const block of chapter.blocks ?? []) {
+    chapterBlocks.forEach((block, index) => {
       if (!block) {
-        continue;
+        return;
       }
 
       if (
@@ -41,14 +43,25 @@ export function useChapterBlocks(
         hasHeader = true;
       }
 
+      let isFirstParagraph = false;
+      if (!hasFirstParagraph && block.type === "paragraph") {
+        const text = block.text?.trim() ?? "";
+        if (text.length > 0) {
+          isFirstParagraph = true;
+          hasFirstParagraph = true;
+        }
+      }
+
       const rendered = renderEditorBlock({
         block,
+        index,
+        isFirstParagraph,
       });
 
       if (rendered) {
         blockEntries.push({ id: block.id, node: rendered, type: block.type });
       }
-    }
+    });
 
     return { blockEntries, hasChapterHeader: hasHeader };
   }, [chapter]);

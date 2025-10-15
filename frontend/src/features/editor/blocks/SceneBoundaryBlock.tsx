@@ -3,6 +3,7 @@ import Stack from "@mui/material/Stack";
 import Typography from "@mui/material/Typography";
 import type { Theme } from "@mui/material/styles";
 import type { components } from "../../../api/schema";
+import type { BlockRenderContext } from "./blockRegistry";
 import type { SceneBoundaryEditingState } from "../types";
 import { EditableBlock } from "./components/EditableBlock";
 import { EditableContentField } from "./components/EditableContentField";
@@ -15,6 +16,7 @@ type ChapterBlock = components["schemas"]["ChapterBlock"];
 
 type SceneBoundaryBlockProps = {
   block: ChapterBlock;
+  context: BlockRenderContext;
 };
 
 export function SceneBoundaryBlock({ block }: SceneBoundaryBlockProps) {

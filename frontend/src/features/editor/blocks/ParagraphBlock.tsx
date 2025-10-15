@@ -2,6 +2,7 @@ import Stack from "@mui/material/Stack";
 import Typography from "@mui/material/Typography";
 import type { Theme } from "@mui/material/styles";
 import type { components } from "../../../api/schema";
+import type { BlockRenderContext } from "./blockRegistry";
 import type {
   ParagraphEditingState,
 } from "../types";
@@ -19,9 +20,13 @@ type ChapterBlock = components["schemas"]["ChapterBlock"];
 
 type ParagraphBlockProps = {
   block: ChapterBlock;
+  context: BlockRenderContext;
 };
 
-export function ParagraphBlock({ block }: ParagraphBlockProps) {
+export function ParagraphBlock({ block, context }: ParagraphBlockProps) {
+  const trimmed = block.text?.trim() ?? "";
+  const shouldUseDropCap = context.isFirstParagraph && trimmed.length > 0;
+
   return (
     <EditableBlock<ParagraphEditingState>
       block={block}
@@ -31,7 +36,23 @@ export function ParagraphBlock({ block }: ParagraphBlockProps) {
         return (
           <Typography
             component="p"
-            sx={(theme: Theme) => theme.typography.editorParagraph}
+            sx={(theme: Theme) => ({
+              ...theme.typography.editorParagraph,
+              ...(shouldUseDropCap
+                ? {
+                    textIndent: 0,
+                    "&::first-letter": {
+                      fontSize: "3.25rem",
+                      lineHeight: 0.88,
+                      float: "left",
+                      paddingRight: theme.spacing(1),
+                      marginTop: theme.spacing(0.25),
+                      fontFamily: theme.typography.h3.fontFamily,
+                      fontWeight: theme.typography.h3.fontWeight,
+                    },
+                  }
+                : {}),
+            })}
           >
             {content.length > 0 ? content : "(Sin texto en este párrafo)"}
           </Typography>
@@ -66,7 +87,7 @@ function ParagraphEditView({ blockId, editingState }: ParagraphEditViewProps) {
     : "Editor de párrafo";
 
   return (
-    <Stack spacing={1.75} alignItems="stretch">
+  <Stack spacing={1.5} alignItems="stretch">
       <EditableContentField
         value={draftText}
         onChange={editingState.paragraph.onChangeDraft}

@@ -1,4 +1,5 @@
 import type { components } from "../../../api/schema";
+import type { BlockRenderContext } from "./blockRegistry";
 import type { MetadataEditingState } from "../types";
 import { EditableBlock } from "./components/EditableBlock";
 import { MetadataEditView } from "./components/MetadataEditView";
@@ -9,6 +10,7 @@ type ChapterBlock = components["schemas"]["ChapterBlock"];
 
 type MetadataBlockProps = {
   block: ChapterBlock;
+  context: BlockRenderContext;
 };
 
 export function MetadataBlock({ block }: MetadataBlockProps) {

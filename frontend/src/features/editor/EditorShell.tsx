@@ -62,18 +62,31 @@ const pageSx = (theme: Theme) => ({
 
 const blockStackSx = (theme: Theme) => ({
   width: "100%",
-  maxWidth: 760,
+  maxWidth: 640,
   bgcolor: theme.palette.editor.blockSurface,
   color: theme.palette.editor.blockText,
-  boxShadow: "0 20px 60px rgba(0, 0, 0, 0.35)",
+  boxShadow: "0 32px 60px rgba(24, 18, 8, 0.18)",
   borderRadius: 2,
-  px: { xs: 3, sm: 6 },
-  py: { xs: 3.5, sm: 5 },
+  border: "1px solid rgba(36, 28, 18, 0.1)",
+  px: { xs: 2.75, sm: 4.5 },
+  py: { xs: 3, sm: 4.5 },
   display: "flex",
   flexDirection: "column",
   gap: { xs: 2.5, sm: 3 },
   position: "relative",
   ...theme.typography.editorBody,
+  backgroundImage:
+    "linear-gradient(180deg, rgba(255, 255, 255, 0.6) 0%, rgba(253, 248, 238, 0.95) 35%, rgba(249, 242, 228, 1) 100%)",
+  "&::before": {
+    content: '""',
+    position: "absolute",
+    inset: 0,
+    borderRadius: "inherit",
+    pointerEvents: "none",
+    backgroundImage:
+      "linear-gradient(90deg, rgba(36, 28, 18, 0.08) 0%, rgba(36, 28, 18, 0.02) 20%, rgba(36, 28, 18, 0) 45%, rgba(36, 28, 18, 0) 55%, rgba(36, 28, 18, 0.02) 80%, rgba(36, 28, 18, 0.08) 100%)",
+    opacity: 0.45,
+  },
 });
 
 const contentWrapperSx = (theme: Theme) => ({
