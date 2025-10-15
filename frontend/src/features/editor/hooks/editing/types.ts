@@ -5,5 +5,6 @@ export type EditorEditingSideEffects = {
     context: EditingDiscardContext,
   ) => Promise<boolean> | boolean;
   confirmDeleteBlock: () => Promise<boolean> | boolean;
+  confirmDeleteBlockVersion: () => Promise<boolean> | boolean;
   notifyUpdateFailure: (error: unknown) => void;
 };

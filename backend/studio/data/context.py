@@ -132,7 +132,9 @@ def get_book_context_sections(
             chapter_specific_items.setdefault(item.section.slug, []).append(item.to_payload())
 
         visibility_overrides = {
-            _visibility_key(entry.context_item.section.slug, entry.context_item.item_id): entry.visible
+            _visibility_key(
+                entry.context_item.section.slug, entry.context_item.item_id
+            ): entry.visible
             for entry in ChapterContextVisibility.objects.filter(
                 chapter_id=chapter_id,
                 context_item__section__book=book,

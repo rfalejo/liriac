@@ -6,6 +6,7 @@ import type {
 import type { ChapterBlock, EditingState } from "../types";
 import { useChapterBlockSelectors } from "./useChapterBlockSelectors";
 import type { EditorEditingSideEffects } from "./editing/types";
+import { useBlockVersionController } from "./editing/useBlockVersionController";
 import { useDialogueBlockEditingSession } from "./editing/useDialogueBlockEditingSession";
 import { useEditingBlockManager } from "./editing/useEditingBlockManager";
 import { useMetadataBlockEditingSession } from "./editing/useMetadataBlockEditingSession";
@@ -123,6 +124,18 @@ export function useEditorEditingState({
     },
   });
 
+  const versioning = useBlockVersionController({
+    block: activeBlock,
+    chapterId: chapter?.id ?? null,
+    isActive: Boolean(activeBlock),
+    isSaving: blockMutationPending,
+    updateBlock,
+    sideEffects: {
+      notifyUpdateFailure: sideEffects.notifyUpdateFailure,
+      confirmDeleteBlockVersion: sideEffects.confirmDeleteBlockVersion,
+    },
+  });
+
   const handleDeleteBlock = useCallback(
     (blockId: string) => {
       if (blockUpdatePending || blockDeletePending) {
@@ -193,6 +206,7 @@ export function useEditorEditingState({
           },
           isSaving: blockMutationPending,
           hasPendingChanges: paragraphSession.hasPendingChanges,
+          versioning,
         },
       };
     }
@@ -223,6 +237,7 @@ export function useEditorEditingState({
           },
           isSaving: blockMutationPending,
           hasPendingChanges: dialogueSession.hasPendingChanges,
+          versioning,
         },
       };
     }
@@ -251,6 +266,7 @@ export function useEditorEditingState({
           },
           isSaving: blockMutationPending,
           hasPendingChanges: sceneBoundarySession.hasPendingChanges,
+          versioning,
         },
       };
     }
@@ -281,6 +297,7 @@ export function useEditorEditingState({
           },
           isSaving: blockMutationPending,
           hasPendingChanges: metadataSession.hasPendingChanges,
+          versioning,
         },
       };
     }
@@ -309,6 +326,7 @@ export function useEditorEditingState({
     metadataSession.onChangeField,
     metadataSession.onChangeKind,
     metadataSession.save,
+    versioning,
     paragraphSession.closeSuggestionPrompt,
     paragraphSession.draftText,
     paragraphSession.hasPendingChanges,

@@ -171,12 +171,45 @@ export interface paths {
         get?: never;
         put?: never;
         post?: never;
-        /** @description Update a single block within a chapter. */
-        delete: operations["library_chapters_blocks_destroy"];
+        delete?: never;
         options?: never;
         head?: never;
         /** @description Update a single block within a chapter. */
         patch: operations["library_chapters_blocks_partial_update"];
+        trace?: never;
+    };
+    "/api/library/chapters/{chapter_id}/blocks/{block_id}/versions/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** @description List the versions available for a block. */
+        get: operations["library_chapters_blocks_versions_retrieve"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/library/chapters/{chapter_id}/blocks/{block_id}/versions/{version}/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        /** @description Delete a specific block version. */
+        delete: operations["library_chapters_blocks_versions_destroy"];
+        options?: never;
+        head?: never;
+        patch?: never;
         trace?: never;
     };
     "/api/library/chapters/{chapter_id}/context-visibility/": {
@@ -246,6 +279,9 @@ export interface components {
             id: string;
             type: components["schemas"]["ChapterBlockTypeEnum"];
             position: number;
+            version?: number;
+            readonly activeVersion: number;
+            readonly versionCount: number;
             text?: string;
             style?: string | null;
             tags?: string[];
@@ -277,6 +313,9 @@ export interface components {
             id?: string;
             type: components["schemas"]["ChapterBlockTypeEnum"];
             position?: number;
+            version?: number;
+            readonly activeVersion: number;
+            readonly versionCount: number;
             text?: string;
             style?: string | null;
             tags?: string[];
@@ -312,6 +351,14 @@ export interface components {
          * @enum {string}
          */
         ChapterBlockTypeEnum: "paragraph" | "dialogue" | "scene_boundary" | "metadata";
+        ChapterBlockVersion: {
+            version: number;
+            isActive: boolean;
+            payload: unknown;
+        };
+        ChapterBlockVersionList: {
+            versions: components["schemas"]["ChapterBlockVersion"][];
+        };
         ChapterContextVisibilityUpdateItem: {
             id: string;
             sectionSlug: string;
@@ -462,6 +509,9 @@ export interface components {
             id?: string;
             type?: components["schemas"]["ChapterBlockTypeEnum"];
             position?: number;
+            version?: number;
+            readonly activeVersion?: number;
+            readonly versionCount?: number;
             text?: string;
             style?: string | null;
             tags?: string[];
@@ -813,27 +863,6 @@ export interface operations {
             };
         };
     };
-    library_chapters_blocks_destroy: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                block_id: string;
-                chapter_id: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description No response body */
-            204: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-        };
-    };
     library_chapters_blocks_partial_update: {
         parameters: {
             query?: never;
@@ -857,6 +886,50 @@ export interface operations {
                 content: {
                     "application/json": components["schemas"]["ChapterDetail"];
                 };
+            };
+        };
+    };
+    library_chapters_blocks_versions_retrieve: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                block_id: string;
+                chapter_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ChapterBlockVersionList"];
+                };
+            };
+        };
+    };
+    library_chapters_blocks_versions_destroy: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                block_id: string;
+                chapter_id: string;
+                version: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description No response body */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
             };
         };
     };

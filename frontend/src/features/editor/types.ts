@@ -4,6 +4,19 @@ export type ChapterBlock = components["schemas"]["ChapterBlock"];
 export type DialogueTurn = components["schemas"]["DialogueTurn"];
 export type DialogueField = "speakerName" | "utterance" | "stageDirection";
 
+export type BlockVersionState = {
+  current: number | null;
+  total: number;
+  canGoPrevious: boolean;
+  canGoNext: boolean;
+  onPrevious: () => void;
+  onNext: () => void;
+  onDelete?: () => void;
+  deleteDisabled?: boolean;
+  disabled?: boolean;
+  loading?: boolean;
+};
+
 type BaseEditingState<TType extends ChapterBlock["type"]> = {
   blockId: string;
   blockType: TType;
@@ -15,6 +28,7 @@ type BaseEditingState<TType extends ChapterBlock["type"]> = {
   supportsSuggestions?: boolean;
   onRequestSuggestion?: () => void;
   isSuggestionPending?: boolean;
+  versioning?: BlockVersionState;
 };
 
 export type ParagraphSuggestionResultState = {

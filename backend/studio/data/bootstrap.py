@@ -8,6 +8,7 @@ from ..models import (
     Book,
     Chapter,
     ChapterBlock,
+    ChapterBlockVersion,
     LibraryContextItem,
     LibrarySection,
 )
@@ -27,6 +28,12 @@ def bootstrap_sample_data(*, force: bool = False, apps=None) -> None:
     BookModel = Book if apps is None else apps.get_model("studio", "Book")
     ChapterModel = Chapter if apps is None else apps.get_model("studio", "Chapter")
     ChapterBlockModel = ChapterBlock if apps is None else apps.get_model("studio", "ChapterBlock")
+    try:
+        ChapterBlockVersionModel = (
+            ChapterBlockVersion if apps is None else apps.get_model("studio", "ChapterBlockVersion")
+        )
+    except LookupError:
+        ChapterBlockVersionModel = None
     LibrarySectionModel = (
         LibrarySection if apps is None else apps.get_model("studio", "LibrarySection")
     )
@@ -38,6 +45,12 @@ def bootstrap_sample_data(*, force: bool = False, apps=None) -> None:
     context_item_has_chapter_field = any(
         field.name == "chapter" for field in LibraryContextItemModel._meta.fields
     )
+    block_field_names = {field.name for field in ChapterBlockModel._meta.fields}
+    block_supports_version_metadata = {
+        "version_count",
+        "active_version_number",
+        "active_version",
+    }.issubset(block_field_names)
 
     with transaction.atomic():
         if not force and LibrarySectionModel.objects.exists():
@@ -81,15 +94,51 @@ def bootstrap_sample_data(*, force: bool = False, apps=None) -> None:
                         for key, value in block.items()
                         if key not in {"id", "type", "position"}
                     }
-                    ChapterBlockModel.objects.update_or_create(
+                    defaults = {
+                        "chapter": chapter_obj,
+                        "type": block.get("type", "paragraph"),
+                        "position": int(block.get("position", 0)),
+                        "payload": payload,
+                    }
+                    if block_supports_version_metadata:
+                        defaults.update(
+                            {
+                                "version_count": 1,
+                                "active_version_number": 1,
+                            }
+                        )
+
+                    block_obj, _ = ChapterBlockModel.objects.update_or_create(
                         id=block["id"],
-                        defaults={
-                            "chapter": chapter_obj,
-                            "type": block.get("type", "paragraph"),
-                            "position": int(block.get("position", 0)),
-                            "payload": payload,
-                        },
+                        defaults=defaults,
                     )
+
+                    if block_supports_version_metadata and ChapterBlockVersionModel is not None:
+                        version_obj, _ = ChapterBlockVersionModel.objects.update_or_create(
+                            block=block_obj,
+                            version=1,
+                            defaults={
+                                "payload": payload,
+                                "is_active": True,
+                            },
+                        )
+                        # Historical models prior to migration 0006 lack these fields.
+                        updated_fields: list[str] = []
+                        if hasattr(block_obj, "active_version"):
+                            block_obj.active_version = version_obj
+                            updated_fields.append("active_version")
+                        if hasattr(block_obj, "active_version_number"):
+                            block_obj.active_version_number = int(version_obj.version)
+                            updated_fields.append("active_version_number")
+                        if hasattr(block_obj, "version_count"):
+                            related_manager = getattr(block_obj, "versions", None)
+                            count = related_manager.count() if related_manager else 1
+                            block_obj.version_count = max(count, 1)
+                            updated_fields.append("version_count")
+                        if hasattr(block_obj, "updated_at"):
+                            updated_fields.append("updated_at")
+                        if updated_fields:
+                            block_obj.save(update_fields=updated_fields)
 
         if not ChapterModel.objects.filter(id=DEFAULT_EDITOR_CHAPTER_ID).exists():
             metadata = SAMPLE_CHAPTER_METADATA.get(DEFAULT_EDITOR_CHAPTER_ID)
@@ -119,15 +168,50 @@ def bootstrap_sample_data(*, force: bool = False, apps=None) -> None:
                         for key, value in block.items()
                         if key not in {"id", "type", "position"}
                     }
-                    ChapterBlockModel.objects.update_or_create(
+                    defaults = {
+                        "chapter": chapter_obj,
+                        "type": block.get("type", "paragraph"),
+                        "position": int(block.get("position", 0)),
+                        "payload": payload,
+                    }
+                    if block_supports_version_metadata:
+                        defaults.update(
+                            {
+                                "version_count": 1,
+                                "active_version_number": 1,
+                            }
+                        )
+
+                    block_obj, _ = ChapterBlockModel.objects.update_or_create(
                         id=block["id"],
-                        defaults={
-                            "chapter": chapter_obj,
-                            "type": block.get("type", "paragraph"),
-                            "position": int(block.get("position", 0)),
-                            "payload": payload,
-                        },
+                        defaults=defaults,
                     )
+
+                    if block_supports_version_metadata and ChapterBlockVersionModel is not None:
+                        version_obj, _ = ChapterBlockVersionModel.objects.update_or_create(
+                            block=block_obj,
+                            version=1,
+                            defaults={
+                                "payload": payload,
+                                "is_active": True,
+                            },
+                        )
+                        updated_fields: list[str] = []
+                        if hasattr(block_obj, "active_version"):
+                            block_obj.active_version = version_obj
+                            updated_fields.append("active_version")
+                        if hasattr(block_obj, "active_version_number"):
+                            block_obj.active_version_number = int(version_obj.version)
+                            updated_fields.append("active_version_number")
+                        if hasattr(block_obj, "version_count"):
+                            related_manager = getattr(block_obj, "versions", None)
+                            count = related_manager.count() if related_manager else 1
+                            block_obj.version_count = max(count, 1)
+                            updated_fields.append("version_count")
+                        if hasattr(block_obj, "updated_at"):
+                            updated_fields.append("updated_at")
+                        if updated_fields:
+                            block_obj.save(update_fields=updated_fields)
 
         if not section_has_book_field:
             for order, section in enumerate(SAMPLE_LIBRARY_SECTIONS):

@@ -27,6 +27,9 @@ def _build_sample_chapter_detail(chapter_id: str) -> Optional[ChapterDetailPaylo
     if metadata is None:
         return None
     blocks = deepcopy(SAMPLE_CHAPTER_BLOCKS.get(chapter_id, []))
+    for block in blocks:
+        block.setdefault("activeVersion", 1)
+        block.setdefault("versionCount", 1)
     return chapter_detail_from_blocks(
         chapter_id=chapter_id,
         title=str(metadata.get("title", "")),
@@ -43,7 +46,9 @@ def _build_sample_chapter_detail(chapter_id: str) -> Optional[ChapterDetailPaylo
 def get_chapter_detail(chapter_id: str) -> Optional[ChapterDetailPayload]:
     try:
         chapter = (
-            Chapter.objects.select_related("book").prefetch_related("blocks").get(pk=chapter_id)
+            Chapter.objects.select_related("book")
+            .prefetch_related("blocks", "blocks__active_version")
+            .get(pk=chapter_id)
         )
     except Chapter.DoesNotExist:
         return _build_sample_chapter_detail(chapter_id)

@@ -1,8 +1,10 @@
 from .blocks import (
     create_chapter_block,
     delete_chapter_block,
+    delete_chapter_block_version,
     ensure_turn_identifiers,
     extract_chapter_context_for_block,
+    list_chapter_block_versions,
     update_chapter_block,
 )
 from .books import (
@@ -35,7 +37,9 @@ __all__ = [
     "update_chapter",
     "create_chapter_block",
     "delete_chapter_block",
+    "delete_chapter_block_version",
     "extract_chapter_context_for_block",
+    "list_chapter_block_versions",
     "update_chapter_block",
     "ensure_turn_identifiers",
     "create_book_context_item",

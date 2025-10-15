@@ -21,8 +21,8 @@ from ..prompts import (
     build_paragraph_suggestion_prompt_base,
 )
 from ..serializers import (
-    ParagraphSuggestionRequestSerializer,
     ParagraphSuggestionPromptResponseSerializer,
+    ParagraphSuggestionRequestSerializer,
     ParagraphSuggestionResponseSerializer,
 )
 from ..services.gemini import GeminiServiceError
@@ -136,9 +136,7 @@ def _build_paragraph_prompt(
 
         if block_payload.get("type") != "paragraph":
             raise ValidationError(
-                {
-                    "blockId": "Solo se pueden generar sugerencias para bloques de tipo 'paragraph'."
-                }
+                {"blockId": "Solo se pueden generar sugerencias para bloques de tipo 'paragraph'."}
             )
 
     paragraph_block = cast(ParagraphBlockPayload, block_payload) if block_payload else None

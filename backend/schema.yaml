@@ -301,9 +301,10 @@ paths:
               schema:
                 $ref: '#/components/schemas/ChapterDetail'
           description: ''
-    delete:
-      operationId: library_chapters_blocks_destroy
-      description: Update a single block within a chapter.
+  /api/library/chapters/{chapter_id}/blocks/{block_id}/versions/:
+    get:
+      operationId: library_chapters_blocks_versions_retrieve
+      description: List the versions available for a block.
       parameters:
       - in: path
         name: block_id
@@ -314,6 +315,35 @@ paths:
         name: chapter_id
         schema:
           type: string
+        required: true
+      tags:
+      - library
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ChapterBlockVersionList'
+          description: ''
+  /api/library/chapters/{chapter_id}/blocks/{block_id}/versions/{version}/:
+    delete:
+      operationId: library_chapters_blocks_versions_destroy
+      description: Delete a specific block version.
+      parameters:
+      - in: path
+        name: block_id
+        schema:
+          type: string
+        required: true
+      - in: path
+        name: chapter_id
+        schema:
+          type: string
+        required: true
+      - in: path
+        name: version
+        schema:
+          type: integer
         required: true
       tags:
       - library
@@ -442,6 +472,17 @@ components:
           $ref: '#/components/schemas/ChapterBlockTypeEnum'
         position:
           type: integer
+        version:
+          type: integer
+          maximum: 999
+          minimum: 1
+          writeOnly: true
+        activeVersion:
+          type: integer
+          readOnly: true
+        versionCount:
+          type: integer
+          readOnly: true
         text:
           type: string
         style:
@@ -525,9 +566,11 @@ components:
           - $ref: '#/components/schemas/SceneDetails'
           nullable: true
       required:
+      - activeVersion
       - id
       - position
       - type
+      - versionCount
     ChapterBlockCreate:
       type: object
       properties:
@@ -537,6 +580,17 @@ components:
           $ref: '#/components/schemas/ChapterBlockTypeEnum'
         position:
           type: integer
+        version:
+          type: integer
+          maximum: 999
+          minimum: 1
+          writeOnly: true
+        activeVersion:
+          type: integer
+          readOnly: true
+        versionCount:
+          type: integer
+          readOnly: true
         text:
           type: string
         style:
@@ -620,7 +674,9 @@ components:
           - $ref: '#/components/schemas/SceneDetails'
           nullable: true
       required:
+      - activeVersion
       - type
+      - versionCount
     ChapterBlockTypeEnum:
       enum:
       - paragraph
@@ -633,6 +689,27 @@ components:
         * `dialogue` - dialogue
         * `scene_boundary` - scene_boundary
         * `metadata` - metadata
+    ChapterBlockVersion:
+      type: object
+      properties:
+        version:
+          type: integer
+        isActive:
+          type: boolean
+        payload: {}
+      required:
+      - isActive
+      - payload
+      - version
+    ChapterBlockVersionList:
+      type: object
+      properties:
+        versions:
+          type: array
+          items:
+            $ref: '#/components/schemas/ChapterBlockVersion'
+      required:
+      - versions
     ChapterContextVisibilityUpdateItem:
       type: object
       properties:
@@ -1028,6 +1105,17 @@ components:
           $ref: '#/components/schemas/ChapterBlockTypeEnum'
         position:
           type: integer
+        version:
+          type: integer
+          maximum: 999
+          minimum: 1
+          writeOnly: true
+        activeVersion:
+          type: integer
+          readOnly: true
+        versionCount:
+          type: integer
+          readOnly: true
         text:
           type: string
         style:

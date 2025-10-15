@@ -116,6 +116,19 @@ export function EditorContainer({
     [openConfirmDialog],
   );
 
+  const confirmDeleteBlockVersion = useCallback(
+    () =>
+      openConfirmDialog({
+        title: "Eliminar versión",
+        description:
+          "¿Quieres eliminar esta versión del bloque? No podrás deshacer esta acción.",
+        confirmLabel: "Eliminar versión",
+        cancelLabel: "Cancelar",
+        tone: "danger",
+      }),
+    [openConfirmDialog],
+  );
+
   const notifyUpdateFailure = useCallback((error: unknown) => {
     showBlockUpdateErrorToast(error);
   }, []);
@@ -137,6 +150,7 @@ export function EditorContainer({
     sideEffects: {
       confirmDiscardChanges,
       confirmDeleteBlock,
+      confirmDeleteBlockVersion,
       notifyUpdateFailure,
     },
   });

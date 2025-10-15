@@ -5,7 +5,7 @@ from unittest.mock import patch
 from django.test import TestCase
 from django.urls import reverse
 
-from studio.models import Book, Chapter, LibraryContextItem
+from studio.models import Book, Chapter, ChapterBlock, ChapterBlockVersion, LibraryContextItem
 
 ORIGIN = "http://localhost:5173"
 
@@ -351,6 +351,147 @@ class ChapterEndpointTests(TestCase):
         self.assertIn("paragraphSuggestion", payload)
         self.assertEqual(payload["paragraphSuggestion"], "Una sugerencia breve.")
         mock_generate.assert_called_once()
+
+    def test_patch_block_creates_new_version(self) -> None:
+        chapter_id = "bk-karamazov-ch-01"
+        block_id = "para-ch1-001"
+        block = ChapterBlock.objects.get(pk=block_id)
+        initial_count = block.versions.count()
+
+        response = self.client.patch(
+            reverse(
+                "library-chapter-block-update",
+                kwargs={"chapter_id": chapter_id, "block_id": block_id},
+            ),
+            data={"text": "Nueva versión con matiz distinto."},
+            content_type="application/json",
+            HTTP_ORIGIN=ORIGIN,
+        )
+
+        self.assertEqual(response.status_code, 200)
+        block.refresh_from_db()
+        self.assertEqual(block.version_count, initial_count + 1)
+        self.assertEqual(block.active_version_number, initial_count + 1)
+        self.assertEqual(block.payload.get("text"), "Nueva versión con matiz distinto.")
+        self.assertEqual(
+            ChapterBlockVersion.objects.filter(block=block).count(),
+            block.version_count,
+        )
+
+    def test_patch_block_reuses_existing_version(self) -> None:
+        chapter_id = "bk-karamazov-ch-01"
+        block_id = "para-ch1-001"
+        block = ChapterBlock.objects.get(pk=block_id)
+        original_text = block.payload.get("text")
+
+        # Create an extra version first.
+        self.client.patch(
+            reverse(
+                "library-chapter-block-update",
+                kwargs={"chapter_id": chapter_id, "block_id": block_id},
+            ),
+            data={"text": "Versión alternativa temporal."},
+            content_type="application/json",
+            HTTP_ORIGIN=ORIGIN,
+        )
+
+        block.refresh_from_db()
+        self.assertGreaterEqual(block.version_count, 2)
+
+        response = self.client.patch(
+            reverse(
+                "library-chapter-block-update",
+                kwargs={"chapter_id": chapter_id, "block_id": block_id},
+            ),
+            data={"version": 1, "text": original_text},
+            content_type="application/json",
+            HTTP_ORIGIN=ORIGIN,
+        )
+
+        self.assertEqual(response.status_code, 200)
+        block.refresh_from_db()
+        self.assertEqual(block.active_version_number, 1)
+        self.assertEqual(block.version_count, 2)
+        self.assertEqual(block.payload.get("text"), original_text)
+
+    def test_block_versions_endpoint_lists_versions(self) -> None:
+        chapter_id = "bk-karamazov-ch-01"
+        block_id = "para-ch1-001"
+
+        # Ensure there are at least two versions.
+        self.client.patch(
+            reverse(
+                "library-chapter-block-update",
+                kwargs={"chapter_id": chapter_id, "block_id": block_id},
+            ),
+            data={"text": "Versión adicional para listar."},
+            content_type="application/json",
+            HTTP_ORIGIN=ORIGIN,
+        )
+
+        response = self.client.get(
+            reverse(
+                "library-chapter-block-versions",
+                kwargs={"chapter_id": chapter_id, "block_id": block_id},
+            ),
+            HTTP_ORIGIN=ORIGIN,
+        )
+
+        self.assertEqual(response.status_code, 200)
+        payload = response.json()
+        self.assertIn("versions", payload)
+        self.assertGreaterEqual(len(payload["versions"]), 2)
+        self.assertTrue(any(item.get("isActive") for item in payload["versions"]))
+
+    def test_delete_block_version_updates_active(self) -> None:
+        chapter_id = "bk-karamazov-ch-01"
+        block_id = "para-ch1-001"
+
+        # Create a secondary version.
+        self.client.patch(
+            reverse(
+                "library-chapter-block-update",
+                kwargs={"chapter_id": chapter_id, "block_id": block_id},
+            ),
+            data={"text": "Versión para eliminar."},
+            content_type="application/json",
+            HTTP_ORIGIN=ORIGIN,
+        )
+
+        block = ChapterBlock.objects.get(pk=block_id)
+        active_version = block.active_version_number
+        self.assertGreaterEqual(active_version, 2)
+
+        response = self.client.delete(
+            reverse(
+                "library-chapter-block-version-detail",
+                kwargs={
+                    "chapter_id": chapter_id,
+                    "block_id": block_id,
+                    "version": active_version,
+                },
+            ),
+            HTTP_ORIGIN=ORIGIN,
+        )
+
+        self.assertEqual(response.status_code, 200)
+        block.refresh_from_db()
+        self.assertEqual(block.version_count, 1)
+        self.assertEqual(block.active_version_number, 1)
+
+    def test_delete_block_last_version_is_rejected(self) -> None:
+        chapter_id = "bk-karamazov-ch-01"
+        block_id = "para-ch1-001"
+
+        response = self.client.delete(
+            reverse(
+                "library-chapter-block-version-detail",
+                kwargs={"chapter_id": chapter_id, "block_id": block_id, "version": 1},
+            ),
+            HTTP_ORIGIN=ORIGIN,
+        )
+
+        self.assertEqual(response.status_code, 400)
 
 
 class EditorEndpointTests(TestCase):

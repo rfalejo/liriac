@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import type { Dispatch, SetStateAction } from "react";
 import type { ChapterBlockUpdatePayload } from "../../../../api/chapters";
 import type { ChapterBlock } from "../../types";
@@ -44,28 +44,51 @@ export function createBlockEditingState<Block extends ChapterBlock, Draft>(
       params;
 
     const [draft, setDraft] = useState<Draft>(() => deriveDraft(null));
-    const [syncedBlockId, setSyncedBlockId] = useState<string | null>(null);
+    const syncedIdentityRef = useRef<{ id: string | null; version: number | null }>(
+      { id: null, version: null },
+    );
 
-    useEffect(() => {
-      if (isActive && block) {
-        setDraft(deriveDraft(block));
-        setSyncedBlockId(block.id);
+    const resolveActiveVersion = useCallback((source: Block | null): number | null => {
+      if (!source) {
+        return null;
       }
-    }, [block?.id, deriveDraft, isActive]);
+
+      const maybeVersion = (source as { activeVersion?: number }).activeVersion;
+      return typeof maybeVersion === "number" ? maybeVersion : null;
+    }, []);
 
     useEffect(() => {
       if (!isActive) {
         setDraft(deriveDraft(null));
-        setSyncedBlockId(null);
+        syncedIdentityRef.current = { id: null, version: null };
+        return;
       }
-    }, [deriveDraft, isActive]);
+
+      if (!block) {
+        setDraft(deriveDraft(null));
+        syncedIdentityRef.current = { id: null, version: null };
+        return;
+      }
+
+      const activeVersion = resolveActiveVersion(block);
+      const { id, version } = syncedIdentityRef.current;
+
+      if (block.id !== id || activeVersion !== version) {
+        setDraft(deriveDraft(block));
+        syncedIdentityRef.current = { id: block.id, version: activeVersion };
+      }
+    }, [block, deriveDraft, isActive, resolveActiveVersion]);
 
     const effectiveDraft = useMemo(() => {
-      if (isActive && block && block.id !== syncedBlockId) {
-        return deriveDraft(block);
+      if (isActive && block) {
+        const activeVersion = resolveActiveVersion(block);
+        const { id, version } = syncedIdentityRef.current;
+        if (block.id !== id || activeVersion !== version) {
+          return deriveDraft(block);
+        }
       }
       return draft;
-    }, [block, deriveDraft, draft, isActive, syncedBlockId]);
+    }, [block, deriveDraft, draft, isActive, resolveActiveVersion]);
 
     const hasPendingChanges = useMemo(() => {
       if (!isActive || !block) {

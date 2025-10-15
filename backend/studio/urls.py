@@ -3,10 +3,12 @@ from django.urls import path
 from .views import (
     ChapterBlockListView,
     ChapterBlockUpdateView,
-    ChapterDetailView,
+    ChapterBlockVersionDetailView,
+    ChapterBlockVersionListView,
     ChapterContextVisibilityView,
-    ChapterParagraphSuggestionView,
+    ChapterDetailView,
     ChapterParagraphSuggestionPromptView,
+    ChapterParagraphSuggestionView,
     EditorView,
     LibraryBookChaptersView,
     LibraryBookContextItemDetailView,
@@ -57,6 +59,16 @@ urlpatterns = [
         "library/chapters/<str:chapter_id>/blocks/<str:block_id>/",
         ChapterBlockUpdateView.as_view(),
         name="library-chapter-block-update",
+    ),
+    path(
+        "library/chapters/<str:chapter_id>/blocks/<str:block_id>/versions/",
+        ChapterBlockVersionListView.as_view(),
+        name="library-chapter-block-versions",
+    ),
+    path(
+        "library/chapters/<str:chapter_id>/blocks/<str:block_id>/versions/<int:version>/",
+        ChapterBlockVersionDetailView.as_view(),
+        name="library-chapter-block-version-detail",
     ),
     path(
         "library/chapters/<str:chapter_id>/context-visibility/",

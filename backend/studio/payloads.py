@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import List, Literal, Optional, TypedDict
+from typing import Any, Dict, List, Literal, Optional, TypedDict
 
 
 def join_paragraphs(paragraphs: List[str]) -> str:
@@ -25,20 +25,25 @@ class ChapterBlockBasePayload(TypedDict):
     position: int
 
 
-class ParagraphBlockPayload(ChapterBlockBasePayload, total=False):
+class ChapterBlockVersionInfo(TypedDict, total=False):
+    activeVersion: int
+    versionCount: int
+
+
+class ParagraphBlockPayload(ChapterBlockBasePayload, ChapterBlockVersionInfo, total=False):
     type: Literal["paragraph"]
     text: str
     style: Literal["narration", "poem", "aside", "letter"]
     tags: List[str]
 
 
-class DialogueBlockPayload(ChapterBlockBasePayload, total=False):
+class DialogueBlockPayload(ChapterBlockBasePayload, ChapterBlockVersionInfo, total=False):
     type: Literal["dialogue"]
     turns: List[DialogueTurnPayload]
     context: Optional[str]
 
 
-class SceneBoundaryBlockPayload(ChapterBlockBasePayload, total=False):
+class SceneBoundaryBlockPayload(ChapterBlockBasePayload, ChapterBlockVersionInfo, total=False):
     type: Literal["scene_boundary"]
     label: Optional[str]
     summary: Optional[str]
@@ -48,7 +53,7 @@ class SceneBoundaryBlockPayload(ChapterBlockBasePayload, total=False):
     mood: Optional[str]
 
 
-class MetadataBlockPayload(ChapterBlockBasePayload, total=False):
+class MetadataBlockPayload(ChapterBlockBasePayload, ChapterBlockVersionInfo, total=False):
     type: Literal["metadata"]
     kind: Literal["chapter_header", "context", "editorial"]
     title: str
@@ -70,6 +75,12 @@ class MetadataBlockPayload(ChapterBlockBasePayload, total=False):
 ChapterBlockPayload = (
     ParagraphBlockPayload | DialogueBlockPayload | SceneBoundaryBlockPayload | MetadataBlockPayload
 )
+
+
+class ChapterBlockVersionPayload(TypedDict, total=False):
+    version: int
+    isActive: bool
+    payload: Dict[str, Any]
 
 
 class ChapterSummaryPayload(TypedDict, total=False):

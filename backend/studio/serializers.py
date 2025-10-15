@@ -54,6 +54,9 @@ class ChapterBlockSerializer(serializers.Serializer):
         choices=("paragraph", "dialogue", "scene_boundary", "metadata"),
     )
     position = serializers.IntegerField()
+    version = serializers.IntegerField(required=False, min_value=1, max_value=999, write_only=True)
+    activeVersion = serializers.IntegerField(required=False, read_only=True)
+    versionCount = serializers.IntegerField(required=False, read_only=True)
     text = serializers.CharField(required=False, allow_blank=True)
     style = serializers.CharField(required=False, allow_blank=True, allow_null=True)
     tags = serializers.ListField(
@@ -166,6 +169,16 @@ class ChapterBlockCreateSerializer(ChapterBlockSerializer):
         super().__init__(*args, **kwargs)
         self.fields["id"].required = False
         self.fields["position"].required = False
+
+
+class ChapterBlockVersionSerializer(serializers.Serializer):
+    version = serializers.IntegerField()
+    isActive = serializers.BooleanField()
+    payload = serializers.JSONField()
+
+
+class ChapterBlockVersionListSerializer(serializers.Serializer):
+    versions = ChapterBlockVersionSerializer(many=True)
 
 
 class ContextItemSerializer(serializers.Serializer):

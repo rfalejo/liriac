@@ -43,6 +43,7 @@ export function EditableBlock<TEditingState extends EditingState>({
       onRequestSuggestion={resolvedEditingState.onRequestSuggestion}
       suggestionPending={resolvedEditingState.isSuggestionPending}
       suggestionDisabled={resolvedEditingState.isSaving}
+      versioning={resolvedEditingState.versioning}
     />
   ) : undefined;
 
@@ -53,6 +54,7 @@ export function EditableBlock<TEditingState extends EditingState>({
       onEdit={resolvedEditingState ? undefined : onEditBlock}
       controls={controls}
       isActive={isEditing}
+      versionNumber={typeof block.activeVersion === "number" ? block.activeVersion : null}
     >
       {resolvedEditingState
         ? renderEditView(block, resolvedEditingState)

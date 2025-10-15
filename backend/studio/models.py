@@ -3,6 +3,7 @@ from __future__ import annotations
 from typing import Any, Dict
 
 from django.core.serializers.json import DjangoJSONEncoder
+from django.core.validators import MaxValueValidator, MinValueValidator
 from django.db import models
 
 from .payloads import (
@@ -219,6 +220,15 @@ class ChapterBlock(TimeStampedModel):
     )
     position = models.IntegerField()
     payload = models.JSONField(default=dict, encoder=DjangoJSONEncoder)
+    active_version = models.ForeignKey(
+        "studio.ChapterBlockVersion",
+        related_name="active_for_block",
+        null=True,
+        blank=True,
+        on_delete=models.SET_NULL,
+    )
+    active_version_number = models.PositiveIntegerField(default=1)
+    version_count = models.PositiveIntegerField(default=1)
 
     class Meta:
         ordering = ["chapter", "position", "id"]
@@ -226,15 +236,53 @@ class ChapterBlock(TimeStampedModel):
     def __str__(self) -> str:
         return f"{self.type}:{self.id}"
 
-    def to_payload(self) -> ChapterBlockPayload:
-        data: ChapterBlockPayload = {
+    def base_payload(self) -> Dict[str, Any]:
+        return {
             "id": self.id,
             "type": self.type,
             "position": int(self.position),
         }
-        extras: Dict[str, Any] = dict(self.payload or {})
-        data.update(extras)
+
+    def to_payload(self) -> ChapterBlockPayload:
+        data: ChapterBlockPayload = self.base_payload()  # type: ignore[assignment]
+        active_payload: Dict[str, Any]
+        if self.active_version is not None:
+            active_payload = dict(self.active_version.payload or {})
+        else:
+            active_payload = dict(self.payload or {})
+        data.update(active_payload)
+        data["activeVersion"] = int(self.active_version_number or 1)
+        data["versionCount"] = int(self.version_count or 1)
         return data
+
+
+class ChapterBlockVersion(TimeStampedModel):
+    block = models.ForeignKey(
+        ChapterBlock,
+        related_name="versions",
+        on_delete=models.CASCADE,
+    )
+    version = models.PositiveIntegerField(
+        validators=[MinValueValidator(1), MaxValueValidator(999)],
+    )
+    payload = models.JSONField(default=dict, encoder=DjangoJSONEncoder)
+    is_active = models.BooleanField(default=False)
+
+    class Meta:
+        ordering = ["block", "version"]
+        constraints = [
+            models.UniqueConstraint(fields=["block", "version"], name="uniq_block_version"),
+        ]
+
+    def __str__(self) -> str:
+        return f"{self.block_id}:v{self.version}"
+
+    def to_payload(self) -> Dict[str, Any]:
+        return {
+            "version": int(self.version),
+            "isActive": bool(self.is_active),
+            "payload": dict(self.payload or {}),
+        }
 
 
 class ChapterContextVisibility(TimeStampedModel):

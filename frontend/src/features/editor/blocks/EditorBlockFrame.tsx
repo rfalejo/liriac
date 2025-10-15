@@ -1,5 +1,6 @@
 import Box from "@mui/material/Box";
 import IconButton from "@mui/material/IconButton";
+import Typography from "@mui/material/Typography";
 import type { Theme } from "@mui/material/styles";
 import {
   type FocusEventHandler,
@@ -25,6 +26,7 @@ type EditorBlockFrameProps = {
   onEdit?: (blockId: string) => void;
   controls?: ReactNode;
   isActive?: boolean;
+  versionNumber?: number | null;
   children: ReactNode;
 };
 
@@ -34,6 +36,7 @@ export function EditorBlockFrame({
   onEdit,
   controls,
   isActive = false,
+  versionNumber,
   children,
 }: EditorBlockFrameProps) {
   const [focusWithin, setFocusWithin] = useState(false);
@@ -120,6 +123,25 @@ export function EditorBlockFrame({
       })}
     >
       {children}
+      {typeof versionNumber === "number" ? (
+        <Box
+          sx={(theme: Theme) => ({
+            position: "absolute",
+            bottom: { xs: 8, sm: 12 },
+            left: { xs: 8, sm: 12 },
+            px: 0.75,
+            py: 0.25,
+            borderRadius: 999,
+            backgroundColor: theme.palette.editor.blockHoverBg,
+            color: theme.palette.editor.blockIcon,
+            fontWeight: 600,
+          })}
+        >
+          <Typography variant="caption" sx={{ fontWeight: 600 }}>
+            v{versionNumber}
+          </Typography>
+        </Box>
+      ) : null}
       <Box
         sx={(theme: Theme) => ({
           position: "absolute",

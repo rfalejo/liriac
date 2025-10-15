@@ -2,8 +2,10 @@ from ..services import generate_paragraph_suggestion
 from .chapters import (
     ChapterBlockListView,
     ChapterBlockUpdateView,
-    ChapterDetailView,
+    ChapterBlockVersionDetailView,
+    ChapterBlockVersionListView,
     ChapterContextVisibilityView,
+    ChapterDetailView,
 )
 from .editor import EditorView
 from .library import (
@@ -22,6 +24,8 @@ from .suggestions import (
 __all__ = [
     "ChapterBlockListView",
     "ChapterBlockUpdateView",
+    "ChapterBlockVersionListView",
+    "ChapterBlockVersionDetailView",
     "ChapterDetailView",
     "ChapterContextVisibilityView",
     "ChapterParagraphSuggestionView",

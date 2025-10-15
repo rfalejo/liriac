@@ -6,6 +6,10 @@ export type ChapterBlockUpdatePayload =
   components["schemas"]["PatchedChapterBlockUpdate"];
 export type ChapterBlockCreatePayload =
   components["schemas"]["ChapterBlockCreate"];
+export type ChapterBlockVersionList =
+  components["schemas"]["ChapterBlockVersionList"];
+export type ChapterBlockVersion =
+  components["schemas"]["ChapterBlockVersion"];
 export type ParagraphSuggestionResponse =
   components["schemas"]["ParagraphSuggestionResponse"];
 export type ParagraphSuggestionPromptResponse =
@@ -79,6 +83,46 @@ export async function deleteChapterBlock({
 
   return request<ChapterDetail>(
     `/api/library/chapters/${encodedChapter}/blocks/${encodedBlock}/`,
+    {
+      method: "DELETE",
+    },
+  );
+}
+
+type FetchBlockVersionsParams = {
+  chapterId: string;
+  blockId: string;
+};
+
+export async function fetchChapterBlockVersions({
+  chapterId,
+  blockId,
+}: FetchBlockVersionsParams): Promise<ChapterBlockVersionList> {
+  const encodedChapter = encodeURIComponent(chapterId);
+  const encodedBlock = encodeURIComponent(blockId);
+
+  return request<ChapterBlockVersionList>(
+    `/api/library/chapters/${encodedChapter}/blocks/${encodedBlock}/versions/`,
+  );
+}
+
+type DeleteBlockVersionParams = {
+  chapterId: string;
+  blockId: string;
+  version: number;
+};
+
+export async function deleteChapterBlockVersion({
+  chapterId,
+  blockId,
+  version,
+}: DeleteBlockVersionParams): Promise<ChapterDetail> {
+  const encodedChapter = encodeURIComponent(chapterId);
+  const encodedBlock = encodeURIComponent(blockId);
+  const encodedVersion = encodeURIComponent(String(version));
+
+  return request<ChapterDetail>(
+    `/api/library/chapters/${encodedChapter}/blocks/${encodedBlock}/versions/${encodedVersion}/`,
     {
       method: "DELETE",
     },

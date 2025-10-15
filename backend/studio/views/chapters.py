@@ -10,8 +10,10 @@ from rest_framework.views import APIView
 from ..data import (
     create_chapter_block,
     delete_chapter_block,
+    delete_chapter_block_version,
     get_book_context_sections,
     get_chapter_detail,
+    list_chapter_block_versions,
     update_chapter,
     update_chapter_block,
     update_chapter_context_visibility,
@@ -19,6 +21,7 @@ from ..data import (
 from ..serializers import (
     ChapterBlockCreateSerializer,
     ChapterBlockUpdateSerializer,
+    ChapterBlockVersionListSerializer,
     ChapterContextVisibilityUpdateRequestSerializer,
     ChapterDetailSerializer,
     ChapterSummarySerializer,
@@ -31,6 +34,8 @@ __all__ = [
     "ChapterDetailView",
     "ChapterBlockListView",
     "ChapterBlockUpdateView",
+    "ChapterBlockVersionListView",
+    "ChapterBlockVersionDetailView",
     "ChapterContextVisibilityView",
 ]
 
@@ -109,7 +114,8 @@ class ChapterBlockUpdateView(APIView):
             block_kind=existing_block.get("kind"),
         )
 
-        if not payload:
+        meaningful_keys = [key for key in payload.keys() if key != "id"]
+        if not meaningful_keys:
             raise ValidationError("No se enviaron cambios para actualizar.")
 
         if "id" in payload and payload["id"] != block_id:
@@ -139,6 +145,42 @@ class ChapterBlockUpdateView(APIView):
 
         response_serializer = ChapterDetailSerializer(updated_chapter)
         return Response(response_serializer.data)
+
+
+class ChapterBlockVersionListView(APIView):
+    """List the versions available for a block."""
+
+    authentication_classes: list = []
+    permission_classes: list = []
+
+    @extend_schema(responses=ChapterBlockVersionListSerializer)
+    def get(self, _request, chapter_id: str, block_id: str):
+        try:
+            versions = list_chapter_block_versions(chapter_id, block_id)
+        except KeyError as exc:
+            raise Http404(str(exc)) from exc
+
+        serializer = ChapterBlockVersionListSerializer({"versions": versions})
+        return Response(serializer.data)
+
+
+class ChapterBlockVersionDetailView(APIView):
+    """Delete a specific block version."""
+
+    authentication_classes: list = []
+    permission_classes: list = []
+
+    @extend_schema(responses=ChapterDetailSerializer)
+    def delete(self, _request, chapter_id: str, block_id: str, version: int):
+        try:
+            updated_chapter = delete_chapter_block_version(chapter_id, block_id, int(version))
+        except KeyError as exc:
+            raise Http404(str(exc)) from exc
+        except ValueError as exc:
+            raise ValidationError(str(exc)) from exc
+
+        serializer = ChapterDetailSerializer(updated_chapter)
+        return Response(serializer.data)
 
 
 class ChapterBlockListView(APIView):

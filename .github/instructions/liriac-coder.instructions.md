@@ -115,6 +115,7 @@ backend/
 |   |   |-- 0003_book_context_scope.py
 |   |   |-- 0004_alter_librarysection_options.py
 |   |   |-- 0005_chaptercontextvisibility.py
+|   |   |-- 0006_chapterblock_active_version_number_and_more.py
 |   |   \-- __init__.py
 |   |-- prompts/
 |   |   |-- __init__.py
@@ -143,6 +144,9 @@ backend/
 |-- pyproject.toml
 |-- schema.yaml
 \-- uv.lock
+docs/
+|-- react-antipattern-findings.md
+\-- react-mui-antipatterns.md
 frontend/
 |-- src/
 |   |-- api/
@@ -194,6 +198,7 @@ frontend/
 |   |   |   |   |   |-- constants.ts
 |   |   |   |   |   |-- createBlockEditingState.ts
 |   |   |   |   |   |-- types.ts
+|   |   |   |   |   |-- useBlockVersionController.ts
 |   |   |   |   |   |-- useDialogueBlockEditingSession.ts
 |   |   |   |   |   |-- useEditingBlockManager.ts
 |   |   |   |   |   |-- useMetadataBlockEditingSession.ts
@@ -201,10 +206,12 @@ frontend/
 |   |   |   |   |   |-- useParagraphSuggestionController.ts
 |   |   |   |   |   \-- useSceneBoundaryBlockEditingSession.ts
 |   |   |   |   |-- useChapterBlockSelectors.ts
+|   |   |   |   |-- useChapterBlockVersions.ts
 |   |   |   |   |-- useChapterBlocks.ts
 |   |   |   |   |-- useChapterContextVisibility.ts
 |   |   |   |   |-- useCreateChapterBlock.ts
 |   |   |   |   |-- useDeleteChapterBlock.ts
+|   |   |   |   |-- useDeleteChapterBlockVersion.ts
 |   |   |   |   |-- useDialogueEditingState.ts
 |   |   |   |   |-- useEditorChapterNavigation.ts
 |   |   |   |   |-- useEditorConfirmDialog.ts
@@ -212,6 +219,7 @@ frontend/
 |   |   |   |   |-- useEditorScrollbar.ts
 |   |   |   |   |-- useMetadataEditingState.ts
 |   |   |   |   |-- useParagraphEditingState.ts
+|   |   |   |   |-- useParagraphSuggestionPromptRequest.ts
 |   |   |   |   |-- useParagraphSuggestionRequest.ts
 |   |   |   |   |-- usePinnedHoverPanel.ts
 |   |   |   |   |-- useSceneBoundaryEditingState.ts
