@@ -3,6 +3,7 @@ import Box from "@mui/material/Box";
 import IconButton from "@mui/material/IconButton";
 import Paper from "@mui/material/Paper";
 import Tooltip from "@mui/material/Tooltip";
+import useMediaQuery from "@mui/material/useMediaQuery";
 import type { Theme } from "@mui/material/styles";
 import MoreHorizRoundedIcon from "@mui/icons-material/MoreHorizRounded";
 import SubjectRoundedIcon from "@mui/icons-material/SubjectRounded";
@@ -62,8 +63,11 @@ export function BlockInsertMenu({
   const [hovered, setHovered] = useState(false);
   const [expanded, setExpanded] = useState(false);
   const containerRef = useRef<HTMLDivElement | null>(null);
+  const isTouchViewport = useMediaQuery((theme: Theme) =>
+    theme.breakpoints.down("sm"),
+  );
 
-  const visible = hovered || expanded;
+  const visible = isTouchViewport || hovered || expanded;
 
   const handleToggle = useCallback(() => {
     setExpanded((current) => !current);
