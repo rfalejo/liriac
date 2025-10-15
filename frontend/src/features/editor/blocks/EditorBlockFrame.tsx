@@ -102,9 +102,7 @@ export function EditorBlockFrame({
       sx={(theme: Theme) => {
         const basePaddingX = theme.editor.blockPaddingX;
         const basePaddingY = theme.editor.blockPaddingY;
-        const extraTopPadding = showControls
-          ? { xs: 2.75, sm: 3.25 }
-          : { xs: 0, sm: 0 };
+        const extraTopPadding = { xs: 2.75, sm: 3.25 };
 
         return {
           width: "100%",
