@@ -324,3 +324,53 @@ class ParagraphSuggestionResponseSerializer(serializers.Serializer):
 
 class ParagraphSuggestionPromptResponseSerializer(serializers.Serializer):
     prompt = serializers.CharField()
+
+
+class BlockConversionTurnSerializer(serializers.Serializer):
+    id = serializers.CharField(required=False, allow_blank=True)
+    speakerId = serializers.CharField(required=False, allow_blank=True, allow_null=True)
+    speakerName = serializers.CharField(required=False, allow_blank=True, allow_null=True)
+    utterance = serializers.CharField()
+    stageDirection = serializers.CharField(required=False, allow_blank=True, allow_null=True)
+
+
+class BlockConversionBlockSerializer(serializers.Serializer):
+    type = serializers.ChoiceField(choices=("paragraph", "dialogue"))
+    text = serializers.CharField(required=False, allow_blank=True)
+    turns = BlockConversionTurnSerializer(many=True, required=False)
+    context = serializers.CharField(required=False, allow_blank=True)
+
+    def validate(self, attrs):
+        block_type = attrs.get("type")
+        if block_type == "paragraph":
+            text = attrs.get("text")
+            if not text or not text.strip():
+                raise serializers.ValidationError(
+                    {"text": "Los párrafos sugeridos deben incluir texto."}
+                )
+        elif block_type == "dialogue":
+            turns = attrs.get("turns") or []
+            if not turns:
+                raise serializers.ValidationError(
+                    {"turns": "Los diálogos sugeridos deben incluir al menos un turno."}
+                )
+        return attrs
+
+
+class BlockConversionRequestSerializer(serializers.Serializer):
+    text = serializers.CharField()
+    instructions = serializers.CharField(required=False, allow_blank=True)
+    contextBlockId = serializers.CharField(required=False, allow_blank=True)
+
+
+class BlockConversionResponseSerializer(serializers.Serializer):
+    conversionId = serializers.CharField()
+    blocks = BlockConversionBlockSerializer(many=True)
+
+
+class BlockConversionApplySerializer(serializers.Serializer):
+    anchorBlockId = serializers.CharField(required=False, allow_blank=True)
+    placement = serializers.ChoiceField(
+        choices=("before", "after", "append"),
+        default="append",
+    )

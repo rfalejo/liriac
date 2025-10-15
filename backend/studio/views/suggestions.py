@@ -10,17 +10,24 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 
 from ..data import (
+    apply_block_conversion_suggestion,
+    create_block_conversion_suggestion,
     extract_chapter_context_for_block,
     get_active_context_items,
     get_book_metadata,
     get_chapter_detail,
 )
+from ..data.conversions import BlockConversionError
 from ..payloads import ParagraphBlockPayload
 from ..prompts import (
     build_paragraph_suggestion_prompt,
     build_paragraph_suggestion_prompt_base,
 )
 from ..serializers import (
+    BlockConversionApplySerializer,
+    BlockConversionRequestSerializer,
+    BlockConversionResponseSerializer,
+    ChapterDetailSerializer,
     ParagraphSuggestionPromptResponseSerializer,
     ParagraphSuggestionRequestSerializer,
     ParagraphSuggestionResponseSerializer,
@@ -30,6 +37,8 @@ from ..services.gemini import GeminiServiceError
 __all__ = [
     "ChapterParagraphSuggestionView",
     "ChapterParagraphSuggestionPromptView",
+    "ChapterBlockConversionSuggestionView",
+    "BlockConversionApplyView",
 ]
 
 
@@ -105,6 +114,67 @@ class ChapterParagraphSuggestionPromptView(APIView):
         )
 
         response_serializer = ParagraphSuggestionPromptResponseSerializer({"prompt": prompt})
+        return Response(response_serializer.data)
+
+
+class ChapterBlockConversionSuggestionView(APIView):
+    """Generate a block conversion suggestion using Gemini."""
+
+    authentication_classes: list = []
+    permission_classes: list = []
+
+    @extend_schema(
+        request=BlockConversionRequestSerializer,
+        responses=BlockConversionResponseSerializer,
+    )
+    def post(self, request, chapter_id: str):
+        serializer = BlockConversionRequestSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        payload = serializer.validated_data
+
+        try:
+            suggestion = create_block_conversion_suggestion(
+                chapter_id=chapter_id,
+                text=payload["text"],
+                instructions=payload.get("instructions"),
+                context_block_id=payload.get("contextBlockId"),
+            )
+        except KeyError as exc:
+            raise Http404(str(exc)) from exc
+        except (ValueError, GeminiServiceError) as exc:
+            raise ValidationError({"detail": str(exc)}) from exc
+
+        response_serializer = BlockConversionResponseSerializer(suggestion)
+        return Response(response_serializer.data)
+
+
+class BlockConversionApplyView(APIView):
+    """Apply a stored block conversion suggestion to a chapter."""
+
+    authentication_classes: list = []
+    permission_classes: list = []
+
+    @extend_schema(
+        request=BlockConversionApplySerializer,
+        responses=ChapterDetailSerializer,
+    )
+    def post(self, request, conversion_id: str):
+        serializer = BlockConversionApplySerializer(data=request.data or {})
+        serializer.is_valid(raise_exception=True)
+        payload = serializer.validated_data
+
+        try:
+            detail = apply_block_conversion_suggestion(
+                conversion_id=conversion_id,
+                anchor_block_id=payload.get("anchorBlockId"),
+                placement=payload.get("placement", "append"),
+            )
+        except KeyError as exc:
+            raise Http404(str(exc)) from exc
+        except (ValueError, BlockConversionError) as exc:
+            raise ValidationError({"detail": str(exc)}) from exc
+
+        response_serializer = ChapterDetailSerializer(detail)
         return Response(response_serializer.data)
 
 

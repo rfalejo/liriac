@@ -352,6 +352,69 @@ class ChapterEndpointTests(TestCase):
         self.assertEqual(payload["paragraphSuggestion"], "Una sugerencia breve.")
         mock_generate.assert_called_once()
 
+    @patch("studio.views.suggestions.create_block_conversion_suggestion")
+    def test_block_conversion_suggestion_endpoint(self, mock_create) -> None:
+        mock_create.return_value = {
+            "conversionId": "123e4567-e89b-12d3-a456-426614174000",
+            "blocks": [
+                {"type": "paragraph", "text": "Nueva escena con los niños."},
+                {
+                    "type": "dialogue",
+                    "context": "Encuentro entre Liam y Fabiana.",
+                    "turns": [
+                        {
+                            "id": "turn-1",
+                            "speakerName": "Liam",
+                            "utterance": "—¿Listos para la aventura?",
+                        }
+                    ],
+                },
+            ],
+        }
+
+        chapter_id = "bk-karamazov-ch-01"
+        response = self.client.post(
+            reverse("library-chapter-block-conversion", kwargs={"chapter_id": chapter_id}),
+            data={"text": "Texto fuente a convertir."},
+            content_type="application/json",
+            HTTP_ORIGIN=ORIGIN,
+        )
+
+        self.assertEqual(response.status_code, 200)
+        payload = response.json()
+        self.assertEqual(
+            payload["conversionId"], "123e4567-e89b-12d3-a456-426614174000"
+        )
+        self.assertEqual(len(payload["blocks"]), 2)
+        mock_create.assert_called_once()
+        self.assertEqual(response["Access-Control-Allow-Origin"], ORIGIN)
+
+    @patch("studio.views.suggestions.apply_block_conversion_suggestion")
+    def test_block_conversion_apply_endpoint(self, mock_apply) -> None:
+        chapter = Chapter.objects.get(pk="bk-karamazov-ch-01")
+        mock_apply.return_value = chapter.to_detail_payload()
+
+        conversion_id = "123e4567-e89b-12d3-a456-426614174000"
+        response = self.client.post(
+            reverse(
+                "library-block-conversion-apply",
+                kwargs={"conversion_id": conversion_id},
+            ),
+            data={"placement": "append"},
+            content_type="application/json",
+            HTTP_ORIGIN=ORIGIN,
+        )
+
+        self.assertEqual(response.status_code, 200)
+        payload = response.json()
+        self.assertEqual(payload["id"], chapter.id)
+        mock_apply.assert_called_once()
+        _, kwargs = mock_apply.call_args
+        self.assertEqual(str(kwargs.get("conversion_id")), str(conversion_id))
+        self.assertIsNone(kwargs.get("anchor_block_id"))
+        self.assertEqual(kwargs.get("placement"), "append")
+        self.assertEqual(response["Access-Control-Allow-Origin"], ORIGIN)
+
     def test_patch_block_creates_new_version(self) -> None:
         chapter_id = "bk-karamazov-ch-01"
         block_id = "para-ch1-001"

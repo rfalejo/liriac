@@ -1,6 +1,8 @@
 from django.urls import path
 
 from .views import (
+    BlockConversionApplyView,
+    ChapterBlockConversionSuggestionView,
     ChapterBlockListView,
     ChapterBlockUpdateView,
     ChapterBlockVersionDetailView,
@@ -84,6 +86,16 @@ urlpatterns = [
         "library/chapters/<str:chapter_id>/paragraph-suggestion/prompt/",
         ChapterParagraphSuggestionPromptView.as_view(),
         name="library-chapter-paragraph-suggestion-prompt",
+    ),
+    path(
+        "library/chapters/<str:chapter_id>/block-conversions/",
+        ChapterBlockConversionSuggestionView.as_view(),
+        name="library-chapter-block-conversion",
+    ),
+    path(
+        "library/block-conversions/<uuid:conversion_id>/apply/",
+        BlockConversionApplyView.as_view(),
+        name="library-block-conversion-apply",
     ),
     path("editor/", EditorView.as_view(), name="editor"),
 ]

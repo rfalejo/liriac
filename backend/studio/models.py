@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from typing import Any, Dict
+from uuid import uuid4
 
 from django.core.serializers.json import DjangoJSONEncoder
 from django.core.validators import MaxValueValidator, MinValueValidator
@@ -283,6 +284,51 @@ class ChapterBlockVersion(TimeStampedModel):
             "isActive": bool(self.is_active),
             "payload": dict(self.payload or {}),
         }
+
+
+class ChapterBlockConversionStatus(models.TextChoices):
+    PENDING = "pending", "Pending"
+    ACCEPTED = "accepted", "Accepted"
+    DISCARDED = "discarded", "Discarded"
+    FAILED = "failed", "Failed"
+
+
+class ChapterBlockConversion(TimeStampedModel):
+    id = models.UUIDField(primary_key=True, default=uuid4, editable=False)
+    chapter = models.ForeignKey(
+        Chapter,
+        related_name="block_conversions",
+        on_delete=models.CASCADE,
+    )
+    source_text = models.TextField()
+    instructions = models.TextField(blank=True)
+    context_block_id = models.CharField(max_length=64, blank=True)
+    provider = models.CharField(max_length=64, default="gemini")
+    model_name = models.CharField(max_length=128, blank=True)
+    status = models.CharField(
+        max_length=16,
+        choices=ChapterBlockConversionStatus.choices,
+        default=ChapterBlockConversionStatus.PENDING,
+    )
+    suggested_blocks = models.JSONField(default=list, encoder=DjangoJSONEncoder)
+    applied_block_ids = models.JSONField(default=list, encoder=DjangoJSONEncoder, blank=True)
+    error_message = models.TextField(blank=True)
+
+    class Meta:
+        ordering = ["-created_at"]
+
+    def __str__(self) -> str:
+        return f"conversion:{self.id}:{self.chapter_id}:{self.status}"
+
+    def mark_failed(self, *, message: str) -> None:
+        self.status = ChapterBlockConversionStatus.FAILED
+        self.error_message = message
+        self.save(update_fields=["status", "error_message", "updated_at"])
+
+    def mark_accepted(self, *, block_ids: list[str]) -> None:
+        self.status = ChapterBlockConversionStatus.ACCEPTED
+        self.applied_block_ids = block_ids
+        self.save(update_fields=["status", "applied_block_ids", "updated_at"])
 
 
 class ChapterContextVisibility(TimeStampedModel):

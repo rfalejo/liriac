@@ -24,6 +24,10 @@ from .context import (
     update_book_context_items,
     update_chapter_context_visibility,
 )
+from .conversions import (
+    apply_block_conversion_suggestion,
+    create_block_conversion_suggestion,
+)
 from .editor import get_editor_state
 
 __all__ = [
@@ -50,4 +54,6 @@ __all__ = [
     "update_chapter_context_visibility",
     "get_editor_state",
     "bootstrap_sample_data",
+    "create_block_conversion_suggestion",
+    "apply_block_conversion_suggestion",
 ]

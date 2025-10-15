@@ -19,6 +19,26 @@ class DialogueTurnPayload(TypedDict, total=False):
     tone: Literal["whisper", "shout", "thought", "narration"]
 
 
+class BlockConversionTurnPayload(TypedDict, total=False):
+    id: str
+    speakerId: str
+    speakerName: str
+    utterance: str
+    stageDirection: str
+
+
+class BlockConversionBlockPayload(TypedDict, total=False):
+    type: Literal["paragraph", "dialogue"]
+    text: str
+    turns: List[BlockConversionTurnPayload]
+    context: str
+
+
+class BlockConversionSuggestionPayload(TypedDict, total=False):
+    conversionId: str
+    blocks: List[BlockConversionBlockPayload]
+
+
 class ChapterBlockBasePayload(TypedDict):
     id: str
     type: Literal["paragraph", "dialogue", "scene_boundary", "metadata"]
