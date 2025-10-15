@@ -18,11 +18,15 @@ export type ChapterBlockListProps = {
     blockType: ChapterBlockType,
     position: BlockInsertPosition,
   ) => void;
+  onOpenConversion?: () => void;
+  conversionDisabled?: boolean;
 };
 
 export function ChapterBlockList({
   blockEntries,
   onInsertBlock,
+  onOpenConversion,
+  conversionDisabled,
 }: ChapterBlockListProps) {
   const { editingState } = useEditorBlockEditing();
   const activeBlockId = editingState?.blockId ?? null;
@@ -46,6 +50,8 @@ export function ChapterBlockList({
               <BlockInsertMenu
                 position={insertPosition}
                 onInsertBlock={onInsertBlock}
+                onOpenConversion={onOpenConversion}
+                conversionDisabled={conversionDisabled}
               />
             ) : null}
             <Box
@@ -81,6 +87,8 @@ export function ChapterBlockList({
                   index: index + 1,
                 }}
                 onInsertBlock={onInsertBlock}
+                onOpenConversion={onOpenConversion}
+                conversionDisabled={conversionDisabled}
               />
             ) : null}
           </Fragment>

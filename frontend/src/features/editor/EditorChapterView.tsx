@@ -23,6 +23,8 @@ type EditorChapterViewProps = {
     blockType: ChapterBlockType,
     position: BlockInsertPosition,
   ) => void;
+  onOpenConversion?: () => void;
+  conversionDisabled?: boolean;
   editingState?: EditingState;
 };
 
@@ -33,6 +35,8 @@ export function EditorChapterView({
   onRetry,
   onEditBlock,
   onInsertBlock,
+  onOpenConversion,
+  conversionDisabled,
   editingState,
 }: EditorChapterViewProps) {
   const { blockEntries, hasChapterHeader } = useChapterBlocks(chapter);
@@ -63,11 +67,17 @@ export function EditorChapterView({
         ) : null}
 
         {blockEntries.length === 0 ? (
-          <ChapterEmptyState onInsertBlock={onInsertBlock} />
+          <ChapterEmptyState
+            onInsertBlock={onInsertBlock}
+            onOpenConversion={onOpenConversion}
+            conversionDisabled={conversionDisabled}
+          />
         ) : (
           <ChapterBlockList
             blockEntries={blockEntries}
             onInsertBlock={onInsertBlock}
+            onOpenConversion={onOpenConversion}
+            conversionDisabled={conversionDisabled}
           />
         )}
       </Fragment>

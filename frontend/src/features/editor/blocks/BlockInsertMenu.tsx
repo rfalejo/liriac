@@ -10,6 +10,7 @@ import SubjectRoundedIcon from "@mui/icons-material/SubjectRounded";
 import ChatBubbleOutlineRoundedIcon from "@mui/icons-material/ChatBubbleOutlineRounded";
 import InfoRoundedIcon from "@mui/icons-material/InfoRounded";
 import LandscapeRoundedIcon from "@mui/icons-material/LandscapeRounded";
+import ContentPasteRoundedIcon from "@mui/icons-material/ContentPasteRounded";
 import type { FocusEventHandler } from "react";
 import type { components } from "../../../api/schema";
 
@@ -27,6 +28,8 @@ type BlockInsertMenuProps = {
     blockType: ChapterBlockType,
     position: BlockInsertPosition,
   ) => void;
+  onOpenConversion?: () => void;
+  conversionDisabled?: boolean;
 };
 
 export const BLOCK_INSERT_OPTIONS = [
@@ -59,6 +62,8 @@ export const BLOCK_INSERT_OPTIONS = [
 export function BlockInsertMenu({
   position,
   onInsertBlock,
+  onOpenConversion,
+  conversionDisabled = false,
 }: BlockInsertMenuProps) {
   const [hovered, setHovered] = useState(false);
   const [expanded, setExpanded] = useState(false);
@@ -99,17 +104,53 @@ export function BlockInsertMenu({
     [hovered],
   );
 
-  const optionButtons = useMemo(
-    () =>
-      BLOCK_INSERT_OPTIONS.map(({ type, label, Icon }) => (
-        <Tooltip key={type} title={label} placement="top" arrow>
+  const optionButtons = useMemo(() => {
+    const blockButtons = BLOCK_INSERT_OPTIONS.map(({ type, label, Icon }) => (
+      <Tooltip key={type} title={label} placement="top" arrow>
+        <IconButton
+          size="small"
+          onClick={() => {
+            onInsertBlock?.(type, position);
+            setExpanded(false);
+          }}
+          aria-label={label}
+          sx={(theme: Theme) => ({
+            color: theme.palette.editor.blockMenuIcon,
+            transition: theme.editor.iconButtonTransition,
+            "&:hover": {
+              backgroundColor: theme.palette.editor.blockMenuHoverBg,
+              color: theme.palette.editor.blockMenuIconHover,
+            },
+          })}
+        >
+          <Icon fontSize="small" />
+        </IconButton>
+      </Tooltip>
+    ));
+
+    if (!onOpenConversion) {
+      return blockButtons;
+    }
+
+    const conversionButton = (
+      <Tooltip
+        key="conversion"
+        title="Pegar y convertir"
+        placement="top"
+        arrow
+      >
+        <span>
           <IconButton
             size="small"
             onClick={() => {
-              onInsertBlock?.(type, position);
+              if (conversionDisabled) {
+                return;
+              }
+              onOpenConversion();
               setExpanded(false);
             }}
-            aria-label={label}
+            aria-label="Pegar y convertir"
+            disabled={conversionDisabled}
             sx={(theme: Theme) => ({
               color: theme.palette.editor.blockMenuIcon,
               transition: theme.editor.iconButtonTransition,
@@ -117,14 +158,19 @@ export function BlockInsertMenu({
                 backgroundColor: theme.palette.editor.blockMenuHoverBg,
                 color: theme.palette.editor.blockMenuIconHover,
               },
+              "&.Mui-disabled": {
+                color: theme.palette.action.disabled,
+              },
             })}
           >
-            <Icon fontSize="small" />
+            <ContentPasteRoundedIcon fontSize="small" />
           </IconButton>
-        </Tooltip>
-  )),
-    [onInsertBlock, position],
-  );
+        </span>
+      </Tooltip>
+    );
+
+    return [conversionButton, ...blockButtons];
+  }, [conversionDisabled, onInsertBlock, onOpenConversion, position]);
 
   return (
     <Box

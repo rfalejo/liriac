@@ -23,7 +23,6 @@ import {
 import { ContextConfigurationPanel } from "./contextPanel";
 import { usePinnedHoverPanel } from "./hooks/usePinnedHoverPanel";
 import { useBlockConversion } from "./hooks/useBlockConversion";
-import { BlockConversionToolbar } from "./conversions/BlockConversionToolbar";
 import { DraftConversionPreview } from "./conversions/DraftConversionPreview";
 import { BlockConversionDialog } from "./conversions/BlockConversionDialog";
 
@@ -230,23 +229,17 @@ export function EditorContainer({
     mutationPending ||
     !chapter?.id;
 
-  const chapterTopSlot = chapter ? (
-    <Stack spacing={conversionDraft ? 2.5 : 2}>
-      <BlockConversionToolbar
-        onOpen={openConversionDialog}
-        disabled={conversionActionsDisabled}
+  const chapterTopSlot = chapter && conversionDraft ? (
+    <Stack spacing={2.5}>
+      <DraftConversionPreview
+        blocks={conversionDraft.blocks}
+        onAccept={() => {
+          void acceptDraft();
+        }}
+        onReject={rejectDraft}
+        accepting={conversionApplying}
+        error={conversionApplyError}
       />
-      {conversionDraft ? (
-        <DraftConversionPreview
-          blocks={conversionDraft.blocks}
-          onAccept={() => {
-            void acceptDraft();
-          }}
-          onReject={rejectDraft}
-          accepting={conversionApplying}
-          error={conversionApplyError}
-        />
-      ) : null}
     </Stack>
   ) : null;
 
@@ -279,6 +272,10 @@ export function EditorContainer({
         onRetry: reload,
         onEditBlock: handleEditBlock,
         onInsertBlock: handleInsertBlock,
+        onOpenConversion: conversionActionsDisabled
+          ? undefined
+          : openConversionDialog,
+        conversionDisabled: conversionActionsDisabled,
         editingState,
       }}
       chapterTopSlot={chapterTopSlot}
