@@ -106,7 +106,7 @@ export function EditorBlockFrame({
   const denseTopExtra = { xs: 0.125, sm: 0.25 };
   const activeTopOffset = { xs: 2.5, sm: 3 };
 
-        const isExpanded = isActive || showControls;
+  const isExpanded = isActive;
 
         return {
           width: "100%",
