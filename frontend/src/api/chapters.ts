@@ -4,8 +4,10 @@ import { request } from "./client";
 export type ChapterDetail = components["schemas"]["ChapterDetail"];
 export type ChapterBlockUpdatePayload =
   components["schemas"]["PatchedChapterBlockUpdate"];
-export type ChapterBlockCreatePayload =
-  components["schemas"]["ChapterBlockCreate"];
+export type ChapterBlockCreatePayload = Omit<
+  components["schemas"]["ChapterBlockCreate"],
+  "activeVersion" | "versionCount"
+>;
 export type ChapterBlockVersionList =
   components["schemas"]["ChapterBlockVersionList"];
 export type ChapterBlockVersion =

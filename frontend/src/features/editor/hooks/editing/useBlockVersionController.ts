@@ -134,7 +134,7 @@ export function useBlockVersionController({
     void navigateToVersion(target);
   }, [getSiblingVersion, navigateToVersion]);
 
-  const handleDeleteVersion = useCallback(async () => {
+  const handleDeleteVersion = useCallback(() => {
     if (!blockId || !currentVersion) {
       return;
     }
@@ -143,17 +143,19 @@ export function useBlockVersionController({
       return;
     }
 
-  const confirmed = await confirmDeleteBlockVersion();
-    if (!confirmed) {
-      return;
-    }
+    void (async () => {
+      const confirmed = await confirmDeleteBlockVersion();
+      if (!confirmed) {
+        return;
+      }
 
-    try {
-      await deleteVersion(currentVersion);
-      await refetch({ throwOnError: false });
-    } catch (error) {
-      notifyUpdateFailure(error);
-    }
+      try {
+        await deleteVersion(currentVersion);
+        await refetch({ throwOnError: false });
+      } catch (error) {
+        notifyUpdateFailure(error);
+      }
+    })();
   }, [blockId, confirmDeleteBlockVersion, currentVersion, deleteVersion, notifyUpdateFailure, refetch, totalVersions]);
 
   if (!blockId || !chapterId || !currentVersion) {
