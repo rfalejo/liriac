@@ -9,7 +9,6 @@ import CheckRoundedIcon from "@mui/icons-material/CheckRounded";
 import ChevronLeftRoundedIcon from "@mui/icons-material/ChevronLeftRounded";
 import ChevronRightRoundedIcon from "@mui/icons-material/ChevronRightRounded";
 import CloseRoundedIcon from "@mui/icons-material/CloseRounded";
-import DeleteOutlineRoundedIcon from "@mui/icons-material/DeleteOutlineRounded";
 import DeleteRoundedIcon from "@mui/icons-material/DeleteRounded";
 import type { BlockVersionState } from "../../types";
 
@@ -40,13 +39,21 @@ export function BlockEditControls({
   const suggestionButtonDisabled =
     disabled || suggestionDisabled || suggestionPending;
   const versionControlsDisabled = disabled || versioning?.disabled;
-  const versionDeleteDisabled =
-    versionControlsDisabled || versioning?.deleteDisabled;
 
   return (
-    <Stack direction="row" spacing={0.5} alignItems="center">
+    <Stack
+      direction="row"
+      alignItems="center"
+      sx={(theme: Theme) => ({
+        padding: theme.spacing(0.25, 0.75),
+        borderRadius: 999,
+        backgroundColor: theme.palette.editor.blockHoverBg,
+        boxShadow: `inset 0 0 0 1px ${theme.palette.editor.blockHoverOutline}`,
+        columnGap: theme.spacing(1.25),
+      })}
+    >
       {versioning ? (
-        <Stack direction="row" spacing={0.25} alignItems="center">
+        <Stack direction="row" spacing={0.75} alignItems="center">
           <IconButton
             size="small"
             onClick={() => {
@@ -92,8 +99,8 @@ export function BlockEditControls({
             ) : (
               <Typography variant="caption" sx={{ fontWeight: 600 }}>
                 {versioning.current != null
-                  ? `v${versioning.current}/${versioning.total}`
-                  : "v—"}
+                  ? `${versioning.current}/${versioning.total}`
+                  : "—"}
               </Typography>
             )}
           </Box>
@@ -123,34 +130,6 @@ export function BlockEditControls({
           >
             <ChevronRightRoundedIcon sx={{ fontSize: "1.1rem" }} />
           </IconButton>
-          {versioning.onDelete ? (
-            <IconButton
-              size="small"
-              onClick={() => {
-                if (versionDeleteDisabled) {
-                  return;
-                }
-                versioning.onDelete?.();
-              }}
-              disabled={Boolean(versionDeleteDisabled)}
-              aria-label="Eliminar versión"
-              sx={(theme: Theme) => ({
-                backgroundColor: theme.palette.editor.blockHoverBg,
-                color: theme.palette.editor.blockIcon,
-                transition: theme.editor.iconButtonTransition,
-                "&:hover": {
-                  backgroundColor: theme.palette.editor.controlDeleteHoverBg,
-                  color: theme.palette.editor.blockIconHover,
-                },
-                "&.Mui-disabled": {
-                  backgroundColor: theme.palette.editor.controlConfirmDisabledBg,
-                  color: theme.palette.editor.controlGhostDisabledText,
-                },
-              })}
-            >
-              <DeleteOutlineRoundedIcon sx={{ fontSize: "1.1rem" }} />
-            </IconButton>
-          ) : null}
         </Stack>
       ) : null}
       {showSuggestionButton ? (

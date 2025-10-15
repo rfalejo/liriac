@@ -99,25 +99,43 @@ export function EditorBlockFrame({
       onBlurCapture={handleBlurCapture}
       onMouseEnter={() => setHovered(true)}
       onMouseLeave={() => setHovered(false)}
-      sx={(theme: Theme) => ({
-        width: "100%",
-        position: "relative",
-        borderRadius: theme.editor.blockRadius,
-        px: theme.editor.blockPaddingX,
-        py: theme.editor.blockPaddingY,
-        transition: theme.editor.blockTransition,
-        backgroundColor: isActive
-          ? theme.palette.editor.blockActiveBg
-          : showControls
-            ? theme.palette.editor.blockHoverBg
-            : "transparent",
-        boxShadow: isActive
-          ? `0 0 0 1px ${theme.palette.editor.blockActiveOutline}`
-          : showControls
-            ? `0 0 0 1px ${theme.palette.editor.blockHoverOutline}`
-            : "0 0 0 1px transparent",
-        outline: "none",
-      })}
+      sx={(theme: Theme) => {
+        const basePaddingX = theme.editor.blockPaddingX;
+        const basePaddingY = theme.editor.blockPaddingY;
+        const extraTopPadding = showControls
+          ? { xs: 2.75, sm: 3.25 }
+          : { xs: 0, sm: 0 };
+
+        return {
+          width: "100%",
+          position: "relative",
+          borderRadius: theme.editor.blockRadius,
+          px: {
+            xs: theme.spacing(basePaddingX.xs),
+            sm: theme.spacing(basePaddingX.sm),
+          },
+          pt: {
+            xs: theme.spacing(basePaddingY.xs + extraTopPadding.xs),
+            sm: theme.spacing(basePaddingY.sm + extraTopPadding.sm),
+          },
+          pb: {
+            xs: theme.spacing(basePaddingY.xs),
+            sm: theme.spacing(basePaddingY.sm),
+          },
+          transition: theme.editor.blockTransition,
+          backgroundColor: isActive
+            ? theme.palette.editor.blockActiveBg
+            : showControls
+              ? theme.palette.editor.blockHoverBg
+              : "transparent",
+          boxShadow: isActive
+            ? `0 0 0 1px ${theme.palette.editor.blockActiveOutline}`
+            : showControls
+              ? `0 0 0 1px ${theme.palette.editor.blockHoverOutline}`
+              : "0 0 0 1px transparent",
+          outline: "none",
+        };
+      }}
     >
       {children}
       <Box
