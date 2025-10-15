@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo } from "react";
+import { useCallback, useEffect, useMemo, useRef } from "react";
 import type { ChapterBlock } from "../../types";
 import { useChapterBlockVersions } from "../useChapterBlockVersions";
 import { useDeleteChapterBlockVersion } from "../useDeleteChapterBlockVersion";
@@ -36,6 +36,11 @@ export function useBlockVersionController({
   });
   const { data, isLoading, isFetching, isFetched, refetch, error } = versionsQuery;
 
+  const versionSnapshotRef = useRef<{
+    blockId: string | null;
+    count: number | null;
+  }>({ blockId: null, count: null });
+
   useEffect(() => {
     if (!isActive || !error) {
       return;
@@ -50,13 +55,30 @@ export function useBlockVersionController({
 
   useEffect(() => {
     if (!isActive || !block) {
+      versionSnapshotRef.current = { blockId: null, count: null };
       return;
     }
+
+    const currentCount = block.versionCount ?? null;
+    const currentBlockId = block.id;
+    const previousSnapshot = versionSnapshotRef.current;
+    versionSnapshotRef.current = { blockId: currentBlockId, count: currentCount };
+
     if (!isFetched) {
       return;
     }
-    void refetch({ throwOnError: false });
-  }, [block?.versionCount, block?.activeVersion, isActive, isFetched, refetch]);
+
+    const previousCount =
+      previousSnapshot.blockId === currentBlockId ? previousSnapshot.count : null;
+
+    if (
+      currentCount != null &&
+      previousCount != null &&
+      currentCount > previousCount
+    ) {
+      void refetch({ throwOnError: false });
+    }
+  }, [block?.id, block?.versionCount, isActive, isFetched, refetch]);
 
   const availableVersions = useMemo(() => {
     if (data?.versions) {
@@ -114,14 +136,11 @@ export function useBlockVersionController({
           blockId,
           payload: { version: targetVersion },
         });
-        if (chapterId && blockId) {
-          await refetch({ throwOnError: false });
-        }
       } catch (error) {
         notifyUpdateFailure(error);
       }
     },
-    [blockId, chapterId, currentVersion, notifyUpdateFailure, refetch, updateBlock],
+    [blockId, chapterId, currentVersion, notifyUpdateFailure, updateBlock],
   );
 
   const handlePrevious = useCallback(() => {

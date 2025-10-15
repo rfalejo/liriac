@@ -44,16 +44,40 @@ export function BlockEditControls({
     <Stack
       direction="row"
       alignItems="center"
+      spacing={1}
       sx={(theme: Theme) => ({
         padding: theme.spacing(0.25, 0.75),
         borderRadius: 999,
         backgroundColor: theme.palette.editor.blockHoverBg,
         boxShadow: `inset 0 0 0 1px ${theme.palette.editor.blockHoverOutline}`,
-        columnGap: theme.spacing(1.25),
       })}
     >
       {versioning ? (
-        <Stack direction="row" spacing={0.75} alignItems="center">
+        <Stack direction="row" spacing={0.5} alignItems="center">
+          <Box
+            sx={(theme: Theme) => ({
+              minWidth: 36,
+              px: 1,
+              py: 0.25,
+              borderRadius: 999,
+              display: "flex",
+              justifyContent: "center",
+              alignItems: "center",
+              backgroundColor: theme.palette.editor.blockHoverBg,
+              color: theme.palette.editor.blockIcon,
+            })}
+            aria-label="Versión seleccionada"
+          >
+            {versioning.loading ? (
+              <CircularProgress size={12} thickness={5} color="inherit" />
+            ) : (
+              <Typography variant="caption" sx={{ fontWeight: 600 }}>
+                {versioning.current != null
+                  ? `${versioning.current}/${versioning.total}`
+                  : "—"}
+              </Typography>
+            )}
+          </Box>
           <IconButton
             size="small"
             onClick={() => {
@@ -80,30 +104,6 @@ export function BlockEditControls({
           >
             <ChevronLeftRoundedIcon sx={{ fontSize: "1.1rem" }} />
           </IconButton>
-          <Box
-            sx={(theme: Theme) => ({
-              minWidth: 36,
-              px: 0.5,
-              py: 0.25,
-              borderRadius: 999,
-              display: "flex",
-              justifyContent: "center",
-              alignItems: "center",
-              backgroundColor: theme.palette.editor.blockHoverBg,
-              color: theme.palette.editor.blockIcon,
-            })}
-            aria-label="Versión seleccionada"
-          >
-            {versioning.loading ? (
-              <CircularProgress size={12} thickness={5} color="inherit" />
-            ) : (
-              <Typography variant="caption" sx={{ fontWeight: 600 }}>
-                {versioning.current != null
-                  ? `${versioning.current}/${versioning.total}`
-                  : "—"}
-              </Typography>
-            )}
-          </Box>
           <IconButton
             size="small"
             onClick={() => {
@@ -131,6 +131,31 @@ export function BlockEditControls({
             <ChevronRightRoundedIcon sx={{ fontSize: "1.1rem" }} />
           </IconButton>
         </Stack>
+      ) : null}
+      {onDelete ? (
+        <IconButton
+          size="small"
+          onClick={() => {
+            onDelete();
+          }}
+          disabled={disabled}
+          aria-label="Eliminar bloque"
+          sx={(theme: Theme) => ({
+            backgroundColor: theme.palette.editor.blockHoverBg,
+            transition: theme.editor.iconButtonTransition,
+            color: theme.palette.editor.blockIcon,
+            "&:hover": {
+              backgroundColor: theme.palette.editor.blockActiveBg,
+              color: theme.palette.editor.blockIconHover,
+            },
+            "&.Mui-disabled": {
+              backgroundColor: theme.palette.editor.controlConfirmDisabledBg,
+              color: theme.palette.editor.controlGhostDisabledText,
+            },
+          })}
+        >
+          <DeleteRoundedIcon sx={{ fontSize: "1.1rem" }} />
+        </IconButton>
       ) : null}
       {showSuggestionButton ? (
         <IconButton
@@ -212,30 +237,6 @@ export function BlockEditControls({
       >
         <CloseRoundedIcon sx={{ fontSize: "1.1rem" }} />
       </IconButton>
-      {onDelete ? (
-        <IconButton
-          size="small"
-          color="error"
-          onClick={() => {
-            onDelete();
-          }}
-          disabled={disabled}
-          aria-label="Eliminar bloque"
-          sx={(theme: Theme) => ({
-            backgroundColor: theme.palette.editor.controlDeleteBg,
-            transition: theme.editor.iconButtonTransition,
-            "&:hover": {
-              backgroundColor: theme.palette.editor.controlDeleteHoverBg,
-            },
-            "&.Mui-disabled": {
-              backgroundColor: theme.palette.editor.controlDeleteDisabledBg,
-              color: theme.palette.editor.controlGhostDisabledText,
-            },
-          })}
-        >
-          <DeleteRoundedIcon sx={{ fontSize: "1.1rem" }} />
-        </IconButton>
-      ) : null}
     </Stack>
   );
 }
