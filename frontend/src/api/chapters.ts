@@ -20,6 +20,12 @@ export type ChapterContextVisibilityResponse =
   components["schemas"]["LibraryResponse"];
 export type ChapterContextVisibilityUpdatePayload =
   components["schemas"]["PatchedChapterContextVisibilityUpdateRequest"];
+export type BlockConversionResponse =
+  components["schemas"]["BlockConversionResponse"];
+export type BlockConversionBlock =
+  components["schemas"]["BlockConversionBlock"];
+export type BlockConversionApplyPayload =
+  components["schemas"]["BlockConversionApply"];
 
 export async function fetchChapterDetail(
   chapterId: string,
@@ -210,6 +216,61 @@ export async function updateChapterContextVisibility({
     `/api/library/chapters/${encodedChapter}/context-visibility/`,
     {
       method: "PATCH",
+      body: JSON.stringify(payload),
+    },
+  );
+}
+
+type BlockConversionRequestParams = {
+  chapterId: string;
+  text: string;
+  instructions?: string;
+  contextBlockId?: string;
+};
+
+export async function requestBlockConversion({
+  chapterId,
+  text,
+  instructions,
+  contextBlockId,
+}: BlockConversionRequestParams): Promise<BlockConversionResponse> {
+  const encodedChapter = encodeURIComponent(chapterId);
+  const body = {
+    text,
+    instructions,
+    contextBlockId,
+  } satisfies components["schemas"]["BlockConversionRequest"];
+
+  return request<BlockConversionResponse>(
+    `/api/library/chapters/${encodedChapter}/block-conversions/`,
+    {
+      method: "POST",
+      body: JSON.stringify(body),
+    },
+  );
+}
+
+type ApplyBlockConversionParams = {
+  conversionId: string;
+  placement?: BlockConversionApplyPayload["placement"];
+  anchorBlockId?: BlockConversionApplyPayload["anchorBlockId"];
+};
+
+export async function applyBlockConversion({
+  conversionId,
+  placement = "append",
+  anchorBlockId,
+}: ApplyBlockConversionParams): Promise<ChapterDetail> {
+  const encodedConversion = encodeURIComponent(conversionId);
+  const payload: BlockConversionApplyPayload = {
+    placement,
+    anchorBlockId,
+  };
+
+  return request<ChapterDetail>(
+    `/api/library/block-conversions/${encodedConversion}/apply/`,
+    {
+      method: "POST",
       body: JSON.stringify(payload),
     },
   );

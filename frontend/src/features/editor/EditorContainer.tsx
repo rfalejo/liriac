@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useRef } from "react";
+import Stack from "@mui/material/Stack";
 import type { components } from "../../api/schema";
 import { useEditorScrollbar } from "./hooks/useEditorScrollbar";
 import { useEditorChapterNavigation } from "./hooks/useEditorChapterNavigation";
@@ -21,6 +22,10 @@ import {
 } from "./utils/blockCreation";
 import { ContextConfigurationPanel } from "./contextPanel";
 import { usePinnedHoverPanel } from "./hooks/usePinnedHoverPanel";
+import { useBlockConversion } from "./hooks/useBlockConversion";
+import { BlockConversionToolbar } from "./conversions/BlockConversionToolbar";
+import { DraftConversionPreview } from "./conversions/DraftConversionPreview";
+import { BlockConversionDialog } from "./conversions/BlockConversionDialog";
 
 type ChapterBlockType = components["schemas"]["ChapterBlockTypeEnum"];
 
@@ -198,6 +203,53 @@ export function EditorContainer({
 
   const selectedChapterId = chapter?.id ?? activeChapterId;
 
+  const {
+    draft: conversionDraft,
+    dialogOpen: conversionDialogOpen,
+    conversionText,
+    canSubmitConversion,
+    conversionPending,
+    conversionError,
+    applyPending: conversionApplying,
+    applyError: conversionApplyError,
+    canOpenDialog: conversionCanOpenDialog,
+    openDialog: openConversionDialog,
+    closeDialog: closeConversionDialog,
+    setConversionText,
+    submitConversion,
+    acceptDraft,
+    rejectDraft,
+    clearConversionError,
+  } = useBlockConversion({ chapterId: chapter?.id });
+
+  const conversionActionsDisabled =
+    !conversionCanOpenDialog ||
+    conversionPending ||
+    conversionApplying ||
+    Boolean(conversionDraft) ||
+    mutationPending ||
+    !chapter?.id;
+
+  const chapterTopSlot = chapter ? (
+    <Stack spacing={conversionDraft ? 2.5 : 2}>
+      <BlockConversionToolbar
+        onOpen={openConversionDialog}
+        disabled={conversionActionsDisabled}
+      />
+      {conversionDraft ? (
+        <DraftConversionPreview
+          blocks={conversionDraft.blocks}
+          onAccept={() => {
+            void acceptDraft();
+          }}
+          onReject={rejectDraft}
+          accepting={conversionApplying}
+          error={conversionApplyError}
+        />
+      ) : null}
+    </Stack>
+  ) : null;
+
   return (
     <EditorShell
       sidebarProps={{
@@ -229,6 +281,7 @@ export function EditorContainer({
         onInsertBlock: handleInsertBlock,
         editingState,
       }}
+      chapterTopSlot={chapterTopSlot}
       scrollAreaRef={scrollAreaRef}
       scrollHandlers={handlers}
       scrollbarState={scrollbarState}
@@ -260,6 +313,23 @@ export function EditorContainer({
         tone={confirmDialog?.tone ?? "warning"}
         confirmDisabled={mutationPending}
         onClose={handleConfirmClose}
+      />
+      <BlockConversionDialog
+        open={conversionDialogOpen}
+        value={conversionText}
+        onChange={setConversionText}
+        onClose={closeConversionDialog}
+        onSubmit={() => {
+          if (!canSubmitConversion || conversionActionsDisabled) {
+            return;
+          }
+          void submitConversion();
+        }}
+        submitting={conversionPending}
+        disabled={Boolean(conversionDraft) || mutationPending || conversionApplying}
+        error={conversionError}
+        onClearError={clearConversionError}
+        canSubmit={canSubmitConversion && !conversionActionsDisabled}
       />
     </EditorShell>
   );

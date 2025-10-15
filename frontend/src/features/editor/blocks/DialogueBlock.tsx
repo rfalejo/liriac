@@ -41,7 +41,7 @@ function DialogueReadView({ block }: DialogueViewProps) {
 
   return (
     <Stack
-      spacing={1.25}
+      spacing={1}
       sx={(theme: Theme) => ({ color: theme.palette.editor.blockHeading })}
     >
       {turns.length === 0 && (
@@ -113,7 +113,7 @@ function DialogueEditView({ block, editingState }: DialogueEditViewProps) {
 
   return (
     <Stack
-      spacing={1.25}
+      spacing={1}
       sx={(theme: Theme) => ({ color: theme.palette.editor.blockHeading })}
     >
       {turns.length === 0 && (

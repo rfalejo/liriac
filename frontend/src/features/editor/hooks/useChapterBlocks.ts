@@ -9,6 +9,7 @@ export type ChapterBlockType = components["schemas"]["ChapterBlockTypeEnum"];
 export type ChapterBlockEntry = {
   id: string;
   node: ReactNode;
+  type: ChapterBlockType;
 };
 
 export type ChapterBlocksResult = {
@@ -26,7 +27,7 @@ export function useChapterBlocks(
 
     let hasHeader = false;
 
-    const blockEntries: ChapterBlockEntry[] = [];
+  const blockEntries: ChapterBlockEntry[] = [];
 
     for (const block of chapter.blocks ?? []) {
       if (!block) {
@@ -45,7 +46,7 @@ export function useChapterBlocks(
       });
 
       if (rendered) {
-        blockEntries.push({ id: block.id, node: rendered });
+        blockEntries.push({ id: block.id, node: rendered, type: block.type });
       }
     }
 

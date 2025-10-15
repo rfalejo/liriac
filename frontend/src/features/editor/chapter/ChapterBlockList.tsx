@@ -1,4 +1,5 @@
 import { Fragment } from "react";
+import Box from "@mui/material/Box";
 import Stack from "@mui/material/Stack";
 import type {
   ChapterBlockEntry,
@@ -8,6 +9,8 @@ import {
   BlockInsertMenu,
   type BlockInsertPosition,
 } from "../blocks/BlockInsertMenu";
+import { getNarrativeBlockSpacing } from "../utils/blockSpacing";
+import { useEditorBlockEditing } from "../context/EditorBlockEditingContext";
 
 export type ChapterBlockListProps = {
   blockEntries: ChapterBlockEntry[];
@@ -21,6 +24,9 @@ export function ChapterBlockList({
   blockEntries,
   onInsertBlock,
 }: ChapterBlockListProps) {
+  const { editingState } = useEditorBlockEditing();
+  const activeBlockId = editingState?.blockId ?? null;
+
   if (blockEntries.length === 0) {
     return null;
   }
@@ -42,7 +48,31 @@ export function ChapterBlockList({
                 onInsertBlock={onInsertBlock}
               />
             ) : null}
-            {entry.node}
+            <Box
+              sx={() => {
+                const previousEntry = index > 0 ? blockEntries[index - 1] : null;
+                const previousType = previousEntry?.type ?? null;
+                const isActive = entry.id === activeBlockId;
+                const previousIsActive = previousEntry?.id === activeBlockId;
+
+                let marginTop = index === 0 ? 0 : getNarrativeBlockSpacing(previousType, entry.type);
+
+                if (isActive && index > 0) {
+                  marginTop = Math.max(marginTop, 0.75);
+                }
+
+                if (previousIsActive) {
+                  marginTop = Math.max(marginTop, 0.75);
+                }
+
+                return {
+                  mt: marginTop,
+                  mb: isActive ? 0.5 : 0,
+                };
+              }}
+            >
+              {entry.node}
+            </Box>
             {onInsertBlock && index === blockEntries.length - 1 ? (
               <BlockInsertMenu
                 position={{

@@ -108,6 +108,7 @@ backend/
 |   |   |-- bootstrap.py
 |   |   |-- chapters.py
 |   |   |-- context.py
+|   |   |-- conversions.py
 |   |   \-- editor.py
 |   |-- migrations/
 |   |   |-- 0001_initial.py
@@ -116,9 +117,11 @@ backend/
 |   |   |-- 0004_alter_librarysection_options.py
 |   |   |-- 0005_chaptercontextvisibility.py
 |   |   |-- 0006_chapterblock_active_version_number_and_more.py
+|   |   |-- 0007_chapterblockconversion.py
 |   |   \-- __init__.py
 |   |-- prompts/
 |   |   |-- __init__.py
+|   |   |-- block_conversion.py
 |   |   \-- paragraph_suggestion.py
 |   |-- services/
 |   |   |-- __init__.py
@@ -193,6 +196,10 @@ frontend/
 |   |   |   |-- contextPanel/
 |   |   |   |   |-- ContextConfigurationPanel.tsx
 |   |   |   |   \-- index.ts
+|   |   |   |-- conversions/
+|   |   |   |   |-- BlockConversionDialog.tsx
+|   |   |   |   |-- BlockConversionToolbar.tsx
+|   |   |   |   \-- DraftConversionPreview.tsx
 |   |   |   |-- hooks/
 |   |   |   |   |-- editing/
 |   |   |   |   |   |-- constants.ts
@@ -205,6 +212,7 @@ frontend/
 |   |   |   |   |   |-- useParagraphBlockEditingSession.ts
 |   |   |   |   |   |-- useParagraphSuggestionController.ts
 |   |   |   |   |   \-- useSceneBoundaryBlockEditingSession.ts
+|   |   |   |   |-- useBlockConversion.ts
 |   |   |   |   |-- useChapterBlockSelectors.ts
 |   |   |   |   |-- useChapterBlockVersions.ts
 |   |   |   |   |-- useChapterBlocks.ts
@@ -230,6 +238,7 @@ frontend/
 |   |   |   |   \-- SidebarShell.tsx
 |   |   |   |-- utils/
 |   |   |   |   |-- blockCreation.ts
+|   |   |   |   |-- blockSpacing.ts
 |   |   |   |   |-- dialogueTurns.ts
 |   |   |   |   |-- editingShortcuts.ts
 |   |   |   |   \-- showBlockUpdateErrorToast.ts

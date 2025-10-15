@@ -100,9 +100,13 @@ export function EditorBlockFrame({
       onMouseEnter={() => setHovered(true)}
       onMouseLeave={() => setHovered(false)}
       sx={(theme: Theme) => {
-        const basePaddingX = theme.editor.blockPaddingX;
-        const basePaddingY = theme.editor.blockPaddingY;
-        const extraTopPadding = { xs: 2.75, sm: 3.25 };
+  const basePaddingX = theme.editor.blockPaddingX;
+  const basePaddingY = theme.editor.blockPaddingY;
+  const densePaddingY = { xs: 0.5, sm: 0.75 };
+  const denseTopExtra = { xs: 0.125, sm: 0.25 };
+  const activeTopOffset = { xs: 2.5, sm: 3 };
+
+        const isExpanded = isActive || showControls;
 
         return {
           width: "100%",
@@ -113,12 +117,20 @@ export function EditorBlockFrame({
             sm: theme.spacing(basePaddingX.sm),
           },
           pt: {
-            xs: theme.spacing(basePaddingY.xs + extraTopPadding.xs),
-            sm: theme.spacing(basePaddingY.sm + extraTopPadding.sm),
+            xs: theme.spacing(
+              isExpanded
+                ? basePaddingY.xs + activeTopOffset.xs
+                : densePaddingY.xs + denseTopExtra.xs,
+            ),
+            sm: theme.spacing(
+              isExpanded
+                ? basePaddingY.sm + activeTopOffset.sm
+                : densePaddingY.sm + denseTopExtra.sm,
+            ),
           },
           pb: {
-            xs: theme.spacing(basePaddingY.xs),
-            sm: theme.spacing(basePaddingY.sm),
+            xs: theme.spacing(isActive ? basePaddingY.xs : densePaddingY.xs),
+            sm: theme.spacing(isActive ? basePaddingY.sm : densePaddingY.sm),
           },
           transition: theme.editor.blockTransition,
           backgroundColor: isActive

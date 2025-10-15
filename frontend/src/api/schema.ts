@@ -21,6 +21,23 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/library/block-conversions/{conversion_id}/apply/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** @description Apply a stored block conversion suggestion to a chapter. */
+        post: operations["library_block_conversions_apply_create"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/library/books/": {
         parameters: {
             query?: never;
@@ -144,6 +161,23 @@ export interface paths {
         patch: operations["library_chapters_partial_update"];
         trace?: never;
     };
+    "/api/library/chapters/{chapter_id}/block-conversions/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** @description Generate a block conversion suggestion using Gemini. */
+        post: operations["library_chapters_block_conversions_create"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/library/chapters/{chapter_id}/blocks/": {
         parameters: {
             query?: never;
@@ -171,7 +205,8 @@ export interface paths {
         get?: never;
         put?: never;
         post?: never;
-        delete?: never;
+        /** @description Update a single block within a chapter. */
+        delete: operations["library_chapters_blocks_destroy"];
         options?: never;
         head?: never;
         /** @description Update a single block within a chapter. */
@@ -268,6 +303,39 @@ export interface paths {
 export type webhooks = Record<string, never>;
 export interface components {
     schemas: {
+        BlockConversionApply: {
+            anchorBlockId?: string;
+            /** @default append */
+            placement: components["schemas"]["PlacementEnum"];
+        };
+        BlockConversionBlock: {
+            type: components["schemas"]["BlockConversionBlockTypeEnum"];
+            text?: string;
+            turns?: components["schemas"]["BlockConversionTurn"][];
+            context?: string;
+        };
+        /**
+         * @description * `paragraph` - paragraph
+         *     * `dialogue` - dialogue
+         * @enum {string}
+         */
+        BlockConversionBlockTypeEnum: "paragraph" | "dialogue";
+        BlockConversionRequest: {
+            text: string;
+            instructions?: string;
+            contextBlockId?: string;
+        };
+        BlockConversionResponse: {
+            conversionId: string;
+            blocks: components["schemas"]["BlockConversionBlock"][];
+        };
+        BlockConversionTurn: {
+            id?: string;
+            speakerId?: string | null;
+            speakerName?: string | null;
+            utterance: string;
+            stageDirection?: string | null;
+        };
         BookUpsert: {
             id?: string;
             title: string;
@@ -553,6 +621,13 @@ export interface components {
         PatchedContextItemsUpdateRequest: {
             items?: components["schemas"]["ContextItemUpdate"][];
         };
+        /**
+         * @description * `before` - before
+         *     * `after` - after
+         *     * `append` - append
+         * @enum {string}
+         */
+        PlacementEnum: "before" | "after" | "append";
         SceneDetails: {
             locationId?: string | null;
             locationName?: string | null;
@@ -583,6 +658,31 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["EditorState"];
+                };
+            };
+        };
+    };
+    library_block_conversions_apply_create: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                conversion_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: {
+            content: {
+                "application/json": components["schemas"]["BlockConversionApply"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ChapterDetail"];
                 };
             };
         };
@@ -838,6 +938,31 @@ export interface operations {
             };
         };
     };
+    library_chapters_block_conversions_create: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                chapter_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["BlockConversionRequest"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["BlockConversionResponse"];
+                };
+            };
+        };
+    };
     library_chapters_blocks_create: {
         parameters: {
             query?: never;
@@ -860,6 +985,27 @@ export interface operations {
                 content: {
                     "application/json": components["schemas"]["ChapterDetail"];
                 };
+            };
+        };
+    };
+    library_chapters_blocks_destroy: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                block_id: string;
+                chapter_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description No response body */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
             };
         };
     };

@@ -136,8 +136,8 @@ export function BlockInsertMenu({
       sx={{
         width: "100%",
         minHeight: {
-          xs: (theme) => theme.spacing(3.5),
-          sm: (theme) => theme.spacing(4),
+          xs: (theme) => theme.spacing(1.75),
+          sm: (theme) => theme.spacing(2.25),
         },
         display: "grid",
         placeItems: "center",
@@ -153,7 +153,7 @@ export function BlockInsertMenu({
           gap: 0.5,
           px: expanded ? 1.25 : 0.75,
           py: 0.25,
-          minHeight: theme.spacing(3.5),
+          minHeight: theme.spacing(2),
           marginInline: "auto",
           borderRadius: 999,
           backgroundColor: expanded

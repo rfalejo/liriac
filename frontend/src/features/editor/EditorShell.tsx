@@ -104,6 +104,7 @@ type EditorShellProps = {
   leftPanel: SidePanelConfig;
   rightPanel?: SidePanelConfig & { content: ReactNode };
   chapterViewProps: ComponentProps<typeof EditorChapterView>;
+  chapterTopSlot?: ReactNode;
   scrollAreaRef: React.RefObject<HTMLDivElement>;
   scrollHandlers: EditorScrollbarHandlers;
   scrollbarState: ScrollbarState;
@@ -115,6 +116,7 @@ export function EditorShell({
   leftPanel,
   rightPanel,
   chapterViewProps,
+  chapterTopSlot,
   scrollAreaRef,
   scrollHandlers,
   scrollbarState,
@@ -188,6 +190,7 @@ export function EditorShell({
           }}
         >
           <Box sx={blockStackSx}>
+            {chapterTopSlot}
             <EditorChapterView {...chapterViewProps} />
           </Box>
         </Box>
