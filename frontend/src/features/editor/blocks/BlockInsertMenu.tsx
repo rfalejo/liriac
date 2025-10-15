@@ -131,26 +131,26 @@ export function BlockInsertMenu({
       onBlurCapture={handleBlurCapture}
       sx={{
         width: "100%",
-        height: {
-          xs: (theme) => theme.spacing(2.5),
-          sm: (theme) => theme.spacing(3),
+        minHeight: {
+          xs: (theme) => theme.spacing(3.5),
+          sm: (theme) => theme.spacing(4),
         },
-        display: "flex",
-        alignItems: "center",
-        justifyContent: "center",
+        display: "grid",
+        placeItems: "center",
         pointerEvents: "auto",
       }}
     >
       <Paper
         elevation={0}
         sx={(theme: Theme) => ({
-          display: "flex",
+          display: "inline-flex",
           alignItems: "center",
           justifyContent: "center",
           gap: 0.5,
           px: expanded ? 1.25 : 0.75,
-          py: 0,
-          minHeight: "100%",
+          py: 0.25,
+          minHeight: theme.spacing(3.5),
+          marginInline: "auto",
           borderRadius: 999,
           backgroundColor: expanded
             ? theme.palette.editor.blockHoverBg
