@@ -1,4 +1,3 @@
-import { useEffect, useMemo, useState } from "react";
 import Alert from "@mui/material/Alert";
 import Box from "@mui/material/Box";
 import Button from "@mui/material/Button";
@@ -19,17 +18,10 @@ import Typography from "@mui/material/Typography";
 import type { Theme } from "@mui/material/styles";
 import type { components } from "../../../api/schema";
 import type { BlockConversionBlock } from "../../../api/chapters";
-import {
-  fetchGeneralSuggestionPrompt,
-  requestGeneralSuggestion,
-  type GeneralSuggestionRequestPayload,
-} from "../../../api/chapters";
 import { getNarrativeBlockSpacing } from "../utils/blockSpacing";
+import { useGeneralSuggestion, type InsertionOption } from "./useGeneralSuggestion";
 
 type ChapterBlock = components["schemas"]["ChapterBlock"];
-type PlacementEnum = components["schemas"]["PlacementEnum"];
-
-type InsertionOption = "start" | "after" | "append";
 
 type GeneralSuggestionDialogProps = {
   open: boolean;
@@ -38,350 +30,269 @@ type GeneralSuggestionDialogProps = {
   blocks: ChapterBlock[];
 };
 
-type SuggestionResult = {
-  blocks: BlockConversionBlock[];
-};
-
 export function GeneralSuggestionDialog({
   open,
   onClose,
   chapterId,
   blocks,
 }: GeneralSuggestionDialogProps) {
-  const sortedBlocks = useMemo(() => {
-    return [...blocks].sort((a, b) => {
-      const aPosition = typeof a.position === "number" ? a.position : 0;
-      const bPosition = typeof b.position === "number" ? b.position : 0;
-      return aPosition - bPosition;
-    });
-  }, [blocks]);
+  const {
+    prompt,
+    handlePromptChange,
+    option,
+    handleChangeOption,
+    anchorBlockId,
+    handleChangeAnchor,
+    sortedBlocks,
+    pending,
+    copyPending,
+    error,
+    copyError,
+    copySuccess,
+    result,
+    canSubmit,
+    canCopyPrompt,
+    isBusy,
+    handleGenerate,
+    handleCopyPrompt,
+  } = useGeneralSuggestion({ open, chapterId, blocks });
 
-  const firstBlockId = sortedBlocks[0]?.id ?? "";
-
-  const [prompt, setPrompt] = useState("");
-  const [option, setOption] = useState<InsertionOption>("append");
-  const [anchorBlockId, setAnchorBlockId] = useState<string>("");
-  const [pending, setPending] = useState(false);
-  const [copyPending, setCopyPending] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-  const [copyError, setCopyError] = useState<string | null>(null);
-  const [copySuccess, setCopySuccess] = useState(false);
-  const [result, setResult] = useState<SuggestionResult | null>(null);
-
-  useEffect(() => {
-    if (!open) {
-      setPrompt("");
-      setOption("append");
-      setAnchorBlockId("");
-      setPending(false);
-      setCopyPending(false);
-      setError(null);
-      setCopyError(null);
-      setCopySuccess(false);
-      setResult(null);
-      return;
-    }
-
-    if (sortedBlocks.length === 0) {
-      setAnchorBlockId("");
-    } else if (!anchorBlockId || !sortedBlocks.some((block) => block.id === anchorBlockId)) {
-      setAnchorBlockId(sortedBlocks[0]?.id ?? "");
-    }
-  }, [open, sortedBlocks, anchorBlockId]);
-
-  useEffect(() => {
-    if (option === "after" && sortedBlocks.length > 0 && !anchorBlockId) {
-      setAnchorBlockId(sortedBlocks[0]?.id ?? "");
-    }
-    if (option === "after" && sortedBlocks.length === 0) {
-      setOption("append");
-    }
-  }, [option, sortedBlocks, anchorBlockId]);
-
-  useEffect(() => {
-    if (!copySuccess) {
-      return;
-    }
-    const timeout = window.setTimeout(() => {
-      setCopySuccess(false);
-    }, 2400);
-    return () => {
-      window.clearTimeout(timeout);
-    };
-  }, [copySuccess]);
-
-  const trimmedPrompt = prompt.trim();
-
-  const { placement, anchorBlockId: resolvedAnchor } = useMemo(() => {
-    let resolvedPlacement: PlacementEnum = "append";
-    let resolvedAnchorId: string | undefined;
-
-    if (option === "start") {
-      if (firstBlockId) {
-        resolvedPlacement = "before";
-        resolvedAnchorId = firstBlockId;
-      } else {
-        resolvedPlacement = "append";
-      }
-    } else if (option === "after") {
-      resolvedPlacement = "after";
-      resolvedAnchorId = anchorBlockId || undefined;
-    } else {
-      resolvedPlacement = "append";
-    }
-
-    return {
-      placement: resolvedPlacement,
-      anchorBlockId: resolvedAnchorId,
-    };
-  }, [option, firstBlockId, anchorBlockId]);
-
-  const canSubmit = Boolean(
-    chapterId &&
-      trimmedPrompt.length > 0 &&
-      !pending &&
-      !copyPending &&
-      (placement !== "after" || resolvedAnchor),
-  );
-
-  const canCopyPrompt = Boolean(
-    chapterId &&
-      trimmedPrompt.length > 0 &&
-      !pending &&
-      !copyPending &&
-      (placement !== "after" || resolvedAnchor),
-  );
-
-  const handleGenerate = async () => {
-    if (!chapterId) {
-      setError("Selecciona un capítulo antes de generar contenido.");
-      return;
-    }
-
-    if (!trimmedPrompt) {
-      setError("Escribe un prompt para solicitar sugerencias.");
-      return;
-    }
-
-    if (placement === "after" && !resolvedAnchor) {
-      setError("Selecciona el bloque de referencia para ubicar la sugerencia.");
-      return;
-    }
-
-    setPending(true);
-    setError(null);
-    setCopyError(null);
-    setCopySuccess(false);
-    setResult(null);
-
-    try {
-      const payload: GeneralSuggestionRequestPayload = {
-        prompt: trimmedPrompt,
-        placement,
-        anchorBlockId: resolvedAnchor,
-      };
-      const response = await requestGeneralSuggestion({
-        chapterId,
-        ...payload,
-      });
-
-      const blocksResponse = response.blocks ?? [];
-      if (blocksResponse.length === 0) {
-        setError("El modelo no devolvió contenido. Intenta ajustar el prompt.");
-        setResult(null);
-        return;
-      }
-
-      setResult({ blocks: blocksResponse });
-    } catch (generationError) {
-      console.error("General suggestion failed", generationError);
-      setError("No pudimos generar la sugerencia. Inténtalo nuevamente.");
-    } finally {
-      setPending(false);
+  const handleDialogClose = (_event: unknown, _reason?: unknown) => {
+    void _event;
+    void _reason;
+    if (!isBusy) {
+      onClose();
     }
   };
 
-  const handleCopyPrompt = async () => {
-    if (!chapterId) {
-      setCopyError("Selecciona un capítulo antes de copiar el prompt.");
-      return;
-    }
-
-    if (!trimmedPrompt) {
-      setCopyError("Escribe un prompt antes de copiarlo.");
-      return;
-    }
-
-    if (placement === "after" && !resolvedAnchor) {
-      setCopyError("Elige el bloque de referencia para preparar el prompt.");
-      return;
-    }
-
-    if (typeof navigator === "undefined" || !navigator.clipboard?.writeText) {
-      setCopyError("El portapapeles no está disponible en este dispositivo.");
-      return;
-    }
-
-    setCopyPending(true);
-    setCopyError(null);
-    setCopySuccess(false);
-
-    try {
-      const payload: GeneralSuggestionRequestPayload = {
-        prompt: trimmedPrompt,
-        placement,
-        anchorBlockId: resolvedAnchor,
-      };
-      const response = await fetchGeneralSuggestionPrompt({
-        chapterId,
-        ...payload,
-      });
-
-      if (!response.prompt) {
-        throw new Error("Empty prompt response");
-      }
-
-      await navigator.clipboard.writeText(response.prompt);
-      setCopySuccess(true);
-    } catch (copyPromptError) {
-      console.error("Copy general suggestion prompt failed", copyPromptError);
-      setCopyError("No pudimos copiar el prompt. Intenta de nuevo.");
-    } finally {
-      setCopyPending(false);
+  const handleCancel = () => {
+    if (!isBusy) {
+      onClose();
     }
   };
 
-  const handleChangeOption = (_: unknown, value: InsertionOption | null) => {
-    if (!value) {
-      return;
-    }
-    setOption(value);
-    setError(null);
-  };
-
-  const renderedResult = result ? (
-    <SuggestionPreview blocks={result.blocks} />
-  ) : null;
+  const resultBlocks = result?.blocks ?? null;
 
   return (
     <Dialog
       open={open}
-      onClose={() => {
-        if (!pending && !copyPending) {
-          onClose();
-        }
-      }}
+      onClose={handleDialogClose}
       fullWidth
       maxWidth="md"
     >
       <DialogTitle>Relleno con IA</DialogTitle>
       <DialogContent dividers>
         <Stack spacing={3}>
-          <Stack spacing={1.5}>
-            <Typography variant="subtitle2" sx={{ fontWeight: 600 }}>
-              Prompt para la sugerencia
-            </Typography>
-            <TextField
-              multiline
-              minRows={4}
-              maxRows={12}
-              value={prompt}
-              onChange={(event) => {
-                setPrompt(event.target.value);
-              }}
-              placeholder="Describe el relleno que necesitas"
-              disabled={pending || copyPending}
-            />
-          </Stack>
-
-          <Stack spacing={2}>
-            <Typography variant="subtitle2" sx={{ fontWeight: 600 }}>
-              ¿Dónde quieres ubicar el relleno?
-            </Typography>
-            <ToggleButtonGroup
-              exclusive
-              value={option}
-              onChange={handleChangeOption}
-              fullWidth
-              color="primary"
-              aria-label="Seleccionar ubicación del relleno"
-            >
-              <ToggleButton value="start">Inicio del capítulo</ToggleButton>
-              <ToggleButton
-                value="after"
-                disabled={sortedBlocks.length === 0}
-              >
-                Entre bloques
-              </ToggleButton>
-              <ToggleButton value="append">Final del capítulo</ToggleButton>
-            </ToggleButtonGroup>
-
-            {option === "after" ? (
-              <FormControl fullWidth disabled={sortedBlocks.length === 0}>
-                <InputLabel id="general-suggestion-anchor-label">
-                  Bloque de referencia
-                </InputLabel>
-                <Select<string>
-                  labelId="general-suggestion-anchor-label"
-                  label="Bloque de referencia"
-                  value={anchorBlockId}
-                  onChange={(event) => {
-                    setAnchorBlockId(event.target.value);
-                  }}
-                  disabled={sortedBlocks.length === 0 || pending || copyPending}
-                >
-                  {sortedBlocks.map((block, index) => (
-                    <MenuItem key={block.id ?? `block-${index}`} value={block.id ?? ""}>
-                      {formatBlockOptionLabel(block, index)}
-                    </MenuItem>
-                  ))}
-                </Select>
-              </FormControl>
-            ) : null}
-
-            {option === "after" && sortedBlocks.length === 0 ? (
-              <Alert severity="info">
-                Agrega al menos un bloque antes de insertar relleno entre bloques.
-              </Alert>
-            ) : null}
-          </Stack>
-
-          {error ? <Alert severity="error">{error}</Alert> : null}
-          {copyError ? <Alert severity="error">{copyError}</Alert> : null}
-          {copySuccess ? (
-            <Alert severity="success">Prompt copiado al portapapeles.</Alert>
-          ) : null}
-
-          {renderedResult}
+          <SuggestionPromptSection
+            value={prompt}
+            disabled={isBusy}
+            onChange={handlePromptChange}
+          />
+          <SuggestionPlacementSection
+            option={option}
+            sortedBlocks={sortedBlocks}
+            anchorBlockId={anchorBlockId}
+            disabled={isBusy}
+            onOptionChange={handleChangeOption}
+            onAnchorChange={handleChangeAnchor}
+          />
+          <SuggestionFeedback
+            error={error}
+            copyError={copyError}
+            copySuccess={copySuccess}
+          />
+          {resultBlocks ? <SuggestionPreview blocks={resultBlocks} /> : null}
         </Stack>
       </DialogContent>
-      <DialogActions sx={{ px: 3, py: 2 }}>
-        <Button
-          onClick={onClose}
-          disabled={pending || copyPending}
-        >
-          Cancelar
-        </Button>
-        <Button
-          variant="outlined"
-          onClick={() => {
-            void handleCopyPrompt();
-          }}
-          disabled={!canCopyPrompt || pending || copyPending}
-        >
-          {copyPending ? "Copiando…" : "Copiar prompt"}
-        </Button>
-        <Button
-          variant="contained"
-          onClick={() => {
-            void handleGenerate();
-          }}
-          disabled={!canSubmit}
-        >
-          {pending ? "Generando…" : "Generar"}
-        </Button>
-      </DialogActions>
+      <SuggestionDialogFooter
+        pending={pending}
+        copyPending={copyPending}
+        canSubmit={canSubmit}
+        canCopyPrompt={canCopyPrompt}
+        disableCancel={isBusy}
+        onCancel={handleCancel}
+        onGenerate={handleGenerate}
+        onCopyPrompt={handleCopyPrompt}
+      />
     </Dialog>
+  );
+}
+
+type SuggestionPromptSectionProps = {
+  value: string;
+  disabled: boolean;
+  onChange: (value: string) => void;
+};
+
+function SuggestionPromptSection({ value, disabled, onChange }: SuggestionPromptSectionProps) {
+  return (
+    <Stack spacing={1.5}>
+      <Typography variant="subtitle2" sx={{ fontWeight: 600 }}>
+        Prompt para la sugerencia
+      </Typography>
+      <TextField
+        multiline
+        minRows={4}
+        maxRows={12}
+        value={value}
+        onChange={(event) => {
+          onChange(event.target.value);
+        }}
+        placeholder="Describe el relleno que necesitas"
+        disabled={disabled}
+      />
+    </Stack>
+  );
+}
+
+type SuggestionPlacementSectionProps = {
+  option: InsertionOption;
+  sortedBlocks: ChapterBlock[];
+  anchorBlockId: string;
+  disabled: boolean;
+  onOptionChange: (value: InsertionOption) => void;
+  onAnchorChange: (value: string) => void;
+};
+
+function SuggestionPlacementSection({
+  option,
+  sortedBlocks,
+  anchorBlockId,
+  disabled,
+  onOptionChange,
+  onAnchorChange,
+}: SuggestionPlacementSectionProps) {
+  const handleToggleChange = (_: unknown, value: InsertionOption | null) => {
+    if (!value) {
+      return;
+    }
+    onOptionChange(value);
+  };
+
+  const noBlocksAvailable = sortedBlocks.length === 0;
+
+  return (
+    <Stack spacing={2}>
+      <Typography variant="subtitle2" sx={{ fontWeight: 600 }}>
+        ¿Dónde quieres ubicar el relleno?
+      </Typography>
+      <ToggleButtonGroup
+        exclusive
+        value={option}
+        onChange={handleToggleChange}
+        fullWidth
+        color="primary"
+        aria-label="Seleccionar ubicación del relleno"
+      >
+        <ToggleButton value="start" disabled={disabled}>Inicio del capítulo</ToggleButton>
+        <ToggleButton
+          value="after"
+          disabled={noBlocksAvailable || disabled}
+        >
+          Entre bloques
+        </ToggleButton>
+        <ToggleButton value="append" disabled={disabled}>Final del capítulo</ToggleButton>
+      </ToggleButtonGroup>
+
+      {option === "after" ? (
+        <FormControl fullWidth disabled={noBlocksAvailable || disabled}>
+          <InputLabel id="general-suggestion-anchor-label">
+            Bloque de referencia
+          </InputLabel>
+          <Select<string>
+            labelId="general-suggestion-anchor-label"
+            label="Bloque de referencia"
+            value={anchorBlockId}
+            onChange={(event) => {
+              onAnchorChange(event.target.value);
+            }}
+            disabled={noBlocksAvailable || disabled}
+          >
+            {sortedBlocks.map((block, index) => (
+              <MenuItem key={block.id ?? `block-${index}`} value={block.id ?? ""}>
+                {formatBlockOptionLabel(block, index)}
+              </MenuItem>
+            ))}
+          </Select>
+        </FormControl>
+      ) : null}
+
+      {option === "after" && noBlocksAvailable ? (
+        <Alert severity="info">
+          Agrega al menos un bloque antes de insertar relleno entre bloques.
+        </Alert>
+      ) : null}
+    </Stack>
+  );
+}
+
+type SuggestionFeedbackProps = {
+  error: string | null;
+  copyError: string | null;
+  copySuccess: boolean;
+};
+
+function SuggestionFeedback({ error, copyError, copySuccess }: SuggestionFeedbackProps) {
+  if (!error && !copyError && !copySuccess) {
+    return null;
+  }
+
+  return (
+    <Stack spacing={1.5}>
+      {error ? <Alert severity="error">{error}</Alert> : null}
+      {copyError ? <Alert severity="error">{copyError}</Alert> : null}
+      {copySuccess ? (
+        <Alert severity="success">Prompt copiado al portapapeles.</Alert>
+      ) : null}
+    </Stack>
+  );
+}
+
+type SuggestionDialogFooterProps = {
+  pending: boolean;
+  copyPending: boolean;
+  canSubmit: boolean;
+  canCopyPrompt: boolean;
+  disableCancel: boolean;
+  onCancel: () => void;
+  onGenerate: () => Promise<void>;
+  onCopyPrompt: () => Promise<void>;
+};
+
+function SuggestionDialogFooter({
+  pending,
+  copyPending,
+  canSubmit,
+  canCopyPrompt,
+  disableCancel,
+  onCancel,
+  onGenerate,
+  onCopyPrompt,
+}: SuggestionDialogFooterProps) {
+  return (
+    <DialogActions sx={{ px: 3, py: 2 }}>
+      <Button onClick={onCancel} disabled={disableCancel}>
+        Cancelar
+      </Button>
+      <Button
+        variant="outlined"
+        onClick={() => {
+          void onCopyPrompt();
+        }}
+        disabled={!canCopyPrompt}
+      >
+        {copyPending ? "Copiando…" : "Copiar prompt"}
+      </Button>
+      <Button
+        variant="contained"
+        onClick={() => {
+          void onGenerate();
+        }}
+        disabled={!canSubmit}
+      >
+        {pending ? "Generando…" : "Generar"}
+      </Button>
+    </DialogActions>
   );
 }
 
