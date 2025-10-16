@@ -19,6 +19,8 @@ from .library import (
 from .suggestions import (
     BlockConversionApplyView,
     ChapterBlockConversionSuggestionView,
+    ChapterGeneralSuggestionPromptView,
+    ChapterGeneralSuggestionView,
     ChapterParagraphSuggestionPromptView,
     ChapterParagraphSuggestionView,
 )
@@ -32,6 +34,8 @@ __all__ = [
     "ChapterContextVisibilityView",
     "ChapterParagraphSuggestionView",
     "ChapterParagraphSuggestionPromptView",
+    "ChapterGeneralSuggestionView",
+    "ChapterGeneralSuggestionPromptView",
     "ChapterBlockConversionSuggestionView",
     "BlockConversionApplyView",
     "EditorView",

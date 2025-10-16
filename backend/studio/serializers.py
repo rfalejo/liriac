@@ -326,6 +326,24 @@ class ParagraphSuggestionPromptResponseSerializer(serializers.Serializer):
     prompt = serializers.CharField()
 
 
+class GeneralSuggestionRequestSerializer(serializers.Serializer):
+    prompt = serializers.CharField()
+    placement = serializers.ChoiceField(choices=("before", "after", "append"))
+    anchorBlockId = serializers.CharField(required=False, allow_blank=True)
+    model = serializers.CharField(required=False, allow_blank=True)
+
+    def validate(self, attrs: Dict[str, Any]) -> Dict[str, Any]:  # type: ignore[override]
+        placement = attrs.get("placement")
+        anchor = attrs.get("anchorBlockId")
+
+        if placement in {"before", "after"} and not anchor:
+            raise serializers.ValidationError(
+                {"anchorBlockId": "Debes proporcionar un bloque de anclaje para esta ubicación."}
+            )
+
+        return attrs
+
+
 class BlockConversionTurnSerializer(serializers.Serializer):
     id = serializers.CharField(required=False, allow_blank=True)
     speakerId = serializers.CharField(required=False, allow_blank=True, allow_null=True)
@@ -355,6 +373,15 @@ class BlockConversionBlockSerializer(serializers.Serializer):
                     {"turns": "Los diálogos sugeridos deben incluir al menos un turno."}
                 )
         return attrs
+
+
+class GeneralSuggestionResponseSerializer(serializers.Serializer):
+    model = serializers.CharField()
+    blocks = BlockConversionBlockSerializer(many=True)
+
+
+class GeneralSuggestionPromptResponseSerializer(serializers.Serializer):
+    prompt = serializers.CharField()
 
 
 class BlockConversionRequestSerializer(serializers.Serializer):

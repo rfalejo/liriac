@@ -9,6 +9,8 @@ from .views import (
     ChapterBlockVersionListView,
     ChapterContextVisibilityView,
     ChapterDetailView,
+    ChapterGeneralSuggestionPromptView,
+    ChapterGeneralSuggestionView,
     ChapterParagraphSuggestionPromptView,
     ChapterParagraphSuggestionView,
     EditorView,
@@ -86,6 +88,16 @@ urlpatterns = [
         "library/chapters/<str:chapter_id>/paragraph-suggestion/prompt/",
         ChapterParagraphSuggestionPromptView.as_view(),
         name="library-chapter-paragraph-suggestion-prompt",
+    ),
+    path(
+        "library/chapters/<str:chapter_id>/general-suggestions/",
+        ChapterGeneralSuggestionView.as_view(),
+        name="library-chapter-general-suggestions",
+    ),
+    path(
+        "library/chapters/<str:chapter_id>/general-suggestions/prompt/",
+        ChapterGeneralSuggestionPromptView.as_view(),
+        name="library-chapter-general-suggestions-prompt",
     ),
     path(
         "library/chapters/<str:chapter_id>/block-conversions/",
