@@ -120,6 +120,7 @@ export function ChapterBlockList({
           conversionDisabled={conversionDisabled}
           visible={isSlotVisible(position)}
           onRequestClose={isTouchViewport ? clearLongPress : undefined}
+          longPressBlockId={isTouchViewport ? longPressBlockId : null}
         />
         {renderPreview(position.index)}
       </Fragment>

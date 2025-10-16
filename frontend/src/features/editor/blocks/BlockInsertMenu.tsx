@@ -6,6 +6,8 @@ import Tooltip from "@mui/material/Tooltip";
 import useMediaQuery from "@mui/material/useMediaQuery";
 import type { Theme } from "@mui/material/styles";
 import MoreHorizRoundedIcon from "@mui/icons-material/MoreHorizRounded";
+import ExpandLessRoundedIcon from "@mui/icons-material/ExpandLessRounded";
+import ExpandMoreRoundedIcon from "@mui/icons-material/ExpandMoreRounded";
 import SubjectRoundedIcon from "@mui/icons-material/SubjectRounded";
 import ChatBubbleOutlineRoundedIcon from "@mui/icons-material/ChatBubbleOutlineRounded";
 import InfoRoundedIcon from "@mui/icons-material/InfoRounded";
@@ -32,6 +34,7 @@ type BlockInsertMenuProps = {
   conversionDisabled?: boolean;
   visible?: boolean;
   onRequestClose?: () => void;
+  longPressBlockId?: string | null;
 };
 
 export const BLOCK_INSERT_OPTIONS = [
@@ -68,6 +71,7 @@ export function BlockInsertMenu({
   conversionDisabled = false,
   visible,
   onRequestClose,
+  longPressBlockId = null,
 }: BlockInsertMenuProps) {
   const [hovered, setHovered] = useState(false);
   const [expanded, setExpanded] = useState(false);
@@ -77,6 +81,28 @@ export function BlockInsertMenu({
   );
 
   const computedVisible = visible ?? (isTouchViewport || hovered || expanded);
+  const isBeforeActive = Boolean(
+    isTouchViewport &&
+      longPressBlockId &&
+      position.beforeBlockId === longPressBlockId,
+  );
+  const isAfterActive = Boolean(
+    isTouchViewport &&
+      longPressBlockId &&
+      position.afterBlockId === longPressBlockId,
+  );
+
+  const TriggerIcon = useMemo(() => {
+    if (isTouchViewport) {
+      if (isBeforeActive) {
+        return ExpandLessRoundedIcon;
+      }
+      if (isAfterActive) {
+        return ExpandMoreRoundedIcon;
+      }
+    }
+    return MoreHorizRoundedIcon;
+  }, [isAfterActive, isBeforeActive, isTouchViewport]);
 
   const handleToggle = useCallback(() => {
     setExpanded((current) => {
@@ -97,8 +123,11 @@ export function BlockInsertMenu({
   }, [isTouchViewport, onRequestClose]);
 
   const handleFocusCapture = useCallback(() => {
+    if (isTouchViewport) {
+      return;
+    }
     setExpanded(true);
-  }, []);
+  }, [isTouchViewport]);
 
   const handleBlurCapture = useCallback<FocusEventHandler<HTMLDivElement>>(
     (event) => {
@@ -130,6 +159,8 @@ export function BlockInsertMenu({
       return;
     }
     if (isTouchViewport) {
+      setExpanded(false);
+    } else {
       setExpanded(true);
     }
   }, [visible, isTouchViewport]);
@@ -265,14 +296,15 @@ export function BlockInsertMenu({
               opacity: computedVisible ? 0.96 : 0,
               transition: "opacity 160ms ease",
               color: theme.palette.editor.blockMenuTrigger,
-              pointerEvents: computedVisible ? "auto" : "none",
+              pointerEvents:
+                isTouchViewport && !computedVisible ? "none" : "auto",
               "&:hover": {
                 backgroundColor: theme.palette.editor.blockMenuHoverBg,
                 color: theme.palette.editor.blockMenuTriggerHover,
               },
             })}
           >
-            <MoreHorizRoundedIcon fontSize="small" />
+            <TriggerIcon fontSize="small" />
           </IconButton>
         )}
       </Paper>
