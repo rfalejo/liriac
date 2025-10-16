@@ -31,7 +31,6 @@ type EditorBlockFrameProps = {
   onClearLongPress?: () => void;
   children: ReactNode;
 };
-
 export function EditorBlockFrame({
   blockId,
   blockType,
@@ -217,6 +216,7 @@ export function EditorBlockFrame({
             xs: theme.spacing(isActive ? basePaddingY.xs : densePaddingY.xs),
             sm: theme.spacing(isActive ? basePaddingY.sm : densePaddingY.sm),
           },
+          minHeight: theme.spacing(5.5),
           transition: theme.editor.blockTransition,
           backgroundColor: isActive
             ? theme.palette.editor.blockActiveBg
