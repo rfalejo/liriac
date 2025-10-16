@@ -1,4 +1,7 @@
-import { useCallback, useEffect, useRef } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import useMediaQuery from "@mui/material/useMediaQuery";
+import { useTheme } from "@mui/material/styles";
+import Box from "@mui/material/Box";
 import type { components } from "../../api/schema";
 import { useEditorScrollbar } from "./hooks/useEditorScrollbar";
 import { useEditorChapterNavigation } from "./hooks/useEditorChapterNavigation";
@@ -24,6 +27,10 @@ import { usePinnedHoverPanel } from "./hooks/usePinnedHoverPanel";
 import { useBlockConversion } from "./hooks/useBlockConversion";
 import type { BlockInsertPosition } from "./blocks/BlockInsertMenu";
 import { BlockConversionDialog } from "./conversions/BlockConversionDialog";
+import { EditorSidebar } from "./EditorSidebar";
+import { QuickActionsDrawer, type QuickActionsTab } from "./components/QuickActionsDrawer";
+
+const QUICK_ACTIONS_TAB_STORAGE_KEY = "editor.quickActions.activeTab";
 
 type ChapterBlockType = components["schemas"]["ChapterBlockTypeEnum"];
 
@@ -39,6 +46,8 @@ export function EditorContainer({
   open,
   onClose,
 }: EditorContainerProps) {
+  const theme = useTheme();
+  const isMobileLayout = useMediaQuery(theme.breakpoints.down("lg"));
   const {
     activeChapterId,
     chapter,
@@ -72,6 +81,39 @@ export function EditorContainer({
 
   const { dialogState: confirmDialog, openConfirmDialog, resolveDialog } =
     useEditorConfirmDialog();
+
+  const [quickActionsOpen, setQuickActionsOpen] = useState(false);
+  const [quickActionsTab, setQuickActionsTab] = useState<QuickActionsTab>("chapters");
+  const quickActionsTriggerRef = useRef<HTMLButtonElement | null>(null);
+
+  useEffect(() => {
+    if (typeof window === "undefined") {
+      return;
+    }
+    const stored = window.localStorage.getItem(QUICK_ACTIONS_TAB_STORAGE_KEY);
+    if (stored === "chapters" || stored === "context") {
+      setQuickActionsTab(stored);
+    }
+  }, []);
+
+  useEffect(() => {
+    if (typeof window === "undefined") {
+      return;
+    }
+    window.localStorage.setItem(QUICK_ACTIONS_TAB_STORAGE_KEY, quickActionsTab);
+  }, [quickActionsTab]);
+
+  useEffect(() => {
+    if (!open) {
+      setQuickActionsOpen(false);
+    }
+  }, [open]);
+
+  useEffect(() => {
+    if (!isMobileLayout) {
+      setQuickActionsOpen(false);
+    }
+  }, [isMobileLayout]);
 
   const handleConfirmClose = useCallback(
     (decision: boolean) => {
@@ -196,10 +238,31 @@ export function EditorContainer({
     },
     [chapter, createBlock, mutationPending, notifyUpdateFailure],
   );
-  const leftPanelControls = usePinnedHoverPanel({ enabled: open });
-  const rightPanelControls = usePinnedHoverPanel({ enabled: open });
+  const leftPanelControls = usePinnedHoverPanel({ enabled: open && !isMobileLayout });
+  const rightPanelControls = usePinnedHoverPanel({ enabled: open && !isMobileLayout });
 
   const selectedChapterId = chapter?.id ?? activeChapterId;
+
+  const sidebarProps = useMemo(
+    () => ({
+      activeChapterId: selectedChapterId,
+      bookTitle,
+      chapters: chapterOptions,
+      error: booksError,
+      loading: booksLoading,
+      onSelectChapter: handleSelectChapter,
+      onReturnToLibrary: onClose,
+    }),
+    [
+      selectedChapterId,
+      bookTitle,
+      chapterOptions,
+      booksError,
+      booksLoading,
+      handleSelectChapter,
+      onClose,
+    ],
+  );
 
   const {
     draft: conversionDraft,
@@ -228,17 +291,63 @@ export function EditorContainer({
     mutationPending ||
     !chapter?.id;
 
+  const mobileQuickActionsHotspot = isMobileLayout
+    ? (
+        <Box
+          component="button"
+          type="button"
+          ref={quickActionsTriggerRef}
+          aria-haspopup="dialog"
+          aria-controls="quick-actions-drawer"
+          aria-expanded={quickActionsOpen}
+          aria-label="Mostrar acciones rápidas"
+          onClick={() => {
+            setQuickActionsOpen(true);
+          }}
+          sx={(theme) => ({
+            position: "fixed",
+            top: 0,
+            left: 0,
+            right: 0,
+            height: "calc(env(safe-area-inset-top, 0px) + 64px)",
+            paddingTop: "env(safe-area-inset-top, 0px)",
+            zIndex: theme.zIndex.appBar + 1,
+            border: 0,
+            backgroundColor: "transparent",
+            cursor: "pointer",
+            opacity: 0,
+            pointerEvents: quickActionsOpen ? "none" : "auto",
+            WebkitTapHighlightColor: "transparent",
+            touchAction: "manipulation",
+            transition: "opacity 180ms ease, background-color 180ms ease",
+            "&:focus-visible": {
+              outline: `2px solid ${theme.palette.primary.light}`,
+              opacity: 0.28,
+              backgroundColor: "rgba(255, 255, 255, 0.18)",
+            },
+            "&:active": {
+              opacity: 0.12,
+              backgroundColor: "rgba(0, 0, 0, 0.08)",
+            },
+          })}
+        />
+      )
+    : null;
+
+  const handleCloseQuickActions = useCallback(() => {
+    setQuickActionsOpen(false);
+    quickActionsTriggerRef.current?.focus({ preventScroll: true });
+  }, []);
+
+  const handleChangeQuickActionsTab = useCallback((tab: QuickActionsTab) => {
+    setQuickActionsTab(tab);
+  }, []);
+
   return (
-    <EditorShell
-      sidebarProps={{
-        activeChapterId: selectedChapterId,
-        bookTitle,
-        chapters: chapterOptions,
-        error: booksError,
-        loading: booksLoading,
-        onSelectChapter: handleSelectChapter,
-        onReturnToLibrary: onClose,
-      }}
+    <>
+      {mobileQuickActionsHotspot}
+      <EditorShell
+      sidebarProps={sidebarProps}
       leftPanel={{
         title: "Capítulos",
         pinned: leftPanelControls.pinned,
@@ -322,6 +431,31 @@ export function EditorContainer({
         onClearError={clearConversionError}
         canSubmit={canSubmitConversion && !conversionActionsDisabled}
       />
-    </EditorShell>
+      {isMobileLayout ? (
+        <QuickActionsDrawer
+          open={quickActionsOpen}
+          onOpen={() => {
+            setQuickActionsOpen(true);
+          }}
+          onClose={handleCloseQuickActions}
+          activeTab={quickActionsTab}
+          onChangeTab={handleChangeQuickActionsTab}
+          chaptersContent={
+            <EditorSidebar
+              {...sidebarProps}
+              hideTitle={false}
+            />
+          }
+          contextContent={
+            <ContextConfigurationPanel
+              chapterId={chapter?.id ?? null}
+              bookTitle={bookTitle ?? null}
+              showHeading
+            />
+          }
+        />
+      ) : null}
+      </EditorShell>
+    </>
   );
 }

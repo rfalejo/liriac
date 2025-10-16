@@ -1,5 +1,6 @@
 import Box from "@mui/material/Box";
-import type { Theme } from "@mui/material/styles";
+import useMediaQuery from "@mui/material/useMediaQuery";
+import { useTheme, type Theme } from "@mui/material/styles";
 import type { ComponentProps, ReactNode } from "react";
 import { EditorChapterView } from "./EditorChapterView";
 import { EditorSidebar } from "./EditorSidebar";
@@ -118,6 +119,7 @@ type EditorShellProps = {
   rightPanel?: SidePanelConfig & { content: ReactNode };
   chapterViewProps: ComponentProps<typeof EditorChapterView>;
   chapterTopSlot?: ReactNode;
+  mobileTopBar?: ReactNode;
   scrollAreaRef: React.RefObject<HTMLDivElement>;
   scrollHandlers: EditorScrollbarHandlers;
   scrollbarState: ScrollbarState;
@@ -130,13 +132,19 @@ export function EditorShell({
   rightPanel,
   chapterViewProps,
   chapterTopSlot,
+  mobileTopBar,
   scrollAreaRef,
   scrollHandlers,
   scrollbarState,
   children,
 }: EditorShellProps) {
-  const leftPinnedOffset = leftPanel.pinned ? leftPanel.width ?? 320 : 0;
-  const rightPinnedOffset = rightPanel?.pinned ? rightPanel.width ?? 320 : 0;
+  const theme = useTheme();
+  const isDesktop = useMediaQuery(theme.breakpoints.up("lg"));
+
+  const leftPinnedOffset = isDesktop && leftPanel.pinned ? leftPanel.width ?? 320 : 0;
+  const rightPinnedOffset = isDesktop && rightPanel?.pinned
+    ? rightPanel.width ?? 320
+    : 0;
   const leftMarginLg = leftPinnedOffset ? `${leftPinnedOffset + 24}px` : undefined;
   const rightMarginLg = rightPinnedOffset
     ? `${rightPinnedOffset + 24}px`
@@ -148,21 +156,23 @@ export function EditorShell({
       aria-labelledby="editor-container-heading"
       sx={shellSx}
     >
-      <HoverableSidePanel
-        side="left"
-        title={leftPanel.title}
-        visible={leftPanel.visible}
-        pinned={leftPanel.pinned}
-        onTogglePin={leftPanel.onTogglePin}
-        onClose={leftPanel.onClose}
-        onEnter={leftPanel.onEnter}
-        onLeave={leftPanel.onLeave}
-        width={leftPanel.width}
-        triggerWidth={leftPanel.triggerWidth}
-      >
-        <EditorSidebar {...sidebarProps} />
-      </HoverableSidePanel>
-      {rightPanel ? (
+      {isDesktop ? (
+        <HoverableSidePanel
+          side="left"
+          title={leftPanel.title}
+          visible={leftPanel.visible}
+          pinned={leftPanel.pinned}
+          onTogglePin={leftPanel.onTogglePin}
+          onClose={leftPanel.onClose}
+          onEnter={leftPanel.onEnter}
+          onLeave={leftPanel.onLeave}
+          width={leftPanel.width}
+          triggerWidth={leftPanel.triggerWidth}
+        >
+          <EditorSidebar {...sidebarProps} />
+        </HoverableSidePanel>
+      ) : null}
+      {isDesktop && rightPanel ? (
         <HoverableSidePanel
           side="right"
           title={rightPanel.title}
@@ -185,6 +195,20 @@ export function EditorShell({
         data-scrollbar-scrollable={scrollbarState.scrollable}
         {...scrollHandlers}
       >
+        {mobileTopBar ? (
+          <Box
+            sx={{
+              width: "100%",
+              maxWidth: 1240,
+              mb: 2,
+              display: { xs: "flex", lg: "none" },
+              justifyContent: "flex-start",
+              mx: "auto",
+            }}
+          >
+            {mobileTopBar}
+          </Box>
+        ) : null}
         <Box
           sx={(theme) => {
             const responsiveAdjustments = leftMarginLg || rightMarginLg

@@ -12,6 +12,7 @@ type EditorSidebarProps = {
   loading: boolean;
   onSelectChapter: (chapterId: string) => void;
   onReturnToLibrary: () => void;
+  hideTitle?: boolean;
 };
 
 export function EditorSidebar({
@@ -22,13 +23,14 @@ export function EditorSidebar({
   loading,
   onSelectChapter,
   onReturnToLibrary,
+  hideTitle = true,
 }: EditorSidebarProps) {
   return (
     <Stack spacing={2.5} sx={{ height: "100%" }}>
       <SidebarHeader
         bookTitle={bookTitle}
         onClose={onReturnToLibrary}
-        hideTitle
+        hideTitle={hideTitle}
       />
       <Box sx={{ flex: 1, overflowY: "auto", pr: 1 }}>
         <SidebarChapterList
