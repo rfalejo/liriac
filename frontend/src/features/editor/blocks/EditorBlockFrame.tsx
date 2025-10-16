@@ -235,18 +235,36 @@ export function EditorBlockFrame({
       {children}
       <Box
         data-editor-block-controls="true"
-        sx={(theme: Theme) => ({
-          position: "absolute",
-          top: { xs: 8, sm: 12 },
-          right: { xs: 8, sm: 12 },
-          display: "flex",
-          gap: 0.5,
-          opacity: showControls
-            ? BUTTON_OPACITY_VISIBLE
-            : BUTTON_OPACITY_HIDDEN,
-          pointerEvents: showControls ? "auto" : "none",
-          transition: theme.editor.blockControlsFade,
-        })}
+        sx={(theme: Theme) => {
+          const topOffset = {
+            xs: `calc(-1 * ${theme.spacing(2.4)})`,
+            sm: `calc(-1 * ${theme.spacing(2.75)})`,
+          } as const;
+
+          return {
+            position: "absolute",
+            top: topOffset,
+            right: {
+              xs: theme.spacing(1),
+              sm: theme.spacing(1.5),
+            },
+            display: "flex",
+            alignItems: "center",
+            gap: 0.5,
+            padding: theme.spacing(0.375, 0.75),
+            borderRadius: 999,
+            backgroundColor: showControls
+              ? "rgba(68, 52, 38, 0.12)"
+              : "rgba(68, 52, 38, 0.06)",
+            border: "none",
+            boxShadow: showControls ? "0 4px 14px rgba(32, 24, 16, 0.18)" : "none",
+            opacity: showControls
+              ? BUTTON_OPACITY_VISIBLE
+              : BUTTON_OPACITY_HIDDEN,
+            pointerEvents: showControls ? "auto" : "none",
+            transition: `${theme.editor.blockControlsFade}, background-color 160ms ease, box-shadow 160ms ease, border-color 160ms ease`,
+          };
+        }}
       >
         {controls ??
           (onEdit ? (
