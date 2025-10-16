@@ -117,7 +117,6 @@ export function EditorBlockFrame({
       clearLongPressTimer,
       onClearLongPress,
       onLongPress,
-      touchRevealed,
     ],
   );
 

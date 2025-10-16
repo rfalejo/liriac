@@ -192,9 +192,16 @@ export function useBookContextEditor({
     [],
   );
 
+  const [initialSnapshotVersion, setInitialSnapshotVersion] = useState(0);
+
   const pendingContextUpdates = useMemo(
-    () => buildContextUpdates(contextSections, contextFormValues, contextInitialRef.current),
-    [contextFormValues, contextSections],
+    () =>
+      buildContextUpdates(
+        contextSections,
+        contextFormValues,
+        contextInitialRef.current,
+      ),
+    [contextFormValues, contextSections, initialSnapshotVersion],
   );
 
   const contextHasChanges = pendingContextUpdates.length > 0;
@@ -205,8 +212,9 @@ export function useBookContextEditor({
     }
 
     try {
-      await updateContextItems(pendingContextUpdates);
-      contextInitialRef.current = cloneContextFormValues(contextFormValues);
+  await updateContextItems(pendingContextUpdates);
+  contextInitialRef.current = cloneContextFormValues(contextFormValues);
+  setInitialSnapshotVersion((current) => current + 1);
       onClearError();
       return { success: true };
     } catch (error) {
@@ -276,7 +284,8 @@ export function useBookContextEditor({
 
         const nextInitial = { ...contextInitialRef.current };
         delete nextInitial[key];
-        contextInitialRef.current = nextInitial;
+  contextInitialRef.current = nextInitial;
+  setInitialSnapshotVersion((current) => current + 1);
         return true;
       } catch (error) {
         console.error("Failed to delete context item", error);

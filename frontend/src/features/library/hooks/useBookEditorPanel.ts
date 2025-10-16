@@ -92,7 +92,28 @@ export function useBookEditorPanel({
     isPending: isDeleting,
   } = useDeleteBook();
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
-  const [activeTab, setActiveTab] = useState<BookEditorTabValue>("metadata");
+  const [tabState, setTabState] = useState(() => ({
+    tab: focusTab,
+    request: focusRequest,
+    bookId: book.id,
+  }));
+
+  const shouldUseFocus =
+    book.id !== tabState.bookId || focusRequest > tabState.request;
+
+  useEffect(() => {
+    if (!shouldUseFocus) {
+      return;
+    }
+
+    setTabState({
+      tab: focusTab,
+      request: focusRequest,
+      bookId: book.id,
+    });
+  }, [book.id, focusRequest, focusTab, shouldUseFocus]);
+
+  const activeTab = shouldUseFocus ? focusTab : tabState.tab;
 
   const clearError = useCallback(() => setErrorMessage(null), []);
 
@@ -185,10 +206,6 @@ export function useBookEditorPanel({
     onResetError: clearError,
   });
 
-  useEffect(() => {
-    setActiveTab(focusTab);
-  }, [focusTab, focusRequest]);
-
   const disableActions =
     isSaving ||
     isUpdatingContext ||
@@ -210,8 +227,12 @@ export function useBookEditorPanel({
   );
 
   const handleTabChange = useCallback((value: BookEditorTabValue) => {
-    setActiveTab(value);
-  }, []);
+    setTabState({
+      tab: value,
+      request: focusRequest,
+      bookId: book.id,
+    });
+  }, [book.id, focusRequest]);
 
   return {
     formState,

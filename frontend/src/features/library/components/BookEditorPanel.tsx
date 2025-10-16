@@ -36,7 +36,7 @@ export function BookEditorPanel({
 }: BookEditorPanelProps) {
   const {
     formState,
-    activeTab,
+  activeTab,
     handleTabChange,
     contextSections,
     contextFormValues,
