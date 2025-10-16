@@ -26,6 +26,12 @@ export type BlockConversionBlock =
   components["schemas"]["BlockConversionBlock"];
 export type BlockConversionApplyPayload =
   components["schemas"]["BlockConversionApply"];
+export type GeneralSuggestionResponse =
+  components["schemas"]["GeneralSuggestionResponse"];
+export type GeneralSuggestionPromptResponse =
+  components["schemas"]["GeneralSuggestionPromptResponse"];
+export type GeneralSuggestionRequestPayload =
+  components["schemas"]["GeneralSuggestionRequest"];
 
 export async function fetchChapterDetail(
   chapterId: string,
@@ -272,6 +278,58 @@ export async function applyBlockConversion({
     {
       method: "POST",
       body: JSON.stringify(payload),
+    },
+  );
+}
+
+type GeneralSuggestionParams = {
+  chapterId: string;
+} & GeneralSuggestionRequestPayload;
+
+export async function requestGeneralSuggestion({
+  chapterId,
+  prompt,
+  placement,
+  anchorBlockId,
+  model,
+}: GeneralSuggestionParams): Promise<GeneralSuggestionResponse> {
+  const encodedChapter = encodeURIComponent(chapterId);
+  const body: GeneralSuggestionRequestPayload = {
+    prompt,
+    placement,
+    anchorBlockId,
+    model,
+  };
+
+  return request<GeneralSuggestionResponse>(
+    `/api/library/chapters/${encodedChapter}/general-suggestions/`,
+    {
+      method: "POST",
+      body: JSON.stringify(body),
+    },
+  );
+}
+
+export async function fetchGeneralSuggestionPrompt({
+  chapterId,
+  prompt,
+  placement,
+  anchorBlockId,
+  model,
+}: GeneralSuggestionParams): Promise<GeneralSuggestionPromptResponse> {
+  const encodedChapter = encodeURIComponent(chapterId);
+  const body: GeneralSuggestionRequestPayload = {
+    prompt,
+    placement,
+    anchorBlockId,
+    model,
+  };
+
+  return request<GeneralSuggestionPromptResponse>(
+    `/api/library/chapters/${encodedChapter}/general-suggestions/prompt/`,
+    {
+      method: "POST",
+      body: JSON.stringify(body),
     },
   );
 }

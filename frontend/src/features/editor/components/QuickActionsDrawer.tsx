@@ -1,6 +1,7 @@
 import Box from "@mui/material/Box";
 import Divider from "@mui/material/Divider";
 import IconButton from "@mui/material/IconButton";
+import Stack from "@mui/material/Stack";
 import SwipeableDrawer from "@mui/material/SwipeableDrawer";
 import Tab from "@mui/material/Tab";
 import Tabs from "@mui/material/Tabs";
@@ -19,6 +20,7 @@ export type QuickActionsDrawerProps = {
   onChangeTab: (tab: QuickActionsTab) => void;
   chaptersContent: ReactNode;
   contextContent: ReactNode;
+  headerActions?: ReactNode;
 };
 
 const tabToIndex: Record<QuickActionsTab, number> = {
@@ -66,6 +68,7 @@ export function QuickActionsDrawer({
   onChangeTab,
   chaptersContent,
   contextContent,
+  headerActions,
 }: QuickActionsDrawerProps) {
   const baseId = useId();
   const chaptersTabId = `${baseId}-quick-actions-tab-chapters`;
@@ -119,6 +122,7 @@ export function QuickActionsDrawer({
             display: "flex",
             alignItems: "center",
             justifyContent: "space-between",
+            gap: theme.spacing(2),
             px: theme.spacing(3),
             pt: theme.spacing(2.5),
             pb: theme.spacing(1.5),
@@ -127,14 +131,17 @@ export function QuickActionsDrawer({
           <Typography variant="subtitle1" fontWeight={600} component="h2">
             Acciones rápidas
           </Typography>
-          <IconButton
-            aria-label="Cerrar acciones rápidas"
-            onClick={onClose}
-            edge="end"
-            size="small"
-          >
-            <CloseRoundedIcon />
-          </IconButton>
+          <Stack direction="row" spacing={1} alignItems="center">
+            {headerActions}
+            <IconButton
+              aria-label="Cerrar acciones rápidas"
+              onClick={onClose}
+              edge="end"
+              size="small"
+            >
+              <CloseRoundedIcon />
+            </IconButton>
+          </Stack>
         </Box>
         <Divider />
         <Tabs

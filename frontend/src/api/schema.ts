@@ -265,6 +265,40 @@ export interface paths {
         patch: operations["library_chapters_context_visibility_partial_update"];
         trace?: never;
     };
+    "/api/library/chapters/{chapter_id}/general-suggestions/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** @description Generate block-agnostic filler suggestions for a chapter. */
+        post: operations["library_chapters_general_suggestions_create"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/library/chapters/{chapter_id}/general-suggestions/prompt/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** @description Return the prompt used for block-agnostic suggestions. */
+        post: operations["library_chapters_general_suggestions_prompt_create"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/library/chapters/{chapter_id}/paragraph-suggestion/": {
         parameters: {
             query?: never;
@@ -534,6 +568,19 @@ export interface components {
             bookTitle?: string | null;
             chapterId?: string | null;
             chapterTitle?: string | null;
+        };
+        GeneralSuggestionPromptResponse: {
+            prompt: string;
+        };
+        GeneralSuggestionRequest: {
+            prompt: string;
+            placement: components["schemas"]["PlacementEnum"];
+            anchorBlockId?: string;
+            model?: string;
+        };
+        GeneralSuggestionResponse: {
+            model: string;
+            blocks: components["schemas"]["BlockConversionBlock"][];
         };
         LibraryBook: {
             id: string;
@@ -1121,6 +1168,56 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["LibraryResponse"];
+                };
+            };
+        };
+    };
+    library_chapters_general_suggestions_create: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                chapter_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["GeneralSuggestionRequest"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["GeneralSuggestionResponse"];
+                };
+            };
+        };
+    };
+    library_chapters_general_suggestions_prompt_create: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                chapter_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["GeneralSuggestionRequest"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["GeneralSuggestionPromptResponse"];
                 };
             };
         };

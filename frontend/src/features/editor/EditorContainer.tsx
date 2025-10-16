@@ -2,6 +2,9 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import useMediaQuery from "@mui/material/useMediaQuery";
 import { useTheme } from "@mui/material/styles";
 import Box from "@mui/material/Box";
+import IconButton from "@mui/material/IconButton";
+import Tooltip from "@mui/material/Tooltip";
+import AutoFixHighRoundedIcon from "@mui/icons-material/AutoFixHighRounded";
 import type { components } from "../../api/schema";
 import { useEditorScrollbar } from "./hooks/useEditorScrollbar";
 import { useEditorChapterNavigation } from "./hooks/useEditorChapterNavigation";
@@ -29,6 +32,7 @@ import type { BlockInsertPosition } from "./blocks/BlockInsertMenu";
 import { BlockConversionDialog } from "./conversions/BlockConversionDialog";
 import { EditorSidebar } from "./EditorSidebar";
 import { QuickActionsDrawer, type QuickActionsTab } from "./components/QuickActionsDrawer";
+import { GeneralSuggestionDialog } from "./suggestions/GeneralSuggestionDialog";
 
 const QUICK_ACTIONS_TAB_STORAGE_KEY = "editor.quickActions.activeTab";
 
@@ -85,6 +89,7 @@ export function EditorContainer({
   const [quickActionsOpen, setQuickActionsOpen] = useState(false);
   const [quickActionsTab, setQuickActionsTab] = useState<QuickActionsTab>("chapters");
   const quickActionsTriggerRef = useRef<HTMLButtonElement | null>(null);
+  const [generalSuggestionOpen, setGeneralSuggestionOpen] = useState(false);
 
   useEffect(() => {
     if (typeof window === "undefined") {
@@ -343,6 +348,41 @@ export function EditorContainer({
     setQuickActionsTab(tab);
   }, []);
 
+  const generalSuggestionDisabled = !chapter?.id;
+  const quickActionHeaderActions = (
+    <Tooltip
+      title={generalSuggestionDisabled ? "Selecciona un capítulo" : "Sugerencia general"}
+      arrow
+    >
+      <span>
+        <IconButton
+          size="small"
+          aria-label="Sugerencia general"
+          onClick={() => {
+            if (generalSuggestionDisabled) {
+              return;
+            }
+            setGeneralSuggestionOpen(true);
+          }}
+          disabled={generalSuggestionDisabled}
+          sx={(theme) => ({
+            color: theme.palette.editor.blockMenuIcon,
+            transition: theme.editor.iconButtonTransition,
+            "&:hover": {
+              backgroundColor: theme.palette.editor.blockMenuHoverBg,
+              color: theme.palette.editor.blockMenuIconHover,
+            },
+            "&.Mui-disabled": {
+              color: theme.palette.action.disabled,
+            },
+          })}
+        >
+          <AutoFixHighRoundedIcon fontSize="small" />
+        </IconButton>
+      </span>
+    </Tooltip>
+  );
+
   return (
     <>
       {mobileQuickActionsHotspot}
@@ -431,6 +471,14 @@ export function EditorContainer({
         onClearError={clearConversionError}
         canSubmit={canSubmitConversion && !conversionActionsDisabled}
       />
+      <GeneralSuggestionDialog
+        open={generalSuggestionOpen}
+        onClose={() => {
+          setGeneralSuggestionOpen(false);
+        }}
+        chapterId={chapter?.id ?? null}
+        blocks={chapter?.blocks ?? []}
+      />
       {isMobileLayout ? (
         <QuickActionsDrawer
           open={quickActionsOpen}
@@ -453,6 +501,7 @@ export function EditorContainer({
               showHeading
             />
           }
+          headerActions={quickActionHeaderActions}
         />
       ) : null}
       </EditorShell>
