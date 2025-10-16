@@ -47,6 +47,7 @@ export function EditorBlockFrame({
   const [hovered, setHovered] = useState(false);
   const [touchRevealed, setTouchRevealed] = useState(false);
   const longPressTimerRef = useRef<number | null>(null);
+  const longPressActivatedRef = useRef(false);
 
   const showControls = useMemo(
     () => isActive || focusWithin || hovered || touchRevealed,
@@ -69,6 +70,23 @@ export function EditorBlockFrame({
     }
   }, []);
 
+  useEffect(() => {
+    if (!onLongPress) {
+      return;
+    }
+
+    if (activeLongPressBlockId === blockId) {
+      setTouchRevealed(true);
+      longPressActivatedRef.current = true;
+      return;
+    }
+
+    if (!isActive) {
+      setTouchRevealed(false);
+      longPressActivatedRef.current = false;
+    }
+  }, [activeLongPressBlockId, blockId, isActive, onLongPress]);
+
   const handlePointerDown = useCallback<PointerEventHandler<HTMLDivElement>>(
     (event) => {
       if (event.pointerType !== "touch") return;
@@ -78,18 +96,17 @@ export function EditorBlockFrame({
         activeLongPressBlockId !== blockId &&
         onClearLongPress
       ) {
+        longPressActivatedRef.current = false;
         onClearLongPress();
       }
 
-      if (!touchRevealed) {
-        event.preventDefault();
-        setTouchRevealed(true);
-      }
+      setTouchRevealed(true);
 
       if (onLongPress) {
         clearLongPressTimer();
         longPressTimerRef.current = window.setTimeout(() => {
           longPressTimerRef.current = null;
+          longPressActivatedRef.current = true;
           onLongPress(blockId);
           setTouchRevealed(true);
         }, 450);
@@ -107,7 +124,11 @@ export function EditorBlockFrame({
 
   const handlePointerUp = useCallback(() => {
     clearLongPressTimer();
-  }, [clearLongPressTimer]);
+    if (!longPressActivatedRef.current && !isActive) {
+      setTouchRevealed(false);
+    }
+    longPressActivatedRef.current = false;
+  }, [clearLongPressTimer, isActive]);
 
   const handlePointerLeave = useCallback<PointerEventHandler<HTMLDivElement>>(
     (event) => {
@@ -115,8 +136,12 @@ export function EditorBlockFrame({
         return;
       }
       clearLongPressTimer();
+      if (!longPressActivatedRef.current && !isActive) {
+        setTouchRevealed(false);
+      }
+      longPressActivatedRef.current = false;
     },
-    [clearLongPressTimer],
+    [clearLongPressTimer, isActive],
   );
 
   const handleBlurCapture = useCallback<FocusEventHandler<HTMLDivElement>>(
@@ -128,6 +153,7 @@ export function EditorBlockFrame({
       }
       setFocusWithin(false);
       setTouchRevealed(false);
+      longPressActivatedRef.current = false;
       if (onClearLongPress) {
         onClearLongPress();
       }
