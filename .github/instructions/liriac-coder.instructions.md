@@ -39,6 +39,7 @@ applyTo: '**'
 - Quality gates from `frontend/`: `pnpm lint`, `pnpm typecheck`, and `pnpm build`. Run them before shipping meaningful changes.
 - Format with `pnpm format` if the formatter reports differences. There is no automated frontend test suite yet, so rely on type coverage and manual verification.
 - Every code task must conclude by running lint (and lint fix if necessary), the corresponding typecheck, and preparing a commit message summary for the changes. Scope the commands to `frontend/` or `backend/` based on the surface that was modified.
+- The frontend and backend tmux panes stay running; use `scripts/cat_frontend_logs.sh` and `scripts/cat_backend_logs.sh` to read their latest output instead of reissuing commands manually.
 
 ## Things to avoid (frontend)
 - Skipping React Query hooks in favour of ad-hoc `fetch` calls; this breaks cache coherence and shared loading states.
@@ -304,6 +305,8 @@ frontend/
 |-- tsconfig.node.json
 \-- vite.config.ts
 scripts/
+|-- cat_backend_logs.sh
+|-- cat_frontend_logs.sh
 \-- generate_repo_tree.py
 .gitignore
 README.md
