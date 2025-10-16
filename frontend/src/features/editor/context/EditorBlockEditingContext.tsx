@@ -4,6 +4,9 @@ import type { EditingState } from "../types";
 type EditorBlockEditingContextValue = {
   editingState?: EditingState;
   onEditBlock: (blockId: string) => void;
+  onLongPressBlock?: (blockId: string) => void;
+  longPressBlockId?: string | null;
+  clearLongPress?: () => void;
 };
 
 const EditorBlockEditingContext =
@@ -13,15 +16,29 @@ type EditorBlockEditingProviderProps = {
   children: ReactNode;
   editingState?: EditingState;
   onEditBlock: (blockId: string) => void;
+  onLongPressBlock?: (blockId: string) => void;
+  longPressBlockId?: string | null;
+  clearLongPress?: () => void;
 };
 
 export function EditorBlockEditingProvider({
   children,
   editingState,
   onEditBlock,
+  onLongPressBlock,
+  longPressBlockId,
+  clearLongPress,
 }: EditorBlockEditingProviderProps) {
   return (
-    <EditorBlockEditingContext.Provider value={{ editingState, onEditBlock }}>
+    <EditorBlockEditingContext.Provider
+      value={{
+        editingState,
+        onEditBlock,
+        onLongPressBlock,
+        longPressBlockId,
+        clearLongPress,
+      }}
+    >
       {children}
     </EditorBlockEditingContext.Provider>
   );

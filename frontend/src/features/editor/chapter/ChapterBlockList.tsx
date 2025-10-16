@@ -1,6 +1,8 @@
-import { Fragment } from "react";
+import { Fragment, useCallback } from "react";
 import Box from "@mui/material/Box";
 import Stack from "@mui/material/Stack";
+import useMediaQuery from "@mui/material/useMediaQuery";
+import type { Theme } from "@mui/material/styles";
 import type {
   ChapterBlockEntry,
   ChapterBlockType,
@@ -40,7 +42,10 @@ export function ChapterBlockList({
   onAcceptConversion,
   onRejectConversion,
 }: ChapterBlockListProps) {
-  const { editingState } = useEditorBlockEditing();
+  const { editingState, longPressBlockId, clearLongPress } = useEditorBlockEditing();
+  const isTouchViewport = useMediaQuery((theme: Theme) =>
+    theme.breakpoints.down("sm"),
+  );
   const activeBlockId = editingState?.blockId ?? null;
 
   if (blockEntries.length === 0) {
@@ -83,6 +88,24 @@ export function ChapterBlockList({
     );
   };
 
+  const isSlotVisible = useCallback(
+    (position: BlockInsertPosition) => {
+      if (!isTouchViewport) {
+        return true;
+      }
+
+      if (!longPressBlockId) {
+        return false;
+      }
+
+      return (
+        position.beforeBlockId === longPressBlockId ||
+        position.afterBlockId === longPressBlockId
+      );
+    },
+    [isTouchViewport, longPressBlockId],
+  );
+
   const renderInsertSlot = (position: BlockInsertPosition) => {
     if (!onInsertBlock) {
       return renderPreview(position.index);
@@ -95,6 +118,8 @@ export function ChapterBlockList({
           onInsertBlock={onInsertBlock}
           onOpenConversion={onOpenConversion}
           conversionDisabled={conversionDisabled}
+          visible={isSlotVisible(position)}
+          onRequestClose={isTouchViewport ? clearLongPress : undefined}
         />
         {renderPreview(position.index)}
       </Fragment>

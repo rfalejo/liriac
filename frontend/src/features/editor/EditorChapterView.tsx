@@ -1,4 +1,6 @@
-import { Fragment } from "react";
+import { Fragment, useCallback, useEffect, useMemo, useState } from "react";
+import useMediaQuery from "@mui/material/useMediaQuery";
+import { useTheme } from "@mui/material/styles";
 import type { ChapterDetail } from "../../api/chapters";
 import type { EditingState } from "./types";
 import { EditorBlockEditingProvider } from "./context/EditorBlockEditingContext";
@@ -51,6 +53,67 @@ export function EditorChapterView({
   editingState,
 }: EditorChapterViewProps) {
   const { blockEntries, hasChapterHeader } = useChapterBlocks(chapter);
+  const theme = useTheme();
+  const isTouchViewport = useMediaQuery(theme.breakpoints.down("sm"));
+  const [longPressBlockId, setLongPressBlockId] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (!isTouchViewport) {
+      setLongPressBlockId(null);
+    }
+  }, [isTouchViewport]);
+
+  useEffect(() => {
+    if (!isTouchViewport) {
+      return;
+    }
+
+    const handleGlobalPointerDown = (event: PointerEvent) => {
+      const target = event.target as HTMLElement | null;
+      if (!target) {
+        return;
+      }
+      if (target.closest("[data-editor-block-insert-menu='true']")) {
+        return;
+      }
+      if (target.closest("[data-editor-block-id]") || target.closest("[data-editor-block-controls]") ) {
+        return;
+      }
+      setLongPressBlockId(null);
+    };
+
+    window.addEventListener("pointerdown", handleGlobalPointerDown, {
+      passive: true,
+    });
+
+    return () => {
+      window.removeEventListener("pointerdown", handleGlobalPointerDown);
+    };
+  }, [isTouchViewport]);
+
+  useEffect(() => {
+    if (!editingState?.blockId) {
+      return;
+    }
+    setLongPressBlockId(null);
+  }, [editingState?.blockId]);
+
+  const handleLongPressBlock = useCallback((blockId: string) => {
+    setLongPressBlockId(blockId);
+  }, []);
+
+  const handleClearLongPress = useCallback(() => {
+    setLongPressBlockId(null);
+  }, []);
+
+  const longPressValue = useMemo(
+    () => ({
+      onLongPressBlock: isTouchViewport ? handleLongPressBlock : undefined,
+      longPressBlockId: isTouchViewport ? longPressBlockId : null,
+      clearLongPress: isTouchViewport ? handleClearLongPress : undefined,
+    }),
+    [handleClearLongPress, handleLongPressBlock, isTouchViewport, longPressBlockId],
+  );
 
   if (loading) {
     return <ChapterLoadingState />;
@@ -68,6 +131,7 @@ export function EditorChapterView({
     <EditorBlockEditingProvider
       editingState={editingState}
       onEditBlock={onEditBlock}
+      {...longPressValue}
     >
       <Fragment>
         {!hasChapterHeader ? (

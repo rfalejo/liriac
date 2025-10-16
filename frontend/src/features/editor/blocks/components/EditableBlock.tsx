@@ -25,7 +25,13 @@ export function EditableBlock<TEditingState extends EditingState>({
   renderReadView,
   renderEditView,
 }: EditableBlockProps<TEditingState>) {
-  const { editingState, onEditBlock } = useEditorBlockEditing();
+  const {
+    editingState,
+    onEditBlock,
+    onLongPressBlock,
+    longPressBlockId,
+    clearLongPress,
+  } = useEditorBlockEditing();
   const resolvedEditingState = selectEditingState(editingState, block);
   const isEditing = Boolean(resolvedEditingState);
 
@@ -52,6 +58,9 @@ export function EditableBlock<TEditingState extends EditingState>({
       blockId={block.id}
       blockType={block.type}
       onEdit={resolvedEditingState ? undefined : onEditBlock}
+      onLongPress={resolvedEditingState ? undefined : onLongPressBlock}
+      activeLongPressBlockId={longPressBlockId}
+      onClearLongPress={clearLongPress}
       controls={controls}
       isActive={isEditing}
     >

@@ -1,4 +1,4 @@
-import { useCallback, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import Box from "@mui/material/Box";
 import IconButton from "@mui/material/IconButton";
 import Paper from "@mui/material/Paper";
@@ -30,6 +30,8 @@ type BlockInsertMenuProps = {
   ) => void;
   onOpenConversion?: (position: BlockInsertPosition) => void;
   conversionDisabled?: boolean;
+  visible?: boolean;
+  onRequestClose?: () => void;
 };
 
 export const BLOCK_INSERT_OPTIONS = [
@@ -64,6 +66,8 @@ export function BlockInsertMenu({
   onInsertBlock,
   onOpenConversion,
   conversionDisabled = false,
+  visible,
+  onRequestClose,
 }: BlockInsertMenuProps) {
   const [hovered, setHovered] = useState(false);
   const [expanded, setExpanded] = useState(false);
@@ -72,16 +76,25 @@ export function BlockInsertMenu({
     theme.breakpoints.down("sm"),
   );
 
-  const visible = isTouchViewport || hovered || expanded;
+  const computedVisible = visible ?? (isTouchViewport || hovered || expanded);
 
   const handleToggle = useCallback(() => {
-    setExpanded((current) => !current);
-  }, []);
+    setExpanded((current) => {
+      const next = !current;
+      if (!next) {
+        onRequestClose?.();
+      }
+      return next;
+    });
+  }, [onRequestClose]);
 
   const handleLeave = useCallback(() => {
     setHovered(false);
     setExpanded(false);
-  }, []);
+    if (isTouchViewport) {
+      onRequestClose?.();
+    }
+  }, [isTouchViewport, onRequestClose]);
 
   const handleFocusCapture = useCallback(() => {
     setExpanded(true);
@@ -100,9 +113,26 @@ export function BlockInsertMenu({
       }
 
       setExpanded(false);
+      if (isTouchViewport) {
+        onRequestClose?.();
+      }
     },
-    [hovered],
+    [hovered, isTouchViewport, onRequestClose],
   );
+
+  useEffect(() => {
+    if (visible === undefined) {
+      return;
+    }
+    if (!visible) {
+      setExpanded(false);
+      setHovered(false);
+      return;
+    }
+    if (isTouchViewport) {
+      setExpanded(true);
+    }
+  }, [visible, isTouchViewport]);
 
   const optionButtons = useMemo(() => {
     const blockButtons = BLOCK_INSERT_OPTIONS.map(({ type, label, Icon }) => (
@@ -112,6 +142,7 @@ export function BlockInsertMenu({
           onClick={() => {
             onInsertBlock?.(type, position);
             setExpanded(false);
+            onRequestClose?.();
           }}
           aria-label={label}
           sx={(theme: Theme) => ({
@@ -148,6 +179,7 @@ export function BlockInsertMenu({
               }
               onOpenConversion?.(position);
               setExpanded(false);
+              onRequestClose?.();
             }}
             aria-label="Pegar y convertir"
             disabled={conversionDisabled}
@@ -174,6 +206,7 @@ export function BlockInsertMenu({
 
   return (
     <Box
+      data-editor-block-insert-menu="true"
       ref={containerRef}
       onMouseEnter={() => setHovered(true)}
       onMouseLeave={handleLeave}
@@ -181,13 +214,20 @@ export function BlockInsertMenu({
       onBlurCapture={handleBlurCapture}
       sx={{
         width: "100%",
-        minHeight: {
-          xs: (theme) => theme.spacing(1.75),
-          sm: (theme) => theme.spacing(2.25),
-        },
-        display: "grid",
+        minHeight:
+          !isTouchViewport || computedVisible
+            ? {
+                xs: (theme) => theme.spacing(1.75),
+                sm: (theme) => theme.spacing(2.25),
+              }
+            : 0,
+        display:
+          isTouchViewport && !computedVisible
+            ? "none"
+            : "grid",
         placeItems: "center",
-        pointerEvents: "auto",
+        pointerEvents:
+          isTouchViewport && !computedVisible ? "none" : "auto",
       }}
     >
       <Paper
@@ -210,7 +250,8 @@ export function BlockInsertMenu({
             : "none",
           transition:
             "background-color 160ms ease, box-shadow 160ms ease, padding 160ms ease",
-          pointerEvents: visible ? "auto" : "none",
+          pointerEvents:
+            isTouchViewport && !computedVisible ? "none" : "auto",
         })}
       >
         {expanded ? (
@@ -221,10 +262,10 @@ export function BlockInsertMenu({
             aria-label="Mostrar tipos de bloque disponibles"
             onClick={handleToggle}
             sx={(theme: Theme) => ({
-              opacity: visible ? 0.96 : 0,
+              opacity: computedVisible ? 0.96 : 0,
               transition: "opacity 160ms ease",
               color: theme.palette.editor.blockMenuTrigger,
-              pointerEvents: visible ? "auto" : "none",
+              pointerEvents: computedVisible ? "auto" : "none",
               "&:hover": {
                 backgroundColor: theme.palette.editor.blockMenuHoverBg,
                 color: theme.palette.editor.blockMenuTriggerHover,

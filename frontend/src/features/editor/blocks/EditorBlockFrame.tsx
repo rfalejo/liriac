@@ -10,6 +10,7 @@ import {
   useMemo,
   useState,
   useEffect,
+  useRef,
 } from "react";
 import EditRoundedIcon from "@mui/icons-material/EditRounded";
 import type { components } from "../../../api/schema";
@@ -25,6 +26,9 @@ type EditorBlockFrameProps = {
   onEdit?: (blockId: string) => void;
   controls?: ReactNode;
   isActive?: boolean;
+  onLongPress?: (blockId: string) => void;
+  activeLongPressBlockId?: string | null;
+  onClearLongPress?: () => void;
   children: ReactNode;
 };
 
@@ -34,11 +38,15 @@ export function EditorBlockFrame({
   onEdit,
   controls,
   isActive = false,
+  onLongPress,
+  activeLongPressBlockId,
+  onClearLongPress,
   children,
 }: EditorBlockFrameProps) {
   const [focusWithin, setFocusWithin] = useState(false);
   const [hovered, setHovered] = useState(false);
   const [touchRevealed, setTouchRevealed] = useState(false);
+  const longPressTimerRef = useRef<number | null>(null);
 
   const showControls = useMemo(
     () => isActive || focusWithin || hovered || touchRevealed,
@@ -54,16 +62,61 @@ export function EditorBlockFrame({
     setTouchRevealed(false);
   }, [isActive]);
 
+  const clearLongPressTimer = useCallback(() => {
+    if (longPressTimerRef.current != null) {
+      window.clearTimeout(longPressTimerRef.current);
+      longPressTimerRef.current = null;
+    }
+  }, []);
+
   const handlePointerDown = useCallback<PointerEventHandler<HTMLDivElement>>(
     (event) => {
       if (event.pointerType !== "touch") return;
+
+      if (
+        activeLongPressBlockId &&
+        activeLongPressBlockId !== blockId &&
+        onClearLongPress
+      ) {
+        onClearLongPress();
+      }
 
       if (!touchRevealed) {
         event.preventDefault();
         setTouchRevealed(true);
       }
+
+      if (onLongPress) {
+        clearLongPressTimer();
+        longPressTimerRef.current = window.setTimeout(() => {
+          longPressTimerRef.current = null;
+          onLongPress(blockId);
+          setTouchRevealed(true);
+        }, 450);
+      }
     },
-    [touchRevealed],
+    [
+      activeLongPressBlockId,
+      blockId,
+      clearLongPressTimer,
+      onClearLongPress,
+      onLongPress,
+      touchRevealed,
+    ],
+  );
+
+  const handlePointerUp = useCallback(() => {
+    clearLongPressTimer();
+  }, [clearLongPressTimer]);
+
+  const handlePointerLeave = useCallback<PointerEventHandler<HTMLDivElement>>(
+    (event) => {
+      if (event.pointerType !== "touch") {
+        return;
+      }
+      clearLongPressTimer();
+    },
+    [clearLongPressTimer],
   );
 
   const handleBlurCapture = useCallback<FocusEventHandler<HTMLDivElement>>(
@@ -75,8 +128,11 @@ export function EditorBlockFrame({
       }
       setFocusWithin(false);
       setTouchRevealed(false);
+      if (onClearLongPress) {
+        onClearLongPress();
+      }
     },
-    [],
+    [onClearLongPress],
   );
 
   const handleEdit = useCallback<MouseEventHandler<HTMLButtonElement>>(
@@ -95,6 +151,9 @@ export function EditorBlockFrame({
       data-editor-block-id={blockId}
       data-editor-block-type={blockType}
       onPointerDown={handlePointerDown}
+      onPointerUp={handlePointerUp}
+      onPointerCancel={handlePointerUp}
+      onPointerLeave={handlePointerLeave}
       onFocusCapture={() => setFocusWithin(true)}
       onBlurCapture={handleBlurCapture}
       onMouseEnter={() => setHovered(true)}
@@ -149,6 +208,7 @@ export function EditorBlockFrame({
     >
       {children}
       <Box
+        data-editor-block-controls="true"
         sx={(theme: Theme) => ({
           position: "absolute",
           top: { xs: 8, sm: 12 },
