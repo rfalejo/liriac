@@ -1,4 +1,4 @@
-import { Fragment, useCallback } from "react";
+import { Fragment, useCallback, useMemo } from "react";
 import Box from "@mui/material/Box";
 import Stack from "@mui/material/Stack";
 import useMediaQuery from "@mui/material/useMediaQuery";
@@ -55,6 +55,31 @@ export function ChapterBlockList({
   const previewIndex = conversionDraft
     ? conversionDraft.position?.index ?? blockEntries.length
     : null;
+
+  const blockSpacingStyles = useMemo(() => {
+    return blockEntries.map((entry, index) => {
+      const previousEntry = index > 0 ? blockEntries[index - 1] : null;
+      const previousType = previousEntry?.type ?? null;
+      const isActive = entry.id === activeBlockId;
+      const previousIsActive = previousEntry?.id === activeBlockId;
+
+      let marginTop =
+        index === 0 ? 0 : getNarrativeBlockSpacing(previousType, entry.type);
+
+      if (isActive && index > 0) {
+        marginTop = Math.max(marginTop, 0.75);
+      }
+
+      if (previousIsActive) {
+        marginTop = Math.max(marginTop, 0.75);
+      }
+
+      return {
+        mt: marginTop,
+        mb: isActive ? 0.5 : 0,
+      };
+    });
+  }, [blockEntries, activeBlockId]);
 
   const renderPreview = (slotIndex: number) => {
     if (
@@ -139,29 +164,7 @@ export function ChapterBlockList({
         return (
           <Fragment key={entry.id}>
             {renderInsertSlot(insertPosition)}
-            <Box
-              sx={() => {
-                const previousEntry = index > 0 ? blockEntries[index - 1] : null;
-                const previousType = previousEntry?.type ?? null;
-                const isActive = entry.id === activeBlockId;
-                const previousIsActive = previousEntry?.id === activeBlockId;
-
-                let marginTop = index === 0 ? 0 : getNarrativeBlockSpacing(previousType, entry.type);
-
-                if (isActive && index > 0) {
-                  marginTop = Math.max(marginTop, 0.75);
-                }
-
-                if (previousIsActive) {
-                  marginTop = Math.max(marginTop, 0.75);
-                }
-
-                return {
-                  mt: marginTop,
-                  mb: isActive ? 0.5 : 0,
-                };
-              }}
-            >
+            <Box sx={blockSpacingStyles[index]}>
               {entry.node}
             </Box>
             {index === blockEntries.length - 1
