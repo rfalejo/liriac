@@ -12,6 +12,7 @@ import { ChapterErrorState } from "./chapter/ChapterErrorState";
 import { ChapterEmptyState } from "./chapter/ChapterEmptyState";
 import { ChapterHeading } from "./chapter/ChapterHeading";
 import { ChapterBlockList } from "./chapter/ChapterBlockList";
+import type { DraftBlockConversion } from "./hooks/useBlockConversion";
 
 type EditorChapterViewProps = {
   loading: boolean;
@@ -23,8 +24,13 @@ type EditorChapterViewProps = {
     blockType: ChapterBlockType,
     position: BlockInsertPosition,
   ) => void;
-  onOpenConversion?: () => void;
+  onOpenConversion?: (position: BlockInsertPosition) => void;
   conversionDisabled?: boolean;
+  conversionDraft?: DraftBlockConversion | null;
+  conversionApplying?: boolean;
+  conversionApplyError?: string | null;
+  onAcceptConversion?: () => void;
+  onRejectConversion?: () => void;
   editingState?: EditingState;
 };
 
@@ -37,6 +43,11 @@ export function EditorChapterView({
   onInsertBlock,
   onOpenConversion,
   conversionDisabled,
+  conversionDraft,
+  conversionApplying,
+  conversionApplyError,
+  onAcceptConversion,
+  onRejectConversion,
   editingState,
 }: EditorChapterViewProps) {
   const { blockEntries, hasChapterHeader } = useChapterBlocks(chapter);
@@ -71,6 +82,11 @@ export function EditorChapterView({
             onInsertBlock={onInsertBlock}
             onOpenConversion={onOpenConversion}
             conversionDisabled={conversionDisabled}
+            conversionDraft={conversionDraft}
+            conversionApplying={conversionApplying}
+            conversionApplyError={conversionApplyError}
+            onAcceptConversion={onAcceptConversion}
+            onRejectConversion={onRejectConversion}
           />
         ) : (
           <ChapterBlockList
@@ -78,6 +94,11 @@ export function EditorChapterView({
             onInsertBlock={onInsertBlock}
             onOpenConversion={onOpenConversion}
             conversionDisabled={conversionDisabled}
+            conversionDraft={conversionDraft}
+            conversionApplying={conversionApplying}
+            conversionApplyError={conversionApplyError}
+            onAcceptConversion={onAcceptConversion}
+            onRejectConversion={onRejectConversion}
           />
         )}
       </Fragment>

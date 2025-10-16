@@ -1,3 +1,4 @@
+import Box from "@mui/material/Box";
 import Button from "@mui/material/Button";
 import Stack from "@mui/material/Stack";
 import Typography from "@mui/material/Typography";
@@ -6,20 +7,32 @@ import type { Theme } from "@mui/material/styles";
 import type { BlockInsertPosition } from "../blocks/BlockInsertMenu";
 import { BLOCK_INSERT_OPTIONS } from "../blocks/BlockInsertMenu";
 import type { ChapterBlockType } from "../hooks/useChapterBlocks";
+import { DraftConversionPreview } from "../conversions/DraftConversionPreview";
+import type { DraftBlockConversion } from "../hooks/useBlockConversion";
 
 type ChapterEmptyStateProps = {
   onInsertBlock?: (
     blockType: ChapterBlockType,
     position: BlockInsertPosition,
   ) => void;
-  onOpenConversion?: () => void;
+  onOpenConversion?: (position: BlockInsertPosition) => void;
   conversionDisabled?: boolean;
+  conversionDraft?: DraftBlockConversion | null;
+  conversionApplying?: boolean;
+  conversionApplyError?: string | null;
+  onAcceptConversion?: () => void;
+  onRejectConversion?: () => void;
 };
 
 export function ChapterEmptyState({
   onInsertBlock,
   onOpenConversion,
   conversionDisabled = false,
+  conversionDraft,
+  conversionApplying,
+  conversionApplyError,
+  onAcceptConversion,
+  onRejectConversion,
 }: ChapterEmptyStateProps) {
   const handleInsert = (blockType: ChapterBlockType) => {
     onInsertBlock?.(blockType, {
@@ -28,6 +41,12 @@ export function ChapterEmptyState({
       index: 0,
     });
   };
+
+  const handleOpenConversion = () => {
+    onOpenConversion?.({ afterBlockId: null, beforeBlockId: null, index: 0 });
+  };
+
+  const draft = conversionDraft ?? null;
 
   return (
     <Stack spacing={1.5} alignItems="flex-start">
@@ -47,7 +66,7 @@ export function ChapterEmptyState({
             variant="contained"
             size="small"
             startIcon={<ContentPasteRoundedIcon fontSize="small" />}
-            onClick={onOpenConversion}
+            onClick={handleOpenConversion}
             disabled={conversionDisabled}
           >
             Pegar y convertir
@@ -65,6 +84,27 @@ export function ChapterEmptyState({
           </Button>
         ))}
       </Stack>
+
+      {draft ? (
+        <Box
+          sx={(theme) => ({
+            width: "100%",
+            mt: { xs: theme.spacing(2), sm: theme.spacing(2.5) },
+          })}
+        >
+          <DraftConversionPreview
+            blocks={draft.blocks}
+            onAccept={() => {
+              onAcceptConversion?.();
+            }}
+            onReject={() => {
+              onRejectConversion?.();
+            }}
+            accepting={Boolean(conversionApplying)}
+            error={conversionApplyError ?? null}
+          />
+        </Box>
+  ) : null}
     </Stack>
   );
 }

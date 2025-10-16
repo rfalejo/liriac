@@ -9,12 +9,14 @@ import {
   applyBlockConversion,
   requestBlockConversion,
 } from "../../../api/chapters";
+import type { BlockInsertPosition } from "../blocks/BlockInsertMenu";
 import { chapterQueryKeys } from "../../library/libraryQueryKeys";
 
 export type DraftBlockConversion = {
   conversionId: string;
   blocks: BlockConversionBlock[];
   sourceText: string;
+  position: BlockInsertPosition | null;
 };
 
 export type UseBlockConversionState = {
@@ -27,7 +29,7 @@ export type UseBlockConversionState = {
   applyPending: boolean;
   applyError: string | null;
   canOpenDialog: boolean;
-  openDialog: () => void;
+  openDialog: (position?: BlockInsertPosition) => void;
   closeDialog: () => void;
   setConversionText: (value: string) => void;
   submitConversion: () => Promise<void>;
@@ -60,6 +62,7 @@ export function useBlockConversion({
   const [conversionError, setConversionError] = useState<string | null>(null);
   const [applyPending, setApplyPending] = useState(false);
   const [applyError, setApplyError] = useState<string | null>(null);
+  const [pendingPosition, setPendingPosition] = useState<BlockInsertPosition | null>(null);
 
   useEffect(() => {
     setDraft(null);
@@ -69,17 +72,24 @@ export function useBlockConversion({
     setApplyPending(false);
     setDialogOpen(false);
     setConversionText("");
+    setPendingPosition(null);
   }, [chapterId]);
 
   const canOpenDialog = Boolean(chapterId) && !applyPending;
 
-  const openDialog = useCallback(() => {
+  const openDialog = useCallback(
+    (position?: BlockInsertPosition) => {
     if (!canOpenDialog) {
       return;
     }
     setConversionError(null);
+      if (position) {
+        setPendingPosition(position);
+      }
     setDialogOpen(true);
-  }, [canOpenDialog]);
+    },
+    [canOpenDialog],
+  );
 
   const closeDialog = useCallback(() => {
     setDialogOpen(false);
@@ -116,7 +126,9 @@ export function useBlockConversion({
         conversionId: response.conversionId,
         blocks: response.blocks,
         sourceText: conversionText,
+        position: pendingPosition,
       });
+      setPendingPosition(pendingPosition);
       setDialogOpen(false);
       setApplyError(null);
     } catch (error) {
@@ -124,7 +136,32 @@ export function useBlockConversion({
     } finally {
       setConversionPending(false);
     }
-  }, [chapterId, conversionText, trimmedText, conversionPending, applyPending]);
+  }, [chapterId, conversionText, trimmedText, conversionPending, applyPending, pendingPosition]);
+
+  const resolvePlacement = useCallback(
+    (position: BlockInsertPosition | null) => {
+      if (!position) {
+        return { placement: "append" as const, anchorBlockId: undefined };
+      }
+
+      if (position.beforeBlockId) {
+        return {
+          placement: "before" as const,
+          anchorBlockId: position.beforeBlockId,
+        };
+      }
+
+      if (position.afterBlockId) {
+        return {
+          placement: "after" as const,
+          anchorBlockId: position.afterBlockId,
+        };
+      }
+
+      return { placement: "append" as const, anchorBlockId: undefined };
+    },
+    [],
+  );
 
   const acceptDraft = useCallback(async () => {
     if (!chapterId || !draft || applyPending) {
@@ -135,20 +172,23 @@ export function useBlockConversion({
     setApplyError(null);
 
     try {
+      const { placement, anchorBlockId } = resolvePlacement(draft.position);
       const updatedChapter: ChapterDetail = await applyBlockConversion({
         conversionId: draft.conversionId,
-        placement: "append",
+        placement,
+        anchorBlockId,
       });
 
       queryClient.setQueryData(chapterQueryKeys.detail(chapterId), updatedChapter);
       setDraft(null);
       setConversionText("");
+      setPendingPosition(null);
     } catch (error) {
       setApplyError(getErrorMessage(error));
     } finally {
       setApplyPending(false);
     }
-  }, [chapterId, draft, applyPending, queryClient]);
+  }, [chapterId, draft, applyPending, queryClient, resolvePlacement]);
 
   const rejectDraft = useCallback(() => {
     if (!draft) {
@@ -157,6 +197,7 @@ export function useBlockConversion({
     setDraft(null);
     setApplyError(null);
     setConversionError(null);
+    setPendingPosition(draft.position ?? null);
     setDialogOpen(true);
   }, [draft]);
 

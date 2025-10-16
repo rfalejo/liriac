@@ -11,6 +11,8 @@ import {
 } from "../blocks/BlockInsertMenu";
 import { getNarrativeBlockSpacing } from "../utils/blockSpacing";
 import { useEditorBlockEditing } from "../context/EditorBlockEditingContext";
+import { DraftConversionPreview } from "../conversions/DraftConversionPreview";
+import type { DraftBlockConversion } from "../hooks/useBlockConversion";
 
 export type ChapterBlockListProps = {
   blockEntries: ChapterBlockEntry[];
@@ -18,8 +20,13 @@ export type ChapterBlockListProps = {
     blockType: ChapterBlockType,
     position: BlockInsertPosition,
   ) => void;
-  onOpenConversion?: () => void;
+  onOpenConversion?: (position: BlockInsertPosition) => void;
   conversionDisabled?: boolean;
+  conversionDraft?: DraftBlockConversion | null;
+  conversionApplying?: boolean;
+  conversionApplyError?: string | null;
+  onAcceptConversion?: () => void;
+  onRejectConversion?: () => void;
 };
 
 export function ChapterBlockList({
@@ -27,6 +34,11 @@ export function ChapterBlockList({
   onInsertBlock,
   onOpenConversion,
   conversionDisabled,
+  conversionDraft,
+  conversionApplying,
+  conversionApplyError,
+  onAcceptConversion,
+  onRejectConversion,
 }: ChapterBlockListProps) {
   const { editingState } = useEditorBlockEditing();
   const activeBlockId = editingState?.blockId ?? null;
@@ -34,6 +46,60 @@ export function ChapterBlockList({
   if (blockEntries.length === 0) {
     return null;
   }
+
+  const previewIndex = conversionDraft
+    ? conversionDraft.position?.index ?? blockEntries.length
+    : null;
+
+  const renderPreview = (slotIndex: number) => {
+    if (
+      conversionDraft == null ||
+      previewIndex == null ||
+      previewIndex !== slotIndex
+    ) {
+      return null;
+    }
+
+    return (
+      <Box
+        sx={(theme) => ({
+          width: "100%",
+          mt: { xs: theme.spacing(1.5), sm: theme.spacing(2) },
+          mb: { xs: theme.spacing(1.5), sm: theme.spacing(2) },
+        })}
+      >
+        <DraftConversionPreview
+          blocks={conversionDraft.blocks}
+          onAccept={() => {
+            onAcceptConversion?.();
+          }}
+          onReject={() => {
+            onRejectConversion?.();
+          }}
+          accepting={Boolean(conversionApplying)}
+          error={conversionApplyError ?? null}
+        />
+      </Box>
+    );
+  };
+
+  const renderInsertSlot = (position: BlockInsertPosition) => {
+    if (!onInsertBlock) {
+      return renderPreview(position.index);
+    }
+
+    return (
+      <Fragment>
+        <BlockInsertMenu
+          position={position}
+          onInsertBlock={onInsertBlock}
+          onOpenConversion={onOpenConversion}
+          conversionDisabled={conversionDisabled}
+        />
+        {renderPreview(position.index)}
+      </Fragment>
+    );
+  };
 
   return (
     <Stack spacing={0}>
@@ -46,14 +112,7 @@ export function ChapterBlockList({
 
         return (
           <Fragment key={entry.id}>
-            {onInsertBlock ? (
-              <BlockInsertMenu
-                position={insertPosition}
-                onInsertBlock={onInsertBlock}
-                onOpenConversion={onOpenConversion}
-                conversionDisabled={conversionDisabled}
-              />
-            ) : null}
+            {renderInsertSlot(insertPosition)}
             <Box
               sx={() => {
                 const previousEntry = index > 0 ? blockEntries[index - 1] : null;
@@ -79,18 +138,13 @@ export function ChapterBlockList({
             >
               {entry.node}
             </Box>
-            {onInsertBlock && index === blockEntries.length - 1 ? (
-              <BlockInsertMenu
-                position={{
+            {index === blockEntries.length - 1
+              ? renderInsertSlot({
                   afterBlockId: entry.id,
                   beforeBlockId: null,
                   index: index + 1,
-                }}
-                onInsertBlock={onInsertBlock}
-                onOpenConversion={onOpenConversion}
-                conversionDisabled={conversionDisabled}
-              />
-            ) : null}
+                })
+              : null}
           </Fragment>
         );
       })}

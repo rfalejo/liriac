@@ -1,5 +1,4 @@
 import { useCallback, useEffect, useRef } from "react";
-import Stack from "@mui/material/Stack";
 import type { components } from "../../api/schema";
 import { useEditorScrollbar } from "./hooks/useEditorScrollbar";
 import { useEditorChapterNavigation } from "./hooks/useEditorChapterNavigation";
@@ -23,7 +22,7 @@ import {
 import { ContextConfigurationPanel } from "./contextPanel";
 import { usePinnedHoverPanel } from "./hooks/usePinnedHoverPanel";
 import { useBlockConversion } from "./hooks/useBlockConversion";
-import { DraftConversionPreview } from "./conversions/DraftConversionPreview";
+import type { BlockInsertPosition } from "./blocks/BlockInsertMenu";
 import { BlockConversionDialog } from "./conversions/BlockConversionDialog";
 
 type ChapterBlockType = components["schemas"]["ChapterBlockTypeEnum"];
@@ -229,20 +228,6 @@ export function EditorContainer({
     mutationPending ||
     !chapter?.id;
 
-  const chapterTopSlot = chapter && conversionDraft ? (
-    <Stack spacing={2.5}>
-      <DraftConversionPreview
-        blocks={conversionDraft.blocks}
-        onAccept={() => {
-          void acceptDraft();
-        }}
-        onReject={rejectDraft}
-        accepting={conversionApplying}
-        error={conversionApplyError}
-      />
-    </Stack>
-  ) : null;
-
   return (
     <EditorShell
       sidebarProps={{
@@ -274,11 +259,20 @@ export function EditorContainer({
         onInsertBlock: handleInsertBlock,
         onOpenConversion: conversionActionsDisabled
           ? undefined
-          : openConversionDialog,
+          : (position: BlockInsertPosition) => {
+              openConversionDialog(position);
+            },
         conversionDisabled: conversionActionsDisabled,
+        conversionDraft,
+        conversionApplying,
+        conversionApplyError,
+        onAcceptConversion: () => {
+          void acceptDraft();
+        },
+        onRejectConversion: rejectDraft,
         editingState,
       }}
-      chapterTopSlot={chapterTopSlot}
+      chapterTopSlot={null}
       scrollAreaRef={scrollAreaRef}
       scrollHandlers={handlers}
       scrollbarState={scrollbarState}

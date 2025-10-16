@@ -28,7 +28,7 @@ type BlockInsertMenuProps = {
     blockType: ChapterBlockType,
     position: BlockInsertPosition,
   ) => void;
-  onOpenConversion?: () => void;
+  onOpenConversion?: (position: BlockInsertPosition) => void;
   conversionDisabled?: boolean;
 };
 
@@ -146,7 +146,7 @@ export function BlockInsertMenu({
               if (conversionDisabled) {
                 return;
               }
-              onOpenConversion();
+              onOpenConversion?.(position);
               setExpanded(false);
             }}
             aria-label="Pegar y convertir"
