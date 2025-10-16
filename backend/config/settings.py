@@ -79,6 +79,7 @@ TEMPLATES = [
 ]
 
 WSGI_APPLICATION = "config.wsgi.application"
+ASGI_APPLICATION = "config.asgi.application"
 
 
 # Database
@@ -170,7 +171,19 @@ SPECTACULAR_SETTINGS = {
 CORS_ALLOWED_ORIGINS = [
     "http://localhost:5173",
     "http://127.0.0.1:5173",
-    "http://192.168.1.10:5173"
+    "http://192.168.1.10:5173",
+    "https://localhost:5173",
+    "https://127.0.0.1:5173",
+    "https://192.168.1.10:5173",
+]
+
+CSRF_TRUSTED_ORIGINS = [
+    "http://localhost:5173",
+    "http://127.0.0.1:5173",
+    "http://192.168.1.10:5173",
+    "https://localhost:5173",
+    "https://127.0.0.1:5173",
+    "https://192.168.1.10:5173",
 ]
 
 CORS_ALLOW_CREDENTIALS = True

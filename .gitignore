@@ -223,3 +223,8 @@ docs/reviews*
 
 # Logs
 **/logs/*
+
+# Local TLS certificates
+backend/certs/*.crt
+backend/certs/*.key
+backend/certs/*.pem

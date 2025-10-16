@@ -27,12 +27,13 @@
     "@types/react-dom": "^18.3.3",
     "@typescript-eslint/eslint-plugin": "^8.46.0",
     "@typescript-eslint/parser": "^8.46.0",
-    "@vitejs/plugin-react": "^4.3.1",
+    "@vitejs/plugin-basic-ssl": "^2.1.0",
+    "@vitejs/plugin-react": "^5.0.4",
     "eslint": "^9.37.0",
     "openapi-typescript": "^7.9.1",
     "prettier": "^3.3.3",
     "typescript": "^5.4.5",
     "typescript-eslint": "^8.46.0",
-    "vite": "^5.2.10"
+    "vite": "^7.1.10"
   }
 }
