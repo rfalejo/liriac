@@ -1,4 +1,4 @@
-import { Fragment, useCallback, useEffect, useMemo, useState } from "react";
+import { Fragment, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import useMediaQuery from "@mui/material/useMediaQuery";
 import { useTheme } from "@mui/material/styles";
 import type { ChapterDetail } from "../../api/chapters";
@@ -56,12 +56,57 @@ export function EditorChapterView({
   const theme = useTheme();
   const isTouchViewport = useMediaQuery(theme.breakpoints.down("sm"));
   const [longPressBlockId, setLongPressBlockId] = useState<string | null>(null);
+  const previousUserSelectRef = useRef<{
+    userSelect: string;
+    webkitUserSelect: string;
+  } | null>(null);
 
   useEffect(() => {
     if (!isTouchViewport) {
       setLongPressBlockId(null);
+      if (previousUserSelectRef.current) {
+        const bodyStyle = document.body.style;
+        bodyStyle.setProperty("user-select", previousUserSelectRef.current.userSelect);
+        bodyStyle.setProperty("-webkit-user-select", previousUserSelectRef.current.webkitUserSelect);
+        previousUserSelectRef.current = null;
+      }
     }
   }, [isTouchViewport]);
+
+  useEffect(() => {
+    if (!isTouchViewport) {
+      return;
+    }
+
+    if (longPressBlockId) {
+      const bodyStyle = document.body.style;
+      if (!previousUserSelectRef.current) {
+        previousUserSelectRef.current = {
+          userSelect: bodyStyle.getPropertyValue("user-select"),
+          webkitUserSelect: bodyStyle.getPropertyValue("-webkit-user-select"),
+        };
+      }
+
+      bodyStyle.setProperty("user-select", "none");
+      bodyStyle.setProperty("-webkit-user-select", "none");
+    } else if (previousUserSelectRef.current) {
+      const bodyStyle = document.body.style;
+      bodyStyle.setProperty("user-select", previousUserSelectRef.current.userSelect);
+      bodyStyle.setProperty("-webkit-user-select", previousUserSelectRef.current.webkitUserSelect);
+      previousUserSelectRef.current = null;
+    }
+  }, [isTouchViewport, longPressBlockId]);
+
+  useEffect(() => {
+    return () => {
+      if (previousUserSelectRef.current) {
+        const bodyStyle = document.body.style;
+        bodyStyle.setProperty("user-select", previousUserSelectRef.current.userSelect);
+        bodyStyle.setProperty("-webkit-user-select", previousUserSelectRef.current.webkitUserSelect);
+        previousUserSelectRef.current = null;
+      }
+    };
+  }, []);
 
   useEffect(() => {
     if (!isTouchViewport) {
@@ -73,10 +118,13 @@ export function EditorChapterView({
       if (!target) {
         return;
       }
-      if (target.closest("[data-editor-block-insert-menu='true']")) {
+      if (target.closest("[data-editor-block-id]")) {
         return;
       }
-      if (target.closest("[data-editor-block-id]") || target.closest("[data-editor-block-controls]") ) {
+      if (target.closest("[data-editor-block-controls='true']")) {
+        return;
+      }
+      if (target.closest("[data-editor-block-insert-menu='true']")) {
         return;
       }
       setLongPressBlockId(null);
