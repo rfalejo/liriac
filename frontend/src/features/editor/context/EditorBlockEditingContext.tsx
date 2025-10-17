@@ -2,9 +2,7 @@ import {
   createContext,
   useCallback,
   useContext,
-  useEffect,
   useMemo,
-  useRef,
   useSyncExternalStore,
   type ReactNode,
 } from "react";
@@ -34,9 +32,7 @@ import type {
 import { useBlockVersionController } from "../hooks/editing/useBlockVersionController";
 
 type EditorBlockEditingContextValue = {
-  subscribe: (listener: () => void) => () => void;
-  getSnapshot: () => EditingState | undefined;
-  getBlockSnapshot: (blockId: string) => EditingState | undefined;
+  editingState: EditingState | undefined;
   onEditBlock: (blockId: string) => void;
   onLongPressBlock?: (blockId: string) => void;
   longPressBlockId?: string | null;
@@ -281,9 +277,6 @@ export function EditorBlockEditingProvider({
   longPressBlockId,
   clearLongPress,
 }: EditorBlockEditingProviderProps) {
-  const editingStateRef = useRef<EditingState | undefined>(undefined);
-  const listenersRef = useRef(new Set<() => void>());
-
   const subscribeToStore = useCallback(
     (listener: () => void) => (store ? store.subscribe(listener) : () => {}),
     [store],
@@ -331,44 +324,16 @@ export function EditorBlockEditingProvider({
     return buildEditingState(store, storeSnapshot, versioning ?? undefined);
   }, [store, storeSnapshot, versioning]);
 
-  useEffect(() => {
-    editingStateRef.current = editingState;
-    listenersRef.current.forEach((listener) => {
-      listener();
-    });
-  }, [editingState]);
-
-  const subscribe = useCallback((listener: () => void) => {
-    listenersRef.current.add(listener);
-    return () => {
-      listenersRef.current.delete(listener);
-    };
-  }, []);
-
-  const getSnapshot = useCallback(() => editingStateRef.current, []);
-
-  const getBlockSnapshot = useCallback(
-    (blockId: string) => {
-      const current = editingStateRef.current;
-      return current?.blockId === blockId ? current : undefined;
-    },
-    [],
-  );
-
   const contextValue = useMemo<EditorBlockEditingContextValue>(
     () => ({
-      subscribe,
-      getSnapshot,
-      getBlockSnapshot,
+      editingState,
       onEditBlock,
       onLongPressBlock,
       longPressBlockId,
       clearLongPress,
     }),
     [
-      subscribe,
-      getSnapshot,
-      getBlockSnapshot,
+      editingState,
       onEditBlock,
       onLongPressBlock,
       longPressBlockId,
@@ -392,22 +357,16 @@ export function useEditorBlockEditing(blockId?: string) {
     );
   }
 
-  const { subscribe, getSnapshot, getBlockSnapshot, ...rest } = context;
+  const { editingState, ...rest } = context;
 
-  const snapshotFn = useCallback(
-    () => (blockId ? getBlockSnapshot(blockId) : getSnapshot()),
-    [blockId, getBlockSnapshot, getSnapshot],
-  );
-
-  const serverSnapshotFn = useCallback(
-    () => (blockId ? getBlockSnapshot(blockId) : getSnapshot()),
-    [blockId, getBlockSnapshot, getSnapshot],
-  );
-
-  const editingState = useSyncExternalStore(subscribe, snapshotFn, serverSnapshotFn);
+  const scopedEditingState = blockId
+    ? editingState && editingState.blockId === blockId
+      ? editingState
+      : undefined
+    : editingState;
 
   return {
-    editingState,
+    editingState: scopedEditingState,
     ...rest,
   };
 }

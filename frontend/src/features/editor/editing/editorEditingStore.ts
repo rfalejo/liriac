@@ -67,11 +67,8 @@ export type MetadataSessionState = {
   baselineKind: MetadataKindOption;
 };
 
-type EditorEditingInternalState = {
+type EditorEditingInternalState = EditorEditingStoreSnapshot & {
   chapterId: string | null;
-  activeSession: InternalSessionState | null;
-  isUpdatePending: boolean;
-  isDeletePending: boolean;
 };
 
 type BlockResolver = (blockId: string) => ChapterBlock | null;
@@ -297,11 +294,7 @@ export class EditorEditingStore {
   }
 
   getSnapshot(): EditorEditingStoreSnapshot {
-    return {
-      activeSession: this.state.activeSession,
-      isUpdatePending: this.state.isUpdatePending,
-      isDeletePending: this.state.isDeletePending,
-    } satisfies EditorEditingStoreSnapshot;
+    return this.state;
   }
 
   subscribe(listener: () => void): () => void {
