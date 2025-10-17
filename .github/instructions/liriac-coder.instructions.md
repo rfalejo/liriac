@@ -95,6 +95,8 @@ When planning a big change, you can use the following tools:
 \-- instructions/
     \-- liriac-coder.instructions.md
 backend/
+|-- certs/
+|   \-- .gitkeep
 |-- config/
 |   |-- __init__.py
 |   |-- asgi.py
@@ -110,7 +112,8 @@ backend/
 |   |   |-- chapters.py
 |   |   |-- context.py
 |   |   |-- conversions.py
-|   |   \-- editor.py
+|   |   |-- editor.py
+|   |   \-- generation.py
 |   |-- migrations/
 |   |   |-- 0001_initial.py
 |   |   |-- 0002_load_sample_data.py
@@ -191,7 +194,8 @@ frontend/
 |   |   |   |   \-- ChapterLoadingState.tsx
 |   |   |   |-- components/
 |   |   |   |   |-- ConfirmationDialog.tsx
-|   |   |   |   \-- HoverableSidePanel.tsx
+|   |   |   |   |-- HoverableSidePanel.tsx
+|   |   |   |   \-- QuickActionsDrawer.tsx
 |   |   |   |-- context/
 |   |   |   |   \-- EditorBlockEditingContext.tsx
 |   |   |   |-- contextPanel/
@@ -201,18 +205,17 @@ frontend/
 |   |   |   |   |-- BlockConversionDialog.tsx
 |   |   |   |   |-- BlockConversionToolbar.tsx
 |   |   |   |   \-- DraftConversionPreview.tsx
+|   |   |   |-- editing/
+|   |   |   |   |-- editorEditingStore.ts
+|   |   |   |   |-- paragraphSuggestions.ts
+|   |   |   |   |-- paragraphSuggestions.types.ts
+|   |   |   |   |-- payloadBuilders.ts
+|   |   |   |   |-- sessionBuilders.ts
+|   |   |   |   \-- sessionTypes.ts
 |   |   |   |-- hooks/
 |   |   |   |   |-- editing/
-|   |   |   |   |   |-- constants.ts
-|   |   |   |   |   |-- createBlockEditingState.ts
 |   |   |   |   |   |-- types.ts
-|   |   |   |   |   |-- useBlockVersionController.ts
-|   |   |   |   |   |-- useDialogueBlockEditingSession.ts
-|   |   |   |   |   |-- useEditingBlockManager.ts
-|   |   |   |   |   |-- useMetadataBlockEditingSession.ts
-|   |   |   |   |   |-- useParagraphBlockEditingSession.ts
-|   |   |   |   |   |-- useParagraphSuggestionController.ts
-|   |   |   |   |   \-- useSceneBoundaryBlockEditingSession.ts
+|   |   |   |   |   \-- useBlockVersionController.ts
 |   |   |   |   |-- useBlockConversion.ts
 |   |   |   |   |-- useChapterBlockSelectors.ts
 |   |   |   |   |-- useChapterBlockVersions.ts
@@ -221,22 +224,20 @@ frontend/
 |   |   |   |   |-- useCreateChapterBlock.ts
 |   |   |   |   |-- useDeleteChapterBlock.ts
 |   |   |   |   |-- useDeleteChapterBlockVersion.ts
-|   |   |   |   |-- useDialogueEditingState.ts
+|   |   |   |   |-- useEditorBlockOperations.ts
 |   |   |   |   |-- useEditorChapterNavigation.ts
 |   |   |   |   |-- useEditorConfirmDialog.ts
-|   |   |   |   |-- useEditorEditingState.ts
 |   |   |   |   |-- useEditorScrollbar.ts
-|   |   |   |   |-- useMetadataEditingState.ts
-|   |   |   |   |-- useParagraphEditingState.ts
-|   |   |   |   |-- useParagraphSuggestionPromptRequest.ts
-|   |   |   |   |-- useParagraphSuggestionRequest.ts
 |   |   |   |   |-- usePinnedHoverPanel.ts
-|   |   |   |   |-- useSceneBoundaryEditingState.ts
+|   |   |   |   |-- useQuickActionsPanel.tsx
 |   |   |   |   \-- useUpdateChapterBlock.ts
 |   |   |   |-- sidebar/
 |   |   |   |   |-- SidebarChapterList.tsx
 |   |   |   |   |-- SidebarHeader.tsx
 |   |   |   |   \-- SidebarShell.tsx
+|   |   |   |-- suggestions/
+|   |   |   |   |-- GeneralSuggestionDialog.tsx
+|   |   |   |   \-- useGeneralSuggestion.ts
 |   |   |   |-- utils/
 |   |   |   |   |-- blockCreation.ts
 |   |   |   |   |-- blockSpacing.ts
@@ -307,7 +308,8 @@ frontend/
 scripts/
 |-- cat_backend_logs.sh
 |-- cat_frontend_logs.sh
-\-- generate_repo_tree.py
+|-- generate_repo_tree.py
+\-- run_backend_https.sh
 .gitignore
 README.md
 ```

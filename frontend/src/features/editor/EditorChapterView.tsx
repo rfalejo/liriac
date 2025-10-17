@@ -125,6 +125,9 @@ export function EditorChapterView({
       if (target.closest("[data-editor-block-controls='true']")) {
         return;
       }
+      if (target.closest("[data-editor-block-insert-slot='true']")) {
+        return;
+      }
       if (target.closest("[data-editor-block-insert-menu='true']")) {
         return;
       }

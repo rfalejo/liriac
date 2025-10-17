@@ -181,6 +181,7 @@ export function BlockInsertMenu({
     >
       <ClickAwayListener onClickAway={onClose}>
         <Paper
+          data-editor-block-insert-menu="true"
           elevation={0}
           sx={(theme: Theme) => ({
             display: "inline-flex",
