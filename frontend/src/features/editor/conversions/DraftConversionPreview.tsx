@@ -16,6 +16,10 @@ export type DraftConversionPreviewProps = {
   onReject: () => void;
   accepting: boolean;
   error?: string | null;
+  title?: string;
+  acceptLabel?: string;
+  acceptingLabel?: string;
+  rejectLabel?: string;
 };
 
 export function DraftConversionPreview({
@@ -24,7 +28,16 @@ export function DraftConversionPreview({
   onReject,
   accepting,
   error,
+  title,
+  acceptLabel,
+  acceptingLabel,
+  rejectLabel,
 }: DraftConversionPreviewProps) {
+  const resolvedTitle = title ?? "Borrador generado por IA";
+  const resolvedAcceptLabel = acceptLabel ?? "Aceptar conversión";
+  const resolvedAcceptingLabel = acceptingLabel ?? "Aceptando…";
+  const resolvedRejectLabel = rejectLabel ?? "Rechazar y editar";
+
   return (
     <Paper
       variant="outlined"
@@ -47,7 +60,7 @@ export function DraftConversionPreview({
         justifyContent="space-between"
       >
         <Typography variant="subtitle1" sx={{ fontWeight: 600 }}>
-          Borrador generado por IA
+          {resolvedTitle}
         </Typography>
         <Stack direction="row" spacing={1.5}>
           <Button
@@ -57,7 +70,7 @@ export function DraftConversionPreview({
             onClick={onReject}
             disabled={accepting}
           >
-            Rechazar y editar
+            {resolvedRejectLabel}
           </Button>
           <Button
             variant="contained"
@@ -66,7 +79,7 @@ export function DraftConversionPreview({
             onClick={onAccept}
             disabled={accepting}
           >
-            {accepting ? "Aceptando…" : "Aceptar conversión"}
+            {accepting ? resolvedAcceptingLabel : resolvedAcceptLabel}
           </Button>
         </Stack>
       </Stack>

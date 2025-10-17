@@ -16,6 +16,7 @@ import { ChapterHeading } from "./chapter/ChapterHeading";
 import { ChapterBlockList } from "./chapter/ChapterBlockList";
 import type { DraftBlockConversion } from "./hooks/useBlockConversion";
 import type { EditorEditingStore } from "./editing/editorEditingStore";
+import type { GeneralSuggestionDraft } from "./generalSuggestions/useGeneralSuggestion";
 
 type EditorChapterViewProps = {
   loading: boolean;
@@ -34,6 +35,11 @@ type EditorChapterViewProps = {
   conversionApplyError?: string | null;
   onAcceptConversion?: () => void;
   onRejectConversion?: () => void;
+  generalSuggestionDraft?: GeneralSuggestionDraft | null;
+  generalSuggestionApplying?: boolean;
+  generalSuggestionError?: string | null;
+  onAcceptGeneralSuggestion?: () => void;
+  onRejectGeneralSuggestion?: () => void;
   editingStore: EditorEditingStore | null;
 };
 
@@ -51,6 +57,11 @@ export function EditorChapterView({
   conversionApplyError,
   onAcceptConversion,
   onRejectConversion,
+  generalSuggestionDraft,
+  generalSuggestionApplying,
+  generalSuggestionError,
+  onAcceptGeneralSuggestion,
+  onRejectGeneralSuggestion,
   editingStore,
 }: EditorChapterViewProps) {
   const { blockEntries, hasChapterHeader } = useChapterBlocks(chapter);
@@ -215,6 +226,11 @@ export function EditorChapterView({
             conversionApplyError={conversionApplyError}
             onAcceptConversion={onAcceptConversion}
             onRejectConversion={onRejectConversion}
+            generalSuggestionDraft={generalSuggestionDraft}
+            generalSuggestionApplying={generalSuggestionApplying}
+            generalSuggestionError={generalSuggestionError}
+            onAcceptGeneralSuggestion={onAcceptGeneralSuggestion}
+            onRejectGeneralSuggestion={onRejectGeneralSuggestion}
           />
         ) : (
           <ChapterBlockList
@@ -227,6 +243,11 @@ export function EditorChapterView({
             conversionApplyError={conversionApplyError}
             onAcceptConversion={onAcceptConversion}
             onRejectConversion={onRejectConversion}
+            generalSuggestionDraft={generalSuggestionDraft}
+            generalSuggestionApplying={generalSuggestionApplying}
+            generalSuggestionError={generalSuggestionError}
+            onAcceptGeneralSuggestion={onAcceptGeneralSuggestion}
+            onRejectGeneralSuggestion={onRejectGeneralSuggestion}
           />
         )}
       </Fragment>

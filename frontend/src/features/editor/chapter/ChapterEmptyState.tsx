@@ -9,6 +9,7 @@ import { BLOCK_INSERT_OPTIONS } from "../blocks/BlockInsertMenu";
 import type { ChapterBlockType } from "../hooks/useChapterBlocks";
 import { DraftConversionPreview } from "../conversions/DraftConversionPreview";
 import type { DraftBlockConversion } from "../hooks/useBlockConversion";
+import type { GeneralSuggestionDraft } from "../generalSuggestions/useGeneralSuggestion";
 
 type ChapterEmptyStateProps = {
   onInsertBlock?: (
@@ -22,6 +23,11 @@ type ChapterEmptyStateProps = {
   conversionApplyError?: string | null;
   onAcceptConversion?: () => void;
   onRejectConversion?: () => void;
+  generalSuggestionDraft?: GeneralSuggestionDraft | null;
+  generalSuggestionApplying?: boolean;
+  generalSuggestionError?: string | null;
+  onAcceptGeneralSuggestion?: () => void;
+  onRejectGeneralSuggestion?: () => void;
 };
 
 export function ChapterEmptyState({
@@ -33,6 +39,11 @@ export function ChapterEmptyState({
   conversionApplyError,
   onAcceptConversion,
   onRejectConversion,
+  generalSuggestionDraft,
+  generalSuggestionApplying,
+  generalSuggestionError,
+  onAcceptGeneralSuggestion,
+  onRejectGeneralSuggestion,
 }: ChapterEmptyStateProps) {
   const handleInsert = (blockType: ChapterBlockType) => {
     onInsertBlock?.(blockType, {
@@ -46,7 +57,41 @@ export function ChapterEmptyState({
     onOpenConversion?.({ afterBlockId: null, beforeBlockId: null, index: 0 });
   };
 
-  const draft = conversionDraft ?? null;
+  const draft = generalSuggestionDraft ?? conversionDraft ?? null;
+  const draftType = generalSuggestionDraft
+    ? "general" as const
+    : conversionDraft
+      ? "conversion" as const
+      : null;
+
+  const acceptingState = draftType === "general"
+    ? Boolean(generalSuggestionApplying)
+    : Boolean(conversionApplying);
+
+  const previewError = draftType === "general"
+    ? generalSuggestionError ?? null
+    : conversionApplyError ?? null;
+
+  const handleAccept = () => {
+    if (draftType === "general") {
+      onAcceptGeneralSuggestion?.();
+      return;
+    }
+    onAcceptConversion?.();
+  };
+
+  const handleReject = () => {
+    if (draftType === "general") {
+      onRejectGeneralSuggestion?.();
+      return;
+    }
+    onRejectConversion?.();
+  };
+
+  const previewTitle = draftType === "general" ? "Sugerencia generada por IA" : undefined;
+  const acceptLabel = draftType === "general" ? "Insertar bloques" : undefined;
+  const acceptingLabel = draftType === "general" ? "Insertando…" : undefined;
+  const rejectLabel = draftType === "general" ? "Descartar sugerencia" : undefined;
 
   return (
     <Stack spacing={1.5} alignItems="flex-start">
@@ -94,14 +139,14 @@ export function ChapterEmptyState({
         >
           <DraftConversionPreview
             blocks={draft.blocks}
-            onAccept={() => {
-              onAcceptConversion?.();
-            }}
-            onReject={() => {
-              onRejectConversion?.();
-            }}
-            accepting={Boolean(conversionApplying)}
-            error={conversionApplyError ?? null}
+            onAccept={handleAccept}
+            onReject={handleReject}
+            accepting={acceptingState}
+            error={previewError}
+            title={previewTitle}
+            acceptLabel={acceptLabel}
+            acceptingLabel={acceptingLabel}
+            rejectLabel={rejectLabel}
           />
         </Box>
   ) : null}

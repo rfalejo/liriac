@@ -12,6 +12,8 @@ import type { BlockInsertPosition } from "./blocks/BlockInsertMenu";
 import { BlockConversionDialog } from "./conversions/BlockConversionDialog";
 import { useEditorBlockOperations } from "./hooks/useEditorBlockOperations";
 import { useQuickActionsPanel } from "./hooks/useQuickActionsPanel";
+import { useGeneralSuggestion } from "./generalSuggestions/useGeneralSuggestion";
+import { GeneralSuggestionDock } from "./generalSuggestions/GeneralSuggestionDock";
 
 
 type EditorContainerProps = {
@@ -99,11 +101,19 @@ export function EditorContainer({
     clearConversionError,
   } = useBlockConversion({ chapterId: chapter?.id });
 
+  const generalSuggestion = useGeneralSuggestion({
+    chapterId: chapter?.id,
+    chapter,
+  });
+
   const conversionActionsDisabled =
     !conversionCanOpenDialog ||
     conversionPending ||
     conversionApplying ||
     Boolean(conversionDraft) ||
+    generalSuggestion.requestPending ||
+    generalSuggestion.applyPending ||
+    Boolean(generalSuggestion.draft) ||
     mutationPending ||
     !chapter?.id;
 
@@ -151,6 +161,13 @@ export function EditorContainer({
             void acceptDraft();
           },
           onRejectConversion: rejectDraft,
+          generalSuggestionDraft: generalSuggestion.draft,
+          generalSuggestionApplying: generalSuggestion.applyPending,
+          generalSuggestionError: generalSuggestion.applyError,
+          onAcceptGeneralSuggestion: () => {
+            void generalSuggestion.acceptDraft();
+          },
+          onRejectGeneralSuggestion: generalSuggestion.rejectDraft,
           editingStore,
         }}
         chapterTopSlot={null}
@@ -202,6 +219,11 @@ export function EditorContainer({
           error={conversionError}
           onClearError={clearConversionError}
           canSubmit={canSubmitConversion && !conversionActionsDisabled}
+        />
+        <GeneralSuggestionDock
+          suggestion={generalSuggestion}
+          disabled={!open}
+          isChapterSelected={Boolean(chapter?.id)}
         />
         {quickActions.overlays}
       </EditorShell>

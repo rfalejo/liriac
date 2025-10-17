@@ -25,6 +25,7 @@ import { getNarrativeBlockSpacing } from "../utils/blockSpacing";
 import { useEditorBlockEditing } from "../context/EditorBlockEditingContext";
 import { DraftConversionPreview } from "../conversions/DraftConversionPreview";
 import type { DraftBlockConversion } from "../hooks/useBlockConversion";
+import type { GeneralSuggestionDraft } from "../generalSuggestions/useGeneralSuggestion";
 import MoreHorizRoundedIcon from "@mui/icons-material/MoreHorizRounded";
 import ExpandLessRoundedIcon from "@mui/icons-material/ExpandLessRounded";
 import ExpandMoreRoundedIcon from "@mui/icons-material/ExpandMoreRounded";
@@ -42,6 +43,11 @@ export type ChapterBlockListProps = {
   conversionApplyError?: string | null;
   onAcceptConversion?: () => void;
   onRejectConversion?: () => void;
+  generalSuggestionDraft?: GeneralSuggestionDraft | null;
+  generalSuggestionApplying?: boolean;
+  generalSuggestionError?: string | null;
+  onAcceptGeneralSuggestion?: () => void;
+  onRejectGeneralSuggestion?: () => void;
 };
 
 export function ChapterBlockList({
@@ -54,6 +60,11 @@ export function ChapterBlockList({
   conversionApplyError,
   onAcceptConversion,
   onRejectConversion,
+  generalSuggestionDraft,
+  generalSuggestionApplying,
+  generalSuggestionError,
+  onAcceptGeneralSuggestion,
+  onRejectGeneralSuggestion,
 }: ChapterBlockListProps) {
   const { editingState, longPressBlockId, clearLongPress } = useEditorBlockEditing();
   const isTouchViewport = useMediaQuery((theme: Theme) =>
@@ -71,9 +82,45 @@ export function ChapterBlockList({
     return null;
   }
 
-  const previewIndex = conversionDraft
-    ? conversionDraft.position?.index ?? blockEntries.length
+  const previewDraft = generalSuggestionDraft ?? conversionDraft ?? null;
+  const previewType = generalSuggestionDraft
+    ? "general" as const
+    : conversionDraft
+      ? "conversion" as const
+      : null;
+
+  const previewIndex = previewDraft
+    ? previewDraft.position?.index ?? blockEntries.length
     : null;
+
+  const previewApplying = previewType === "general"
+    ? Boolean(generalSuggestionApplying)
+    : Boolean(conversionApplying);
+
+  const previewError = previewType === "general"
+    ? generalSuggestionError ?? null
+    : conversionApplyError ?? null;
+
+  const handleAcceptPreview = useCallback(() => {
+    if (previewType === "general") {
+      onAcceptGeneralSuggestion?.();
+      return;
+    }
+    onAcceptConversion?.();
+  }, [onAcceptConversion, onAcceptGeneralSuggestion, previewType]);
+
+  const handleRejectPreview = useCallback(() => {
+    if (previewType === "general") {
+      onRejectGeneralSuggestion?.();
+      return;
+    }
+    onRejectConversion?.();
+  }, [onRejectConversion, onRejectGeneralSuggestion, previewType]);
+
+  const previewTitle = previewType === "general" ? "Sugerencia generada por IA" : undefined;
+  const previewAcceptLabel = previewType === "general" ? "Insertar bloques" : undefined;
+  const previewAcceptingLabel = previewType === "general" ? "Insertando…" : undefined;
+  const previewRejectLabel = previewType === "general" ? "Descartar sugerencia" : undefined;
 
   const blockSpacingStyles = useMemo(() => {
     return blockEntries.map((entry, index) => {
@@ -102,7 +149,7 @@ export function ChapterBlockList({
 
   const renderPreview = (slotIndex: number) => {
     if (
-      conversionDraft == null ||
+      previewDraft == null ||
       previewIndex == null ||
       previewIndex !== slotIndex
     ) {
@@ -118,15 +165,15 @@ export function ChapterBlockList({
         })}
       >
         <DraftConversionPreview
-          blocks={conversionDraft.blocks}
-          onAccept={() => {
-            onAcceptConversion?.();
-          }}
-          onReject={() => {
-            onRejectConversion?.();
-          }}
-          accepting={Boolean(conversionApplying)}
-          error={conversionApplyError ?? null}
+            blocks={previewDraft.blocks}
+            onAccept={handleAcceptPreview}
+            onReject={handleRejectPreview}
+            accepting={previewApplying}
+            error={previewError}
+            title={previewTitle}
+            acceptLabel={previewAcceptLabel}
+            acceptingLabel={previewAcceptingLabel}
+            rejectLabel={previewRejectLabel}
         />
       </Box>
     );
