@@ -7,7 +7,6 @@ import {
   useEditorConfirmDialog,
   type ConfirmDialogState,
 } from "./useEditorConfirmDialog";
-import { useEditorEditingState } from "./useEditorEditingState";
 import { useUpdateChapterBlock } from "./useUpdateChapterBlock";
 import type { EditingDiscardContext } from "./editing/types";
 import {
@@ -17,6 +16,8 @@ import {
 } from "../utils/blockCreation";
 import { showBlockUpdateErrorToast } from "../utils/showBlockUpdateErrorToast";
 import type { BlockInsertPosition } from "../blocks/BlockInsertMenu";
+import { EditorEditingStore } from "../editing/editorEditingStore";
+import { useChapterBlockSelectors } from "./useChapterBlockSelectors";
 
 type ChapterBlockType = components["schemas"]["ChapterBlockTypeEnum"];
 
@@ -25,8 +26,8 @@ type UseEditorBlockOperationsParams = {
 };
 
 type UseEditorBlockOperationsResult = {
-  editingState?: ReturnType<typeof useEditorEditingState>["editingState"];
-  handleEditBlock: ReturnType<typeof useEditorEditingState>["handleEditBlock"];
+  editingStore: EditorEditingStore | null;
+  handleEditBlock: (blockId: string) => void;
   handleInsertBlock: (
     blockType: ChapterBlockType,
     position: BlockInsertPosition,
@@ -55,6 +56,8 @@ export function useEditorBlockOperations({
   const { deleteBlock, isPending: blockDeletePending } = useDeleteChapterBlock({
     chapterId,
   });
+
+  const { getBlockById } = useChapterBlockSelectors(chapter);
 
   const blockMutationPending = blockUpdatePending || blockCreatePending;
   const mutationPending = blockMutationPending || blockDeletePending;
@@ -126,19 +129,57 @@ export function useEditorBlockOperations({
     [deleteBlock],
   );
 
-  const { editingState, handleEditBlock } = useEditorEditingState({
-    chapter,
-    updateBlock,
-    deleteBlock: deleteBlockById,
-    blockUpdatePending: blockMutationPending,
-    blockDeletePending,
-    sideEffects: {
-      confirmDiscardChanges,
-      confirmDeleteBlock,
-      confirmDeleteBlockVersion,
-      notifyUpdateFailure,
+  const blockResolver = useCallback(
+    (blockId: string) => getBlockById(blockId),
+    [getBlockById],
+  );
+
+  const storeRef = useRef<{ store: EditorEditingStore; chapterId: string | null } | null>(null);
+
+  if (!storeRef.current || storeRef.current.chapterId !== chapterId) {
+    storeRef.current = {
+      chapterId,
+      store: new EditorEditingStore({
+        chapterId,
+        blockResolver,
+        updateBlock,
+        deleteBlock: deleteBlockById,
+        sideEffects: {
+          confirmDiscardChanges,
+          confirmDeleteBlock,
+          confirmDeleteBlockVersion,
+          notifyUpdateFailure,
+        },
+      }),
+    };
+  } else {
+    storeRef.current.store.setBlockResolver(blockResolver);
+    storeRef.current.store.updateChapterId(chapterId);
+  }
+
+  const editingStore = storeRef.current.store;
+
+  useEffect(() => {
+    editingStore.setBlockResolver(blockResolver);
+  }, [blockResolver, editingStore]);
+
+  useEffect(() => {
+    editingStore.setMutationState({
+      updatePending: blockMutationPending,
+      deletePending: blockDeletePending,
+    });
+  }, [blockDeletePending, blockMutationPending, editingStore]);
+
+  useEffect(() => {
+    editingStore.syncActiveSession();
+  }, [editingStore, chapter]);
+
+  const handleEditBlock = useCallback(
+    (blockId: string) => {
+      editingStore.startEditing(blockId);
     },
-  });
+    [editingStore],
+  );
 
   const handleEditBlockRef = useRef(handleEditBlock);
 
@@ -176,7 +217,7 @@ export function useEditorBlockOperations({
   );
 
   return {
-    editingState,
+    editingStore,
     handleEditBlock,
     handleInsertBlock,
     confirmDialog: dialogState,

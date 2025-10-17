@@ -47,7 +47,7 @@ export function EditorContainer({
   );
 
   const {
-    editingState,
+    editingStore,
     handleEditBlock,
     handleInsertBlock,
     confirmDialog,
@@ -152,7 +152,7 @@ export function EditorContainer({
             void acceptDraft();
           },
           onRejectConversion: rejectDraft,
-          editingState,
+          editingStore,
         }}
         chapterTopSlot={null}
         scrollAreaRef={scrollAreaRef}

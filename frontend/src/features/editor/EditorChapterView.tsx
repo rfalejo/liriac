@@ -1,8 +1,8 @@
 import { Fragment, useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useSyncExternalStore } from "react";
 import useMediaQuery from "@mui/material/useMediaQuery";
 import { useTheme } from "@mui/material/styles";
 import type { ChapterDetail } from "../../api/chapters";
-import type { EditingState } from "./types";
 import { EditorBlockEditingProvider } from "./context/EditorBlockEditingContext";
 import type { BlockInsertPosition } from "./blocks/BlockInsertMenu";
 import {
@@ -15,6 +15,7 @@ import { ChapterEmptyState } from "./chapter/ChapterEmptyState";
 import { ChapterHeading } from "./chapter/ChapterHeading";
 import { ChapterBlockList } from "./chapter/ChapterBlockList";
 import type { DraftBlockConversion } from "./hooks/useBlockConversion";
+import type { EditorEditingStore } from "./editing/editorEditingStore";
 
 type EditorChapterViewProps = {
   loading: boolean;
@@ -33,7 +34,7 @@ type EditorChapterViewProps = {
   conversionApplyError?: string | null;
   onAcceptConversion?: () => void;
   onRejectConversion?: () => void;
-  editingState?: EditingState;
+  editingStore: EditorEditingStore | null;
 };
 
 export function EditorChapterView({
@@ -50,7 +51,7 @@ export function EditorChapterView({
   conversionApplyError,
   onAcceptConversion,
   onRejectConversion,
-  editingState,
+  editingStore,
 }: EditorChapterViewProps) {
   const { blockEntries, hasChapterHeader } = useChapterBlocks(chapter);
   const theme = useTheme();
@@ -139,12 +140,24 @@ export function EditorChapterView({
     };
   }, [isTouchViewport]);
 
+  const activeBlockId = useSyncExternalStore(
+    useCallback(
+      (listener: () => void) => (editingStore ? editingStore.subscribe(listener) : () => {}),
+      [editingStore],
+    ),
+    useCallback(
+      () => editingStore?.getActiveSession()?.blockId ?? null,
+      [editingStore],
+    ),
+    () => null,
+  );
+
   useEffect(() => {
-    if (!editingState?.blockId) {
+    if (!activeBlockId) {
       return;
     }
     setLongPressBlockId(null);
-  }, [editingState?.blockId]);
+  }, [activeBlockId]);
 
   const handleLongPressBlock = useCallback((blockId: string) => {
     setLongPressBlockId(blockId);
@@ -177,7 +190,7 @@ export function EditorChapterView({
 
   return (
     <EditorBlockEditingProvider
-      editingState={editingState}
+      store={editingStore}
       onEditBlock={onEditBlock}
       {...longPressValue}
     >
