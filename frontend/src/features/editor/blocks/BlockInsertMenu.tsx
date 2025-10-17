@@ -1,19 +1,15 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import Box from "@mui/material/Box";
+import { useCallback, useEffect, useMemo } from "react";
+import ClickAwayListener from "@mui/material/ClickAwayListener";
 import IconButton from "@mui/material/IconButton";
 import Paper from "@mui/material/Paper";
+import Popper from "@mui/material/Popper";
 import Tooltip from "@mui/material/Tooltip";
-import useMediaQuery from "@mui/material/useMediaQuery";
 import type { Theme } from "@mui/material/styles";
-import MoreHorizRoundedIcon from "@mui/icons-material/MoreHorizRounded";
-import ExpandLessRoundedIcon from "@mui/icons-material/ExpandLessRounded";
-import ExpandMoreRoundedIcon from "@mui/icons-material/ExpandMoreRounded";
 import SubjectRoundedIcon from "@mui/icons-material/SubjectRounded";
 import ChatBubbleOutlineRoundedIcon from "@mui/icons-material/ChatBubbleOutlineRounded";
 import InfoRoundedIcon from "@mui/icons-material/InfoRounded";
 import LandscapeRoundedIcon from "@mui/icons-material/LandscapeRounded";
 import ContentPasteRoundedIcon from "@mui/icons-material/ContentPasteRounded";
-import type { FocusEventHandler } from "react";
 import type { components } from "../../../api/schema";
 
 type ChapterBlockType = components["schemas"]["ChapterBlockTypeEnum"];
@@ -25,16 +21,16 @@ export type BlockInsertPosition = {
 };
 
 type BlockInsertMenuProps = {
-  position: BlockInsertPosition;
+  anchorEl: HTMLElement | null;
+  open: boolean;
+  position: BlockInsertPosition | null;
   onInsertBlock?: (
     blockType: ChapterBlockType,
     position: BlockInsertPosition,
   ) => void;
   onOpenConversion?: (position: BlockInsertPosition) => void;
   conversionDisabled?: boolean;
-  visible?: boolean;
-  onRequestClose?: () => void;
-  longPressBlockId?: string | null;
+  onClose: () => void;
 };
 
 export const BLOCK_INSERT_OPTIONS = [
@@ -65,105 +61,49 @@ export const BLOCK_INSERT_OPTIONS = [
 }>;
 
 export function BlockInsertMenu({
+  anchorEl,
+  open,
   position,
   onInsertBlock,
   onOpenConversion,
   conversionDisabled = false,
-  visible,
-  onRequestClose,
-  longPressBlockId = null,
+  onClose,
 }: BlockInsertMenuProps) {
-  const [hovered, setHovered] = useState(false);
-  const [expanded, setExpanded] = useState(false);
-  const containerRef = useRef<HTMLDivElement | null>(null);
-  const isTouchViewport = useMediaQuery((theme: Theme) =>
-    theme.breakpoints.down("sm"),
-  );
-
-  const computedVisible = visible ?? (isTouchViewport || hovered || expanded);
-  const isBeforeActive = Boolean(
-    isTouchViewport &&
-      longPressBlockId &&
-      position.beforeBlockId === longPressBlockId,
-  );
-  const isAfterActive = Boolean(
-    isTouchViewport &&
-      longPressBlockId &&
-      position.afterBlockId === longPressBlockId,
-  );
-
-  const TriggerIcon = useMemo(() => {
-    if (isTouchViewport) {
-      if (isBeforeActive) {
-        return ExpandLessRoundedIcon;
-      }
-      if (isAfterActive) {
-        return ExpandMoreRoundedIcon;
-      }
-    }
-    return MoreHorizRoundedIcon;
-  }, [isAfterActive, isBeforeActive, isTouchViewport]);
-
-  const handleToggle = useCallback(() => {
-    setExpanded((current) => {
-      const next = !current;
-      if (!next) {
-        onRequestClose?.();
-      }
-      return next;
-    });
-  }, [onRequestClose]);
-
-  const handleLeave = useCallback(() => {
-    setHovered(false);
-    setExpanded(false);
-    if (isTouchViewport) {
-      onRequestClose?.();
-    }
-  }, [isTouchViewport, onRequestClose]);
-
-  const handleFocusCapture = useCallback(() => {
-    if (isTouchViewport) {
-      return;
-    }
-    setExpanded(true);
-  }, [isTouchViewport]);
-
-  const handleBlurCapture = useCallback<FocusEventHandler<HTMLDivElement>>(
-    (event) => {
-      const nextFocus = event.relatedTarget as Node | null;
-      const root = containerRef.current;
-      if (root && nextFocus && root.contains(nextFocus)) {
-        return;
-      }
-
-      if (hovered) {
-        return;
-      }
-
-      setExpanded(false);
-      if (isTouchViewport) {
-        onRequestClose?.();
-      }
-    },
-    [hovered, isTouchViewport, onRequestClose],
-  );
-
   useEffect(() => {
-    if (visible === undefined) {
+    if (!open) {
       return;
     }
-    if (!visible) {
-      setExpanded(false);
-      setHovered(false);
+
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === "Escape") {
+        onClose();
+      }
+    };
+
+    window.addEventListener("keydown", handleKeyDown);
+    return () => {
+      window.removeEventListener("keydown", handleKeyDown);
+    };
+  }, [open, onClose]);
+
+  const handleSelectBlock = useCallback(
+    (type: ChapterBlockType) => {
+      if (!position) {
+        return;
+      }
+      onInsertBlock?.(type, position);
+      onClose();
+    },
+    [onClose, onInsertBlock, position],
+  );
+
+  const handleConversion = useCallback(() => {
+    if (!position || conversionDisabled) {
       return;
     }
-    if (isTouchViewport) {
-      setExpanded(false);
-    } else {
-      setExpanded(true);
-    }
-  }, [visible, isTouchViewport]);
+    onOpenConversion?.(position);
+    onClose();
+  }, [conversionDisabled, onClose, onOpenConversion, position]);
 
   const optionButtons = useMemo(() => {
     const blockButtons = BLOCK_INSERT_OPTIONS.map(({ type, label, Icon }) => (
@@ -171,9 +111,7 @@ export function BlockInsertMenu({
         <IconButton
           size="small"
           onClick={() => {
-            onInsertBlock?.(type, position);
-            setExpanded(false);
-            onRequestClose?.();
+            handleSelectBlock(type);
           }}
           aria-label={label}
           sx={(theme: Theme) => ({
@@ -204,14 +142,7 @@ export function BlockInsertMenu({
         <span>
           <IconButton
             size="small"
-            onClick={() => {
-              if (conversionDisabled) {
-                return;
-              }
-              onOpenConversion?.(position);
-              setExpanded(false);
-              onRequestClose?.();
-            }}
+            onClick={handleConversion}
             aria-label="Pegar y convertir"
             disabled={conversionDisabled}
             sx={(theme: Theme) => ({
@@ -233,81 +164,39 @@ export function BlockInsertMenu({
     );
 
     return [conversionButton, ...blockButtons];
-  }, [conversionDisabled, onInsertBlock, onOpenConversion, position]);
+  }, [conversionDisabled, handleConversion, handleSelectBlock, onOpenConversion]);
 
   return (
-    <Box
-      data-editor-block-insert-menu="true"
-      ref={containerRef}
-      onMouseEnter={() => setHovered(true)}
-      onMouseLeave={handleLeave}
-      onFocusCapture={handleFocusCapture}
-      onBlurCapture={handleBlurCapture}
-      sx={{
-        width: "100%",
-        minHeight:
-          !isTouchViewport || computedVisible
-            ? {
-                xs: (theme) => theme.spacing(1.75),
-                sm: (theme) => theme.spacing(2.25),
-              }
-            : 0,
-        display:
-          isTouchViewport && !computedVisible
-            ? "none"
-            : "grid",
-        placeItems: "center",
-        pointerEvents:
-          isTouchViewport && !computedVisible ? "none" : "auto",
-      }}
+    <Popper
+      open={open}
+      anchorEl={anchorEl}
+      placement="top"
+      role="dialog"
+      modifiers={[
+        {
+          name: "offset",
+          options: { offset: [0, 12] },
+        },
+      ]}
     >
-      <Paper
-        elevation={0}
-        sx={(theme: Theme) => ({
-          display: "inline-flex",
-          alignItems: "center",
-          justifyContent: "center",
-          gap: 0.5,
-          px: expanded ? 1.25 : 0.75,
-          py: 0.25,
-          minHeight: theme.spacing(2),
-          marginInline: "auto",
-          borderRadius: 999,
-          backgroundColor: expanded
-            ? theme.palette.editor.blockHoverBg
-            : "transparent",
-          boxShadow: expanded
-            ? `0 0 0 1px ${theme.palette.editor.blockHoverOutline}`
-            : "none",
-          transition:
-            "background-color 160ms ease, box-shadow 160ms ease, padding 160ms ease",
-          pointerEvents:
-            isTouchViewport && !computedVisible ? "none" : "auto",
-        })}
-      >
-        {expanded ? (
-          optionButtons
-        ) : (
-          <IconButton
-            size="small"
-            aria-label="Mostrar tipos de bloque disponibles"
-            onClick={handleToggle}
-            sx={(theme: Theme) => ({
-              opacity: computedVisible ? 0.96 : 0,
-              transition: "opacity 160ms ease",
-              color: theme.palette.editor.blockMenuTrigger,
-              pointerEvents:
-                isTouchViewport && !computedVisible ? "none" : "auto",
-              "&:hover": {
-                backgroundColor: theme.palette.editor.blockMenuHoverBg,
-                color: theme.palette.editor.blockMenuTriggerHover,
-              },
-            })}
-          >
-            <TriggerIcon fontSize="small" />
-          </IconButton>
-        )}
-      </Paper>
-    </Box>
+      <ClickAwayListener onClickAway={onClose}>
+        <Paper
+          elevation={0}
+          sx={(theme: Theme) => ({
+            display: "inline-flex",
+            alignItems: "center",
+            justifyContent: "center",
+            gap: 0.5,
+            px: 1.25,
+            py: 0.35,
+            borderRadius: 999,
+            backgroundColor: theme.palette.editor.blockHoverBg,
+            boxShadow: `0 0 0 1px ${theme.palette.editor.blockHoverOutline}, 0 18px 32px rgba(36, 28, 18, 0.18)`,
+          })}
+        >
+          {optionButtons}
+        </Paper>
+      </ClickAwayListener>
+    </Popper>
   );
 }

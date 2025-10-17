@@ -21,31 +21,37 @@ export function useBookLookup({
   chapterId,
   bookId,
 }: UseBookLookupParams): BookLookupResult {
-  const book = useMemo<LibraryBook | null>(() => {
-    if (!books.length) {
-      return null;
-    }
+  const lookupMaps = useMemo(() => {
+    const bookById = new Map<string, LibraryBook>();
+    const bookByChapterId = new Map<string, LibraryBook>();
 
-    // First try to resolve by bookId if provided
-    if (bookId) {
-      const foundByBookId = books.find((book) => book.id === bookId);
-      if (foundByBookId) {
-        return foundByBookId;
+    for (const book of books) {
+      bookById.set(book.id, book);
+      for (const chapter of book.chapters) {
+        bookByChapterId.set(chapter.id, book);
       }
     }
 
-    // Then try to resolve by chapterId if provided
+    return { bookById, bookByChapterId };
+  }, [books]);
+
+  const book = useMemo<LibraryBook | null>(() => {
+    if (bookId) {
+      const match = lookupMaps.bookById.get(bookId);
+      if (match) {
+        return match;
+      }
+    }
+
     if (chapterId) {
-      const foundByChapterId = books.find((book) =>
-        book.chapters.some((chapter) => chapter.id === chapterId),
-      );
-      if (foundByChapterId) {
-        return foundByChapterId;
+      const match = lookupMaps.bookByChapterId.get(chapterId);
+      if (match) {
+        return match;
       }
     }
 
     return null;
-  }, [books, chapterId, bookId]);
+  }, [bookId, chapterId, lookupMaps]);
 
   const bookTitle = book?.title ?? null;
 
