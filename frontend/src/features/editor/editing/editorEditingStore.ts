@@ -2,70 +2,44 @@ import type {
   ChapterBlockUpdatePayload,
   ChapterDetail,
 } from "../../../api/chapters";
-import type { ChapterBlock } from "../types";
-import type { DialogueTurn } from "../types";
 import type {
-  MetadataDraft,
+  ChapterBlock,
+  DialogueTurn,
   MetadataEditableField,
   MetadataKindOption,
-  SceneBoundaryDraft,
   SceneBoundaryEditableField,
 } from "../types";
 import type { EditorEditingSideEffects } from "../hooks/editing/types";
 import { cloneTurns, createEmptyTurn, equalTurns } from "../utils/dialogueTurns";
-import { requestParagraphSuggestion, fetchParagraphSuggestionPrompt } from "../../../api/chapters";
-import type {
-  ParagraphSuggestionResponse,
-  ParagraphSuggestionPromptResponse,
-} from "../../../api/chapters";
+import type { InternalSessionState } from "./sessionTypes";
+import {
+  buildDialogueSession,
+  buildMetadataSession,
+  buildParagraphSession,
+  buildSceneBoundarySession,
+  getRelevantMetadataFields,
+  isEditableBlock,
+  metadataFieldValue,
+  normalizeMetadataKind,
+  toMetadataDraft,
+  toSceneBoundaryDraft,
+} from "./sessionBuilders";
+import { ParagraphSuggestionManager } from "./paragraphSuggestions";
+import type { ParagraphSuggestionSnapshot } from "./paragraphSuggestions.types";
+import {
+  buildDialoguePayload,
+  buildMetadataPayload,
+  buildParagraphPayload,
+  buildSceneBoundaryPayload,
+} from "./payloadBuilders";
 
-const EMPTY_SCENE_BOUNDARY: SceneBoundaryDraft = {
-  label: "",
-  summary: "",
-  locationName: "",
-  timestamp: "",
-  mood: "",
-};
-
-const EMPTY_METADATA: MetadataDraft = {
-  title: "",
-  subtitle: "",
-  epigraph: "",
-  epigraphAttribution: "",
-  context: "",
-  text: "",
-  povCharacterName: "",
-  timelineMarker: "",
-  locationName: "",
-  themeTags: "",
-};
-
-type EditableChapterBlock = ChapterBlock & {
-  type: "paragraph" | "dialogue" | "scene_boundary" | "metadata";
-};
-
-export type DialogueSessionState = {
-  type: "dialogue";
-  blockId: string;
-  draftTurns: DialogueTurn[];
-  baselineTurns: DialogueTurn[];
-};
-
-export type SceneBoundarySessionState = {
-  type: "scene_boundary";
-  blockId: string;
-  draft: SceneBoundaryDraft;
-  baseline: SceneBoundaryDraft;
-};
-
-export type MetadataSessionState = {
-  type: "metadata";
-  blockId: string;
-  draft: MetadataDraft;
-  baseline: MetadataDraft;
-  kind: MetadataKindOption;
-  baselineKind: MetadataKindOption;
-};
+export type {
+  ParagraphSessionState,
+  DialogueSessionState,
+  SceneBoundarySessionState,
+  MetadataSessionState,
+} from "./sessionTypes";
+export type { ParagraphSuggestionContext, ParagraphSuggestionSnapshot } from "./paragraphSuggestions.types";
 
 type EditorEditingInternalState = EditorEditingStoreSnapshot & {
   chapterId: string | null;
@@ -80,151 +54,6 @@ type UpdateBlockFn = (args: {
 
 type DeleteBlockFn = (blockId: string) => Promise<ChapterDetail>;
 
-function isEditableBlock(block: ChapterBlock | null): block is EditableChapterBlock {
-  if (!block) {
-    return false;
-  }
-  return (
-    block.type === "paragraph" ||
-    block.type === "dialogue" ||
-    block.type === "scene_boundary" ||
-    block.type === "metadata"
-  );
-}
-
-function toSceneBoundaryDraft(block: ChapterBlock | null): SceneBoundaryDraft {
-  if (!block || block.type !== "scene_boundary") {
-    return { ...EMPTY_SCENE_BOUNDARY };
-  }
-  return {
-    label: block.label ?? "",
-    summary: block.summary ?? "",
-    locationName:
-      block.sceneDetails?.locationName ?? block.locationName ?? "",
-    timestamp: block.sceneDetails?.timestamp ?? block.timestamp ?? "",
-    mood: block.sceneDetails?.mood ?? block.mood ?? "",
-  } satisfies SceneBoundaryDraft;
-}
-
-function normalizeMetadataKind(kind: unknown): MetadataKindOption {
-  if (kind === "chapter_header" || kind === "context" || kind === "metadata") {
-    return kind;
-  }
-  return "metadata";
-}
-
-function toMetadataDraft(block: ChapterBlock | null): MetadataDraft {
-  if (!block || block.type !== "metadata") {
-    return { ...EMPTY_METADATA };
-  }
-
-  const themeTags =
-    (block.narrativeContext?.themeTags ?? block.themeTags ?? [])
-      .filter((tag): tag is string => Boolean(tag && tag.trim().length > 0))
-      .join(", ");
-
-  return {
-    title: block.title ?? "",
-    subtitle: block.subtitle ?? "",
-    epigraph: block.epigraph ?? "",
-    epigraphAttribution: block.epigraphAttribution ?? "",
-    context: block.context ?? "",
-    text: block.text ?? "",
-    povCharacterName:
-      block.narrativeContext?.povCharacterName ?? block.povCharacterName ?? "",
-    timelineMarker:
-      block.narrativeContext?.timelineMarker ?? block.timelineMarker ?? "",
-    locationName:
-      block.narrativeContext?.locationName ?? block.locationName ?? "",
-    themeTags,
-  } satisfies MetadataDraft;
-}
-
-function metadataFieldValue(
-  block: ChapterBlock | null,
-  field: MetadataEditableField,
-): string {
-  if (!block || block.type !== "metadata") {
-    return "";
-  }
-  switch (field) {
-    case "title":
-      return block.title ?? "";
-    case "subtitle":
-      return block.subtitle ?? "";
-    case "epigraph":
-      return block.epigraph ?? "";
-    case "epigraphAttribution":
-      return block.epigraphAttribution ?? "";
-    case "context":
-      return block.context ?? "";
-    case "povCharacterName":
-      return (
-        block.narrativeContext?.povCharacterName ??
-        block.povCharacterName ??
-        ""
-      );
-    case "timelineMarker":
-      return (
-        block.narrativeContext?.timelineMarker ??
-        block.timelineMarker ??
-        ""
-      );
-    case "locationName":
-      return (
-        block.narrativeContext?.locationName ??
-        block.locationName ??
-        block.narrativeContext?.locationId ??
-        block.locationId ??
-        ""
-      );
-    case "themeTags":
-      return (
-        block.narrativeContext?.themeTags ?? block.themeTags ?? []
-      )
-        .filter((tag): tag is string => Boolean(tag && tag.trim().length > 0))
-        .join(", ");
-    case "text":
-    default:
-      return block.text ?? "";
-  }
-}
-
-function toNullable(value: string): string | null {
-  const trimmed = value.trim();
-  return trimmed.length > 0 ? trimmed : null;
-}
-
-type SuggestionResult = {
-  instructions: string;
-  text: string;
-  isApplied: boolean;
-};
-
-export type ParagraphSuggestionSnapshot = {
-  promptOpen: boolean;
-  instructions: string;
-  usesDraftAsPrompt: boolean;
-  draftSnapshot: string | null;
-  result: SuggestionResult | null;
-  error: string | null;
-  copyStatus: "idle" | "pending" | "copied";
-  isRequestPending: boolean;
-  isCopyPending: boolean;
-};
-
-const EMPTY_PARAGRAPH_SUGGESTION: ParagraphSuggestionSnapshot = {
-  promptOpen: false,
-  instructions: "",
-  usesDraftAsPrompt: false,
-  draftSnapshot: null,
-  result: null,
-  error: null,
-  copyStatus: "idle",
-  isRequestPending: false,
-  isCopyPending: false,
-};
-
 type EditorEditingStoreSnapshot = {
   activeSession: InternalSessionState | null;
   isUpdatePending: boolean;
@@ -232,35 +61,6 @@ type EditorEditingStoreSnapshot = {
 };
 
 type MetadataFieldName = MetadataEditableField;
-
-type ParagraphSuggestionHandlers = {
-  openPrompt: () => void;
-  closePrompt: () => void;
-  submit: () => Promise<void>;
-  applyResult: () => void;
-  dismissResult: () => void;
-  copyPrompt: () => Promise<void>;
-  setInstructions: (value: string) => void;
-};
-
-export type ParagraphSuggestionContext = {
-  getSnapshot: () => ParagraphSuggestionSnapshot;
-  handlers: ParagraphSuggestionHandlers;
-};
-
-export type ParagraphSessionState = {
-  type: "paragraph";
-  blockId: string;
-  draftText: string;
-  baselineText: string;
-  suggestionContext: ParagraphSuggestionContext;
-};
-
-type InternalSessionState =
-  | ParagraphSessionState
-  | DialogueSessionState
-  | SceneBoundarySessionState
-  | MetadataSessionState;
 
 export type EditorEditingStoreOptions = {
   chapterId: string | null;
@@ -277,8 +77,7 @@ export class EditorEditingStore {
   private readonly updateBlock: UpdateBlockFn;
   private readonly deleteBlock: DeleteBlockFn;
   private readonly sideEffects: EditorEditingSideEffects;
-  private paragraphSuggestions: Map<string, ParagraphSuggestionSnapshot> =
-    new Map();
+  private paragraphSuggestions: ParagraphSuggestionManager;
 
   constructor(options: EditorEditingStoreOptions) {
     this.state = {
@@ -291,6 +90,13 @@ export class EditorEditingStore {
     this.updateBlock = options.updateBlock;
     this.deleteBlock = options.deleteBlock;
     this.sideEffects = options.sideEffects;
+    this.paragraphSuggestions = new ParagraphSuggestionManager({
+      getActiveParagraphSession: () => this.ensureActiveSessionOfType("paragraph"),
+      getChapterId: () => this.state.chapterId,
+      resolveBlock: (blockId) => this.resolveBlock(blockId),
+      notifyUpdateFailure: this.sideEffects.notifyUpdateFailure,
+      notifyStore: () => this.notify(),
+    });
   }
 
   getSnapshot(): EditorEditingStoreSnapshot {
@@ -350,319 +156,19 @@ export class EditorEditingStore {
     return this.blockResolver(blockId);
   }
 
-  private ensureParagraphSuggestionContext(blockId: string) {
-    if (!this.paragraphSuggestions.has(blockId)) {
-      this.paragraphSuggestions.set(blockId, {
-        ...EMPTY_PARAGRAPH_SUGGESTION,
-      });
-    }
-  }
-
-  private buildParagraphSuggestionContext(blockId: string): ParagraphSuggestionContext {
-    this.ensureParagraphSuggestionContext(blockId);
-    const getSnapshot = () => this.paragraphSuggestions.get(blockId)!;
-    const updateSnapshot = (updater: (prev: ParagraphSuggestionSnapshot) => ParagraphSuggestionSnapshot) => {
-      const current = getSnapshot();
-      this.paragraphSuggestions.set(blockId, updater(current));
-    };
-
-    const openPrompt = () => {
-      const session = this.state.activeSession;
-      if (!session || session.type !== "paragraph" || session.blockId !== blockId) {
-        return;
-      }
-      const draftText = session.draftText;
-      const shouldUseDraft = draftText.trim().length === 0;
-      updateSnapshot((prev) => ({
-        ...prev,
-        promptOpen: true,
-        usesDraftAsPrompt: shouldUseDraft,
-        instructions: shouldUseDraft ? draftText : prev.instructions,
-        error: null,
-        copyStatus: "idle",
-      }));
-      this.notify();
-    };
-
-    const closePrompt = () => {
-      const snapshot = getSnapshot();
-      if (snapshot.isRequestPending || snapshot.isCopyPending) {
-        return;
-      }
-      updateSnapshot(() => ({
-        ...EMPTY_PARAGRAPH_SUGGESTION,
-      }));
-      this.notify();
-    };
-
-    const submit = async () => {
-      const session = this.state.activeSession;
-      const snapshot = getSnapshot();
-      if (!session || session.type !== "paragraph" || session.blockId !== blockId) {
-        return;
-      }
-      const block = this.resolveBlock(blockId);
-      if (!block || block.type !== "paragraph") {
-        return;
-      }
-      const instructions = snapshot.usesDraftAsPrompt
-        ? session.draftText
-        : snapshot.instructions;
-      const trimmed = instructions.trim();
-      if (!trimmed) {
-        updateSnapshot((prev) => ({
-          ...prev,
-          error: "Añade instrucciones para generar la sugerencia.",
-        }));
-        this.notify();
-        return;
-      }
-
-      updateSnapshot((prev) => ({
-        ...prev,
-        isRequestPending: true,
-        draftSnapshot: session.draftText,
-        error: null,
-      }));
-      this.notify();
-
-      try {
-        if (!this.state.chapterId) {
-          updateSnapshot((prev) => ({
-            ...prev,
-            isRequestPending: false,
-            draftSnapshot: null,
-            error: "No pudimos generar la sugerencia. Inténtalo de nuevo.",
-          }));
-          this.notify();
-          return;
-        }
-        const response: ParagraphSuggestionResponse = await requestParagraphSuggestion({
-          chapterId: this.state.chapterId ?? "",
-          blockId,
-          instructions: trimmed,
-        });
-        updateSnapshot(() => ({
-          promptOpen: false,
-          instructions: trimmed,
-          usesDraftAsPrompt: false,
-          draftSnapshot: session.draftText,
-          result: {
-            instructions: trimmed,
-            text: response.paragraphSuggestion,
-            isApplied: false,
-          },
-          error: null,
-          copyStatus: "idle",
-          isRequestPending: false,
-          isCopyPending: false,
-        }));
-        this.notify();
-      } catch (error) {
-        updateSnapshot((prev) => ({
-          ...prev,
-          error: "No pudimos generar la sugerencia. Inténtalo de nuevo.",
-          isRequestPending: false,
-          draftSnapshot: null,
-        }));
-        this.notify();
-        this.sideEffects.notifyUpdateFailure(error);
-      }
-    };
-
-    const applyResult = () => {
-      const session = this.state.activeSession;
-      if (!session || session.type !== "paragraph" || session.blockId !== blockId) {
-        return;
-      }
-      const snapshot = getSnapshot();
-      const result = snapshot.result;
-      if (!result) {
-        return;
-      }
-      session.draftText = result.text;
-      updateSnapshot((prev) => ({
-        ...prev,
-        result: {
-          ...result,
-          isApplied: true,
-        },
-        error: null,
-      }));
-      this.notify();
-    };
-
-    const dismissResult = () => {
-      const session = this.state.activeSession;
-      if (!session || session.type !== "paragraph" || session.blockId !== blockId) {
-        return;
-      }
-      const snapshot = getSnapshot();
-      const wasApplied = snapshot.result?.isApplied ?? false;
-      const draftSnapshot = snapshot.draftSnapshot;
-      updateSnapshot(() => ({
-        ...EMPTY_PARAGRAPH_SUGGESTION,
-      }));
-      if (wasApplied && draftSnapshot != null) {
-        session.draftText = draftSnapshot;
-      }
-      this.notify();
-    };
-
-    const copyPrompt = async () => {
-      const session = this.state.activeSession;
-      const snapshot = getSnapshot();
-      if (!session || session.type !== "paragraph" || session.blockId !== blockId) {
-        return;
-      }
-      if (snapshot.isCopyPending) {
-        return;
-      }
-      const instructions = snapshot.usesDraftAsPrompt
-        ? session.draftText
-        : snapshot.instructions;
-      const trimmed = instructions.trim();
-      if (!trimmed) {
-        return;
-      }
-      updateSnapshot((prev) => ({
-        ...prev,
-        isCopyPending: true,
-        copyStatus: "pending",
-      }));
-      this.notify();
-      try {
-        if (!this.state.chapterId) {
-          updateSnapshot((prev) => ({
-            ...prev,
-            isCopyPending: false,
-            copyStatus: "idle",
-            error: "No pudimos copiar el prompt. Inténtalo de nuevo.",
-          }));
-          this.notify();
-          return;
-        }
-        const response: ParagraphSuggestionPromptResponse = await fetchParagraphSuggestionPrompt({
-          chapterId: this.state.chapterId ?? "",
-          blockId,
-          instructions: trimmed,
-        });
-        if (!response.prompt) {
-          throw new Error("Empty prompt response");
-        }
-        if (typeof navigator === "undefined" || !navigator.clipboard?.writeText) {
-          throw new Error("Clipboard API unavailable");
-        }
-        await navigator.clipboard.writeText(response.prompt);
-        updateSnapshot((prev) => ({
-          ...prev,
-          isCopyPending: false,
-          copyStatus: "copied",
-          error: null,
-        }));
-        this.notify();
-      } catch (error) {
-        updateSnapshot((prev) => ({
-          ...prev,
-          isCopyPending: false,
-          copyStatus: "idle",
-          error: "No pudimos copiar el prompt. Inténtalo de nuevo.",
-        }));
-        this.notify();
-        this.sideEffects.notifyUpdateFailure(error);
-      }
-    };
-
-    const setInstructions = (value: string) => {
-      updateSnapshot((prev) => ({
-        ...prev,
-        instructions: value,
-        copyStatus: prev.promptOpen ? "idle" : prev.copyStatus,
-      }));
-      this.notify();
-    };
-
-    return {
-      getSnapshot,
-      handlers: {
-        openPrompt,
-        closePrompt,
-        submit,
-        applyResult,
-        dismissResult,
-        copyPrompt,
-        setInstructions,
-      },
-    } satisfies ParagraphSuggestionContext;
-  }
-
-  private buildParagraphSession(block: ChapterBlock): ParagraphSessionState {
-    if (block.type !== "paragraph") {
-      throw new Error("Attempted to build paragraph session for non-paragraph block");
-    }
-    this.paragraphSuggestions.set(block.id, { ...EMPTY_PARAGRAPH_SUGGESTION });
-    const context = this.buildParagraphSuggestionContext(block.id);
-    return {
-      type: "paragraph",
-      blockId: block.id,
-      draftText: block.text ?? "",
-      baselineText: block.text ?? "",
-      suggestionContext: context,
-    } satisfies ParagraphSessionState;
-  }
-
-  private buildDialogueSession(block: ChapterBlock): DialogueSessionState {
-    if (block.type !== "dialogue") {
-      throw new Error("Attempted to build dialogue session for non-dialogue block");
-    }
-    const turns = cloneTurns(block.turns ?? []);
-    return {
-      type: "dialogue",
-      blockId: block.id,
-      draftTurns: turns,
-      baselineTurns: cloneTurns(block.turns ?? []),
-    } satisfies DialogueSessionState;
-  }
-
-  private buildSceneBoundarySession(block: ChapterBlock): SceneBoundarySessionState {
-    if (block.type !== "scene_boundary") {
-      throw new Error("Attempted to build scene boundary session for incompatible block");
-    }
-    const draft = toSceneBoundaryDraft(block);
-    return {
-      type: "scene_boundary",
-      blockId: block.id,
-      draft,
-      baseline: { ...draft },
-    } satisfies SceneBoundarySessionState;
-  }
-
-  private buildMetadataSession(block: ChapterBlock): MetadataSessionState {
-    if (block.type !== "metadata") {
-      throw new Error("Attempted to build metadata session for incompatible block");
-    }
-    const draft = toMetadataDraft(block);
-    const kind = normalizeMetadataKind(block.kind);
-    return {
-      type: "metadata",
-      blockId: block.id,
-      draft,
-      baseline: { ...draft },
-      kind,
-      baselineKind: kind,
-    } satisfies MetadataSessionState;
-  }
-
-  private createSessionFromBlock(block: EditableChapterBlock): InternalSessionState {
+  private createSessionFromBlock(block: ChapterBlock): InternalSessionState {
     switch (block.type) {
-      case "paragraph":
-        return this.buildParagraphSession(block);
+      case "paragraph": {
+        this.paragraphSuggestions.reset(block.id);
+        const context = this.paragraphSuggestions.getContext(block.id);
+        return buildParagraphSession(block, context);
+      }
       case "dialogue":
-        return this.buildDialogueSession(block);
+        return buildDialogueSession(block);
       case "scene_boundary":
-        return this.buildSceneBoundarySession(block);
+        return buildSceneBoundarySession(block);
       case "metadata":
-        return this.buildMetadataSession(block);
+        return buildMetadataSession(block);
       default:
         throw new Error("Unsupported block type");
     }
@@ -686,23 +192,13 @@ export class EditorEditingStore {
         if (session.kind !== session.baselineKind) {
           return true;
         }
-        const fields = this.relevantMetadataFields(session.kind);
+        const fields = getRelevantMetadataFields(session.kind);
         const block = this.resolveBlock(session.blockId);
         return fields.some((field) => session.draft[field] !== metadataFieldValue(block, field));
       }
       default:
         return false;
     }
-  }
-
-  private relevantMetadataFields(kind: MetadataKindOption): MetadataEditableField[] {
-    if (kind === "chapter_header") {
-      return ["title", "subtitle", "epigraph", "epigraphAttribution"];
-    }
-    if (kind === "context") {
-      return ["context", "povCharacterName", "timelineMarker", "locationName", "themeTags"];
-    }
-    return ["text"];
   }
 
   startEditing(blockId: string) {
@@ -793,13 +289,7 @@ export class EditorEditingStore {
       return;
     }
     session.draftText = value;
-    const suggestion = this.paragraphSuggestions.get(session.blockId);
-    if (suggestion?.usesDraftAsPrompt) {
-      this.paragraphSuggestions.set(session.blockId, {
-        ...suggestion,
-        instructions: value,
-      });
-    }
+    this.paragraphSuggestions.handleDraftChange(session.blockId, value);
     this.notify();
   }
 
@@ -850,7 +340,7 @@ export class EditorEditingStore {
     session.draft = {
       ...session.draft,
       [field]: value,
-    } satisfies SceneBoundaryDraft;
+    };
     this.notify();
   }
 
@@ -862,7 +352,7 @@ export class EditorEditingStore {
     session.draft = {
       ...session.draft,
       [field]: value,
-    } satisfies MetadataDraft;
+    };
     this.notify();
   }
 
@@ -875,95 +365,16 @@ export class EditorEditingStore {
     this.notify();
   }
 
-  private buildParagraphPayload(session: ParagraphSessionState): ChapterBlockUpdatePayload {
-    return {
-      text: session.draftText,
-    } satisfies ChapterBlockUpdatePayload;
-  }
-
-  private buildDialoguePayload(session: DialogueSessionState): ChapterBlockUpdatePayload {
-    return {
-      turns: session.draftTurns,
-    } satisfies ChapterBlockUpdatePayload;
-  }
-
-  private buildSceneBoundaryPayload(session: SceneBoundarySessionState): ChapterBlockUpdatePayload {
-    return {
-      label: toNullable(session.draft.label),
-      summary: toNullable(session.draft.summary),
-      sceneDetails: {
-        locationName: toNullable(session.draft.locationName),
-        timestamp: toNullable(session.draft.timestamp),
-        mood: toNullable(session.draft.mood),
-      },
-    } satisfies ChapterBlockUpdatePayload;
-  }
-
-  private buildMetadataPayload(session: MetadataSessionState): ChapterBlockUpdatePayload {
-    const payload: ChapterBlockUpdatePayload = {
-      kind: session.kind,
-    };
-
-    if (session.kind === "chapter_header") {
-      payload.title = toNullable(session.draft.title);
-      payload.subtitle = toNullable(session.draft.subtitle);
-      payload.epigraph = toNullable(session.draft.epigraph);
-      payload.epigraphAttribution = toNullable(session.draft.epigraphAttribution);
-      payload.context = null;
-      payload.text = "";
-      payload.narrativeContext = null;
-      payload.povCharacterName = null;
-      payload.timelineMarker = null;
-      payload.locationName = null;
-      payload.themeTags = [];
-    } else if (session.kind === "context") {
-      payload.context = toNullable(session.draft.context);
-      payload.title = null;
-      payload.subtitle = null;
-      payload.epigraph = null;
-      payload.epigraphAttribution = null;
-      payload.text = "";
-      const normalizedTags = session.draft.themeTags
-        .split(",")
-        .map((entry: string) => entry.trim())
-        .filter((entry: string) => entry.length > 0);
-      payload.narrativeContext = {
-        povCharacterName: toNullable(session.draft.povCharacterName),
-        timelineMarker: toNullable(session.draft.timelineMarker),
-        locationName: toNullable(session.draft.locationName),
-        themeTags: normalizedTags,
-      };
-      payload.povCharacterName = null;
-      payload.timelineMarker = null;
-      payload.locationName = null;
-      payload.themeTags = normalizedTags;
-    } else {
-      payload.text = session.draft.text;
-      payload.title = null;
-      payload.subtitle = null;
-      payload.epigraph = null;
-      payload.epigraphAttribution = null;
-      payload.context = null;
-      payload.narrativeContext = null;
-      payload.povCharacterName = null;
-      payload.timelineMarker = null;
-      payload.locationName = null;
-      payload.themeTags = [];
-    }
-
-    return payload;
-  }
-
   private buildPayload(session: InternalSessionState): ChapterBlockUpdatePayload {
     switch (session.type) {
       case "paragraph":
-        return this.buildParagraphPayload(session);
+        return buildParagraphPayload(session);
       case "dialogue":
-        return this.buildDialoguePayload(session);
+        return buildDialoguePayload(session);
       case "scene_boundary":
-        return this.buildSceneBoundaryPayload(session);
+        return buildSceneBoundaryPayload(session);
       case "metadata":
-        return this.buildMetadataPayload(session);
+        return buildMetadataPayload(session);
       default:
         throw new Error(`Unsupported session type: ${(session as { type: string }).type}`);
     }
@@ -1077,7 +488,7 @@ export class EditorEditingStore {
   }
 
   getSuggestionState(blockId: string): ParagraphSuggestionSnapshot | null {
-    return this.paragraphSuggestions.get(blockId) ?? null;
+    return this.paragraphSuggestions.getSnapshotOrNull(blockId);
   }
 
   hasActivePendingChanges(): boolean {
