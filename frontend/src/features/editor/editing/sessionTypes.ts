@@ -4,14 +4,12 @@ import type {
   MetadataKindOption,
   SceneBoundaryDraft,
 } from "../types";
-import type { ParagraphSuggestionContext } from "./paragraphSuggestions.types";
 
 type ParagraphSessionBase = {
   type: "paragraph";
   blockId: string;
   draftText: string;
   baselineText: string;
-  suggestionContext: ParagraphSuggestionContext;
 };
 
 type DialogueSessionBase = {

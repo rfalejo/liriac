@@ -12,10 +12,6 @@ export type ChapterBlockVersionList =
   components["schemas"]["ChapterBlockVersionList"];
 export type ChapterBlockVersion =
   components["schemas"]["ChapterBlockVersion"];
-export type ParagraphSuggestionResponse =
-  components["schemas"]["ParagraphSuggestionResponse"];
-export type ParagraphSuggestionPromptResponse =
-  components["schemas"]["ParagraphSuggestionPromptResponse"];
 export type ChapterContextVisibilityResponse =
   components["schemas"]["LibraryResponse"];
 export type ChapterContextVisibilityUpdatePayload =
@@ -141,60 +137,6 @@ export async function deleteChapterBlockVersion({
       method: "DELETE",
     },
   );
-}
-
-type ParagraphSuggestionParams = {
-  chapterId: string;
-  blockId: string;
-  instructions: string;
-};
-
-export async function requestParagraphSuggestion({
-  chapterId,
-  blockId,
-  instructions,
-}: ParagraphSuggestionParams): Promise<ParagraphSuggestionResponse> {
-  const encodedChapter = encodeURIComponent(chapterId);
-
-  return request<ParagraphSuggestionResponse>(
-    `/api/library/chapters/${encodedChapter}/paragraph-suggestion/`,
-    {
-      method: "POST",
-      body: JSON.stringify({
-        blockId,
-        instructions,
-      }),
-    },
-  );
-}
-
-type ParagraphSuggestionPromptParams = {
-  chapterId: string;
-  blockId: string;
-  instructions: string;
-};
-
-export async function fetchParagraphSuggestionPrompt({
-  chapterId,
-  blockId,
-  instructions,
-}: ParagraphSuggestionPromptParams): Promise<ParagraphSuggestionPromptResponse> {
-  const encodedChapter = encodeURIComponent(chapterId);
-  const searchParams = new URLSearchParams();
-
-  if (blockId) {
-    searchParams.set("blockId", blockId);
-  }
-
-  if (instructions) {
-    searchParams.set("instructions", instructions);
-  }
-
-  const query = searchParams.toString();
-  const baseUrl = `/api/library/chapters/${encodedChapter}/paragraph-suggestion/prompt/`;
-  const url = query ? `${baseUrl}?${query}` : baseUrl;
-
-  return request<ParagraphSuggestionPromptResponse>(url);
 }
 
 export async function fetchChapterContextVisibility(

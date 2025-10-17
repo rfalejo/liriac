@@ -45,10 +45,6 @@ export function EditableBlock<TEditingState extends EditingState>({
       }}
       onDelete={resolvedEditingState.onDelete}
       disabled={resolvedEditingState.isSaving}
-      supportsSuggestions={resolvedEditingState.supportsSuggestions}
-      onRequestSuggestion={resolvedEditingState.onRequestSuggestion}
-      suggestionPending={resolvedEditingState.isSuggestionPending}
-      suggestionDisabled={resolvedEditingState.isSaving}
       versioning={resolvedEditingState.versioning}
     />
   ) : undefined;

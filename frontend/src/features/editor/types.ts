@@ -25,40 +25,13 @@ type BaseEditingState<TType extends ChapterBlock["type"]> = {
   onDelete?: () => void;
   isSaving: boolean;
   hasPendingChanges: boolean;
-  supportsSuggestions?: boolean;
-  onRequestSuggestion?: () => void;
-  isSuggestionPending?: boolean;
   versioning?: BlockVersionState;
-};
-
-export type ParagraphSuggestionResultState = {
-  instructions: string;
-  text: string;
-  isApplied: boolean;
-  onApply: () => void;
-  onDismiss: () => void;
-};
-
-export type ParagraphSuggestionState = {
-  promptOpen: boolean;
-  instructions: string;
-  onChangeInstructions: (value: string) => void;
-  onSubmit: () => Promise<void>;
-  onClosePrompt: () => void;
-  isRequesting: boolean;
-  onCopyPrompt: () => Promise<void>;
-  isCopyingPrompt: boolean;
-  copyStatus: "idle" | "copied";
-  error?: string | null;
-  result: ParagraphSuggestionResultState | null;
-  usesDraftAsPrompt: boolean;
 };
 
 export type ParagraphEditingState = BaseEditingState<"paragraph"> & {
   paragraph: {
     draftText: string;
     onChangeDraft: (value: string) => void;
-    suggestion?: ParagraphSuggestionState;
   };
 };
 

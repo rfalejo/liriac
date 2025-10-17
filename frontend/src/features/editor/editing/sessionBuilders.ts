@@ -12,7 +12,6 @@ import type {
   ParagraphSessionState,
   SceneBoundarySessionState,
 } from "./sessionTypes";
-import type { ParagraphSuggestionContext } from "./paragraphSuggestions.types";
 
 const EMPTY_SCENE_BOUNDARY: SceneBoundaryDraft = {
   label: "",
@@ -160,7 +159,6 @@ export function getRelevantMetadataFields(kind: MetadataKindOption): MetadataEdi
 
 export function buildParagraphSession(
   block: ChapterBlock,
-  suggestionContext: ParagraphSuggestionContext,
 ): ParagraphSessionState {
   if (block.type !== "paragraph") {
     throw new Error("Attempted to build paragraph session for non-paragraph block");
@@ -170,7 +168,6 @@ export function buildParagraphSession(
     blockId: block.id,
     draftText: block.text ?? "",
     baselineText: block.text ?? "",
-    suggestionContext,
   } satisfies ParagraphSessionState;
 }
 

@@ -16,8 +16,6 @@ import type {
   MetadataEditableField,
   MetadataKindOption,
   ParagraphEditingState,
-  ParagraphSuggestionResultState,
-  ParagraphSuggestionState,
   SceneBoundaryEditingState,
   SceneBoundaryEditableField,
 } from "../types";
@@ -27,7 +25,6 @@ import type {
   DialogueSessionState,
   SceneBoundarySessionState,
   MetadataSessionState,
-  ParagraphSuggestionContext,
 } from "../editing/editorEditingStore";
 import { useBlockVersionController } from "../hooks/editing/useBlockVersionController";
 
@@ -42,44 +39,6 @@ type EditorBlockEditingContextValue = {
 const EditorBlockEditingContext =
   createContext<EditorBlockEditingContextValue | null>(null);
 
-function mapSuggestionContextToState(
-  context: ParagraphSuggestionContext,
-): ParagraphSuggestionState {
-  const snapshot = context.getSnapshot();
-  const result = snapshot.result
-    ? {
-        instructions: snapshot.result.instructions,
-        text: snapshot.result.text,
-        isApplied: snapshot.result.isApplied,
-        onApply: () => {
-          context.handlers.applyResult();
-        },
-        onDismiss: () => {
-          context.handlers.dismissResult();
-        },
-      } satisfies ParagraphSuggestionResultState
-    : null;
-
-  return {
-    promptOpen: snapshot.promptOpen,
-    instructions: snapshot.instructions,
-    onChangeInstructions: (value: string) => {
-      context.handlers.setInstructions(value);
-    },
-    onSubmit: () => context.handlers.submit(),
-    onClosePrompt: () => {
-      context.handlers.closePrompt();
-    },
-    isRequesting: snapshot.isRequestPending,
-    onCopyPrompt: () => context.handlers.copyPrompt(),
-    isCopyingPrompt: snapshot.isCopyPending,
-    copyStatus: snapshot.copyStatus === "copied" ? "copied" : "idle",
-    error: snapshot.error,
-    result,
-    usesDraftAsPrompt: snapshot.usesDraftAsPrompt,
-  } satisfies ParagraphSuggestionState;
-}
-
 function buildParagraphEditingState(
   store: EditorEditingStore,
   session: ParagraphSessionState,
@@ -87,43 +46,24 @@ function buildParagraphEditingState(
   hasPendingChanges: boolean,
   versioning: BlockVersionState | undefined,
 ): ParagraphEditingState {
-  const suggestionContext = session.suggestionContext;
-  const suggestionSnapshot = suggestionContext.getSnapshot();
-  const suggestion = mapSuggestionContextToState(suggestionContext);
-
-  const handleCancel = () => {
-    suggestionContext.handlers.closePrompt();
-    store.cancelEditing();
-  };
-
-  const handleSave = () => {
-    suggestionContext.handlers.closePrompt();
-    store.saveActiveBlock();
-  };
-
-  const handleDelete = () => {
-    suggestionContext.handlers.closePrompt();
-    void store.confirmDeleteActiveBlock();
-  };
-
   return {
     blockId: session.blockId,
     blockType: "paragraph",
-    supportsSuggestions: true,
-    onRequestSuggestion: () => {
-      suggestionContext.handlers.openPrompt();
-    },
-    isSuggestionPending: suggestionSnapshot.isRequestPending,
     paragraph: {
       draftText: session.draftText,
       onChangeDraft: (value: string) => {
         store.updateParagraphDraft(value);
       },
-      suggestion,
     },
-    onCancel: handleCancel,
-    onSave: handleSave,
-    onDelete: handleDelete,
+    onCancel: () => {
+      store.cancelEditing();
+    },
+    onSave: () => {
+      store.saveActiveBlock();
+    },
+    onDelete: () => {
+      void store.confirmDeleteActiveBlock();
+    },
     isSaving,
     hasPendingChanges,
     versioning,

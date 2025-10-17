@@ -24,8 +24,6 @@ import {
   toMetadataDraft,
   toSceneBoundaryDraft,
 } from "./sessionBuilders";
-import { ParagraphSuggestionManager } from "./paragraphSuggestions";
-import type { ParagraphSuggestionSnapshot } from "./paragraphSuggestions.types";
 import {
   buildDialoguePayload,
   buildMetadataPayload,
@@ -39,7 +37,6 @@ export type {
   SceneBoundarySessionState,
   MetadataSessionState,
 } from "./sessionTypes";
-export type { ParagraphSuggestionContext, ParagraphSuggestionSnapshot } from "./paragraphSuggestions.types";
 
 type EditorEditingInternalState = EditorEditingStoreSnapshot & {
   chapterId: string | null;
@@ -77,7 +74,6 @@ export class EditorEditingStore {
   private readonly updateBlock: UpdateBlockFn;
   private readonly deleteBlock: DeleteBlockFn;
   private readonly sideEffects: EditorEditingSideEffects;
-  private paragraphSuggestions: ParagraphSuggestionManager;
 
   constructor(options: EditorEditingStoreOptions) {
     this.state = {
@@ -90,13 +86,6 @@ export class EditorEditingStore {
     this.updateBlock = options.updateBlock;
     this.deleteBlock = options.deleteBlock;
     this.sideEffects = options.sideEffects;
-    this.paragraphSuggestions = new ParagraphSuggestionManager({
-      getActiveParagraphSession: () => this.ensureActiveSessionOfType("paragraph"),
-      getChapterId: () => this.state.chapterId,
-      resolveBlock: (blockId) => this.resolveBlock(blockId),
-      notifyUpdateFailure: this.sideEffects.notifyUpdateFailure,
-      notifyStore: () => this.notify(),
-    });
   }
 
   getSnapshot(): EditorEditingStoreSnapshot {
@@ -159,9 +148,7 @@ export class EditorEditingStore {
   private createSessionFromBlock(block: ChapterBlock): InternalSessionState {
     switch (block.type) {
       case "paragraph": {
-        this.paragraphSuggestions.reset(block.id);
-        const context = this.paragraphSuggestions.getContext(block.id);
-        return buildParagraphSession(block, context);
+        return buildParagraphSession(block);
       }
       case "dialogue":
         return buildDialogueSession(block);
@@ -289,7 +276,6 @@ export class EditorEditingStore {
       return;
     }
     session.draftText = value;
-    this.paragraphSuggestions.handleDraftChange(session.blockId, value);
     this.notify();
   }
 
@@ -485,10 +471,6 @@ export class EditorEditingStore {
 
   getActiveSession(): InternalSessionState | null {
     return this.state.activeSession;
-  }
-
-  getSuggestionState(blockId: string): ParagraphSuggestionSnapshot | null {
-    return this.paragraphSuggestions.getSnapshotOrNull(blockId);
   }
 
   hasActivePendingChanges(): boolean {
