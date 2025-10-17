@@ -112,7 +112,6 @@ export function EditorContainer({
     editorOpen: open,
     chapterId: chapter?.id ?? null,
     bookTitle: bookTitle ?? null,
-    blocks: chapter?.blocks ?? [],
     sidebarProps,
   });
 

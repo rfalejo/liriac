@@ -1,23 +1,15 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import Box from "@mui/material/Box";
-import IconButton from "@mui/material/IconButton";
-import Tooltip from "@mui/material/Tooltip";
-import AutoFixHighRoundedIcon from "@mui/icons-material/AutoFixHighRounded";
 import type { ComponentProps, ReactNode } from "react";
-import type { components } from "../../../api/schema";
 import { EditorSidebar } from "../EditorSidebar";
 import { QuickActionsDrawer, type QuickActionsTab } from "../components/QuickActionsDrawer";
 import { ContextConfigurationPanel } from "../contextPanel";
-import { GeneralSuggestionDialog } from "../suggestions/GeneralSuggestionDialog";
-
-type ChapterBlock = components["schemas"]["ChapterBlock"];
 
 type UseQuickActionsPanelParams = {
   isMobileLayout: boolean;
   editorOpen: boolean;
   chapterId: string | null;
   bookTitle: string | null;
-  blocks: ChapterBlock[];
   sidebarProps: ComponentProps<typeof EditorSidebar>;
 };
 
@@ -33,13 +25,11 @@ export function useQuickActionsPanel({
   editorOpen,
   chapterId,
   bookTitle,
-  blocks,
   sidebarProps,
 }: UseQuickActionsPanelParams): UseQuickActionsPanelResult {
   const [quickActionsOpen, setQuickActionsOpen] = useState(false);
   const [quickActionsTab, setQuickActionsTab] = useState<QuickActionsTab>("chapters");
   const triggerRef = useRef<HTMLButtonElement | null>(null);
-  const [generalSuggestionOpen, setGeneralSuggestionOpen] = useState(false);
 
   useEffect(() => {
     if (typeof window === "undefined") {
@@ -70,12 +60,6 @@ export function useQuickActionsPanel({
     }
   }, [isMobileLayout]);
 
-  useEffect(() => {
-    if (!chapterId) {
-      setGeneralSuggestionOpen(false);
-    }
-  }, [chapterId]);
-
   const handleCloseQuickActions = useCallback(() => {
     setQuickActionsOpen(false);
     triggerRef.current?.focus({ preventScroll: true });
@@ -84,44 +68,6 @@ export function useQuickActionsPanel({
   const handleChangeQuickActionsTab = useCallback((tab: QuickActionsTab) => {
     setQuickActionsTab(tab);
   }, []);
-
-  const handleOpenSuggestion = useCallback(() => {
-    if (!chapterId) {
-      return;
-    }
-    setGeneralSuggestionOpen(true);
-  }, [chapterId]);
-
-  const generalSuggestionDisabled = !chapterId;
-
-  const headerActions = useMemo(() => (
-    <Tooltip
-      title={generalSuggestionDisabled ? "Selecciona un capítulo" : "Sugerencia general"}
-      arrow
-    >
-      <span>
-        <IconButton
-          size="small"
-          aria-label="Sugerencia general"
-          onClick={handleOpenSuggestion}
-          disabled={generalSuggestionDisabled}
-          sx={(theme) => ({
-            color: theme.palette.editor.blockMenuIcon,
-            transition: theme.editor.iconButtonTransition,
-            "&:hover": {
-              backgroundColor: theme.palette.editor.blockMenuHoverBg,
-              color: theme.palette.editor.blockMenuIconHover,
-            },
-            "&.Mui-disabled": {
-              color: theme.palette.action.disabled,
-            },
-          })}
-        >
-          <AutoFixHighRoundedIcon fontSize="small" />
-        </IconButton>
-      </span>
-    </Tooltip>
-  ), [generalSuggestionDisabled, handleOpenSuggestion]);
 
   const mobileHotspot = useMemo(() => {
     if (!isMobileLayout) {
@@ -172,14 +118,6 @@ export function useQuickActionsPanel({
 
   const overlays = useMemo(() => (
     <>
-      <GeneralSuggestionDialog
-        open={generalSuggestionOpen}
-        onClose={() => {
-          setGeneralSuggestionOpen(false);
-        }}
-        chapterId={chapterId}
-        blocks={blocks}
-      />
       {isMobileLayout ? (
         <QuickActionsDrawer
           open={quickActionsOpen}
@@ -197,17 +135,14 @@ export function useQuickActionsPanel({
               showHeading
             />
           )}
-          headerActions={headerActions}
         />
       ) : null}
     </>
   ), [
-    blocks,
     bookTitle,
     chapterId,
     handleChangeQuickActionsTab,
     handleCloseQuickActions,
-    headerActions,
     isMobileLayout,
     quickActionsOpen,
     quickActionsTab,
