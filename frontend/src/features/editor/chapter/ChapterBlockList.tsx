@@ -289,7 +289,7 @@ function InsertSlotTrigger({
     return MoreHorizRoundedIcon;
   }, [isTouchViewport, relation]);
 
-  const showButton = !isTouchViewport || visible;
+  const showButton = !isTouchViewport || visible || isActive;
   const handleClick = useCallback(
     (event: MouseEvent<HTMLButtonElement> | KeyboardEvent<HTMLButtonElement>) => {
       event.preventDefault();
