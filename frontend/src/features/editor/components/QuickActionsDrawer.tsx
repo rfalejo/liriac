@@ -50,7 +50,9 @@ function TabPanel({ value, tab, ariaLabelledBy, children }: TabPanelProps) {
       hidden={hidden}
       sx={{
         flex: 1,
+        minHeight: 0,
         overflowY: "auto",
+        WebkitOverflowScrolling: "touch",
         display: hidden ? "none" : "block",
         pt: 2,
       }}
@@ -169,7 +171,7 @@ export function QuickActionsDrawer({
           />
         </Tabs>
         <Divider />
-        <Box sx={{ flex: 1, display: "flex", flexDirection: "column", px: 3, pb: 3 }}>
+        <Box sx={{ flex: 1, minHeight: 0, display: "flex", flexDirection: "column", px: 3, pb: 3 }}>
           <TabPanel value={activeTab} tab="chapters" ariaLabelledBy={chaptersTabId}>
             {chaptersContent}
           </TabPanel>
