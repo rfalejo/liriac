@@ -31,6 +31,8 @@ export function useEditorScrollbar(
 ) {
   const scrollAreaRef = useRef<HTMLDivElement | null>(null);
   const hideTimerRef = useRef<number | null>(null);
+  const scrollableRef = useRef(false);
+  const modeRef = useRef<"hidden" | "visible">("hidden");
   const [{ mode, scrollable }, setScrollState] = useState<ScrollState>(() => ({
     mode: "hidden",
     scrollable: false,
@@ -46,19 +48,39 @@ export function useEditorScrollbar(
   const evaluateScrollable = useCallback(() => {
     const node = scrollAreaRef.current;
     if (!node || !isActive) {
-      setScrollState((current) => ({ ...current, scrollable: false }));
+      scrollableRef.current = false;
+      setScrollState((current) => {
+        if (!current.scrollable && current.mode === "hidden") {
+          return current;
+        }
+        modeRef.current = "hidden";
+        return { mode: "hidden", scrollable: false };
+      });
       return;
     }
 
-    setScrollState((current) => ({
-      ...current,
-      scrollable: node.scrollHeight - node.clientHeight > 4,
-    }));
+    const nextScrollable = node.scrollHeight - node.clientHeight > 4;
+    scrollableRef.current = nextScrollable;
+    setScrollState((current) => {
+      if (current.scrollable === nextScrollable) {
+        return current;
+      }
+      const nextMode = nextScrollable ? current.mode : "hidden";
+      modeRef.current = nextMode;
+      return { mode: nextMode, scrollable: nextScrollable };
+    });
   }, [isActive]);
 
   useEffect(() => {
     if (!isActive) {
-      setScrollState({ mode: "hidden", scrollable: false });
+      scrollableRef.current = false;
+      modeRef.current = "hidden";
+      setScrollState((current) => {
+        if (current.mode === "hidden" && !current.scrollable) {
+          return current;
+        }
+        return { mode: "hidden", scrollable: false };
+      });
       return;
     }
 
@@ -76,15 +98,31 @@ export function useEditorScrollbar(
   const scheduleHide = useCallback(() => {
     clearHideTimer();
     hideTimerRef.current = window.setTimeout(() => {
-      setScrollState((current) => ({ ...current, mode: "hidden" }));
+      setScrollState((current) => {
+        if (current.mode === "hidden") {
+          return current;
+        }
+        modeRef.current = "hidden";
+        return { ...current, mode: "hidden" };
+      });
     }, hideDelay);
   }, [clearHideTimer, hideDelay]);
 
   const reveal = useCallback(() => {
-    if (!scrollable) return;
-    setScrollState((current) => ({ ...current, mode: "visible" }));
+    if (!scrollableRef.current) {
+      return;
+    }
+    if (modeRef.current !== "visible") {
+      setScrollState((current) => {
+        if (current.mode === "visible") {
+          return current;
+        }
+        modeRef.current = "visible";
+        return { ...current, mode: "visible" };
+      });
+    }
     scheduleHide();
-  }, [scheduleHide, scrollable]);
+  }, [scheduleHide]);
 
   const handleScroll = useCallback<UIEventHandler<HTMLDivElement>>(() => {
     reveal();
@@ -99,9 +137,9 @@ export function useEditorScrollbar(
   const handlePointerLeave = useCallback<
     MouseEventHandler<HTMLDivElement>
   >(() => {
-    if (!scrollable) return;
+    if (!scrollableRef.current) return;
     scheduleHide();
-  }, [scheduleHide, scrollable]);
+  }, [scheduleHide]);
 
   const handlers: EditorScrollbarHandlers = {
     onScroll: handleScroll,

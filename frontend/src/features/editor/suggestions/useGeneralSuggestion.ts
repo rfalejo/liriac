@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import type { components } from "../../../api/schema";
 import {
   fetchGeneralSuggestionPrompt,
@@ -48,13 +48,22 @@ export function useGeneralSuggestion({
   chapterId,
   blocks,
 }: UseGeneralSuggestionParams): UseGeneralSuggestionResult {
+  const sortedCacheRef = useRef<ChapterBlock[]>([]);
+
   const sortedBlocks = useMemo(() => {
-    return [...blocks].sort((a, b) => {
+    if (!open) {
+      return sortedCacheRef.current;
+    }
+
+    const ordered = [...blocks].sort((a, b) => {
       const aPosition = typeof a.position === "number" ? a.position : 0;
       const bPosition = typeof b.position === "number" ? b.position : 0;
       return aPosition - bPosition;
     });
-  }, [blocks]);
+
+    sortedCacheRef.current = ordered;
+    return ordered;
+  }, [blocks, open]);
 
   const [prompt, setPrompt] = useState("");
   const [option, setOption] = useState<InsertionOption>("append");

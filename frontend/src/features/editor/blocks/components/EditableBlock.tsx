@@ -31,7 +31,7 @@ export function EditableBlock<TEditingState extends EditingState>({
     onLongPressBlock,
     longPressBlockId,
     clearLongPress,
-  } = useEditorBlockEditing();
+  } = useEditorBlockEditing(block.id);
   const resolvedEditingState = selectEditingState(editingState, block);
   const isEditing = Boolean(resolvedEditingState);
 
